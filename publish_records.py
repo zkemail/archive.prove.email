@@ -8,11 +8,13 @@ import dns.resolver
 import dns.rdatatype
 from dotenv import load_dotenv
 
+
 class DkimRecord(NamedTuple):
     dkimSelector: str
     dkimDomain: str
     value: str
     timestamp: datetime
+
 
 def getOsEnv(key: str):
     value = os.getenv(key)
@@ -20,25 +22,28 @@ def getOsEnv(key: str):
         raise Exception(f'environment variable {key} not found')
     return value
 
+
 def addRecordsToDb(records: list[DkimRecord]):
     """ Connect to the PostgreSQL database server """
     conn = None
     try:
         conn = psycopg2.connect(
-            host = getOsEnv('POSTGRESQL_HOST'),
-            database = getOsEnv('POSTGRESQL_DATABASE'),
-            user = getOsEnv('POSTGRESQL_USER'),
-            password = getOsEnv('POSTGRESQL_PASSWORD'))
+            host=getOsEnv('POSTGRESQL_HOST'),
+            database=getOsEnv('POSTGRESQL_DATABASE'),
+            user=getOsEnv('POSTGRESQL_USER'),
+            password=getOsEnv('POSTGRESQL_PASSWORD'))
         cur = conn.cursor()
         cur.execute('SELECT version()')
         print(cur.fetchone())
         for record in records:
             print(record)
-            cur.execute('SELECT * FROM "DkimRecord" WHERE "dkimSelector" = %s AND "dkimDomain" = %s', (record.dkimSelector, record.dkimDomain))
+            cur.execute('SELECT * FROM "DkimRecord" WHERE "dkimSelector" = %s AND "dkimDomain" = %s',
+                        (record.dkimSelector, record.dkimDomain))
             if cur.fetchone():
                 print('record already exists')
                 continue
-            cur.execute('INSERT INTO "DkimRecord" ("dkimSelector", "dkimDomain", "fetchedAt", "value") VALUES (%s, %s, %s, %s)', (record.dkimSelector, record.dkimDomain, record.timestamp, record.value))
+            cur.execute('INSERT INTO "DkimRecord" ("dkimSelector", "dkimDomain", "fetchedAt", "value") VALUES (%s, %s, %s, %s)',
+                        (record.dkimSelector, record.dkimDomain, record.timestamp, record.value))
             conn.commit()
         cur.close()
     except (psycopg2.DatabaseError) as error:
@@ -48,11 +53,13 @@ def addRecordsToDb(records: list[DkimRecord]):
             conn.close()
             print('Database connection closed.')
 
+
 def connect_to_sqlite3_db():
     conn = sqlite3.connect('emails.db')
     c = conn.cursor()
     conn.commit()
     return c, conn
+
 
 def get_domain_selectors_dict():
     c, conn = connect_to_sqlite3_db()
@@ -71,6 +78,7 @@ def get_domain_selectors_dict():
             res[domain].append(selector)
     return res
 
+
 def getDkimRecords():
     res = []
     domainSelectorsDict = get_domain_selectors_dict()
@@ -85,16 +93,20 @@ def getDkimRecords():
                 print(f'warning: no records found for {qname}')
                 continue
             if len(response) > 1:
-                print(f'warning: > 1 record found for {qname}, using first one')
+                print(
+                    f'warning: > 1 record found for {qname}, using first one')
             dkimData = b''.join(response[0].strings).decode()
             print(dkimData)
-            dkimRecord = DkimRecord(dkimSelector=selector, dkimDomain=domain, value=dkimData, timestamp=datetime.now())
+            dkimRecord = DkimRecord(
+                dkimSelector=selector, dkimDomain=domain, value=dkimData, timestamp=datetime.now())
             res.append(dkimRecord)
     return res
+
 
 def run():
     load_dotenv()
     records = getDkimRecords()
     addRecordsToDb(records)
+
 
 run()
