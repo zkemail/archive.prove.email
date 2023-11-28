@@ -10,8 +10,8 @@ from dotenv import load_dotenv
 
 
 class DkimRecord(NamedTuple):
-    dkimSelector: str
-    dkimDomain: str
+    domain: str
+    selector: str
     value: str
     timestamp: datetime
 
@@ -36,14 +36,14 @@ def addRecordsToDb(records: list[DkimRecord]):
         cur.execute('SELECT version()')
         print(cur.fetchone())
         for record in records:
-            print(record)
-            cur.execute('SELECT * FROM "DkimRecord" WHERE "dkimSelector" = %s AND "dkimDomain" = %s',
-                        (record.dkimSelector, record.dkimDomain))
+            cur.execute('SELECT * FROM "DkimRecord" WHERE "dkimDomain" = %s AND "dkimSelector" = %s',
+                        (record.domain, record.selector))
             if cur.fetchone():
-                print('record already exists')
+                print(f'{record.domain}, {record.selector} already exists, skipping')
                 continue
-            cur.execute('INSERT INTO "DkimRecord" ("dkimSelector", "dkimDomain", "fetchedAt", "value") VALUES (%s, %s, %s, %s)',
-                        (record.dkimSelector, record.dkimDomain, record.timestamp, record.value))
+            print(f'adding {record.domain}, {record.selector} to database')
+            cur.execute('INSERT INTO "DkimRecord" ("dkimDomain", "dkimSelector", "fetchedAt", "value") VALUES (%s, %s, %s, %s)',
+                        (record.domain, record.selector, record.timestamp, record.value))
             conn.commit()
         cur.close()
     except (psycopg2.DatabaseError) as error:
@@ -79,14 +79,12 @@ def get_domain_selectors_dict():
     return res
 
 
-def getDkimRecords():
+def fetchDkimRecordsFromDns(domainSelectorsDict):
     res = []
     domainSelectorsDict = get_domain_selectors_dict()
-    print(domainSelectorsDict)
     for domain in domainSelectorsDict:
-        print('DOMAIN', domain)
         for selector in domainSelectorsDict[domain]:
-            print('SELECTOR', selector)
+            print(f'fetching {selector}._domainkey.{domain}')
             qname = f'{selector}._domainkey.{domain}'
             response = dns.resolver.resolve(qname, 'TXT')
             if len(response) == 0:
@@ -96,16 +94,19 @@ def getDkimRecords():
                 print(
                     f'warning: > 1 record found for {qname}, using first one')
             dkimData = b''.join(response[0].strings).decode()
-            print(dkimData)
             dkimRecord = DkimRecord(
-                dkimSelector=selector, dkimDomain=domain, value=dkimData, timestamp=datetime.now())
+                selector=selector, domain=domain, value=dkimData, timestamp=datetime.now())
             res.append(dkimRecord)
     return res
 
 
 def run():
     load_dotenv()
-    records = getDkimRecords()
+    print('loading domains and selectors')
+    domainSelectorsDict = get_domain_selectors_dict()
+    print('fetching dkim records from dns')
+    records = fetchDkimRecordsFromDns(domainSelectorsDict)
+    print('adding records to database')
     addRecordsToDb(records)
 
 
