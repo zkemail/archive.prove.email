@@ -16,22 +16,22 @@ class DkimRecord(NamedTuple):
     timestamp: datetime
 
 
-def getOsEnv(key: str):
+def get_os_env(key: str):
     value = os.getenv(key)
     if not value:
         raise Exception(f'environment variable {key} not found')
     return value
 
 
-def addRecordsToDb(records: list[DkimRecord]):
+def add_records_to_db(records: list[DkimRecord]):
     """ Connect to the PostgreSQL database server """
     conn = None
     try:
         conn = psycopg2.connect(
-            host=getOsEnv('POSTGRESQL_HOST'),
-            database=getOsEnv('POSTGRESQL_DATABASE'),
-            user=getOsEnv('POSTGRESQL_USER'),
-            password=getOsEnv('POSTGRESQL_PASSWORD'))
+            host=get_os_env('POSTGRESQL_HOST'),
+            database=get_os_env('POSTGRESQL_DATABASE'),
+            user=get_os_env('POSTGRESQL_USER'),
+            password=get_os_env('POSTGRESQL_PASSWORD'))
         cur = conn.cursor()
         cur.execute('SELECT version()')
         print(cur.fetchone())
@@ -79,7 +79,7 @@ def get_domain_selectors_dict():
     return res
 
 
-def fetchDkimRecordsFromDns(domainSelectorsDict):
+def fetch_dkim_records_from_dns(domainSelectorsDict):
     res = []
     domainSelectorsDict = get_domain_selectors_dict()
     for domain in domainSelectorsDict:
@@ -100,14 +100,15 @@ def fetchDkimRecordsFromDns(domainSelectorsDict):
     return res
 
 
-def run():
+def main():
     load_dotenv()
     print('loading domains and selectors')
     domainSelectorsDict = get_domain_selectors_dict()
     print('fetching dkim records from dns')
-    records = fetchDkimRecordsFromDns(domainSelectorsDict)
+    records = fetch_dkim_records_from_dns(domainSelectorsDict)
     print('adding records to database')
-    addRecordsToDb(records)
+    add_records_to_db(records)
 
 
-run()
+if __name__ == '__main__':
+    main()
