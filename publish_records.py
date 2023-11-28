@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 class DkimRecord(NamedTuple):
     dkimSelector: str
     dkimDomain: str
+    value: str
     timestamp: datetime
 
 def getOsEnv(key: str):
@@ -37,7 +38,7 @@ def addRecordsToDb(records: list[DkimRecord]):
             if cur.fetchone():
                 print('record already exists')
                 continue
-            cur.execute('INSERT INTO "DkimRecord" ("dkimSelector", "dkimDomain", "fetchedAt", "value") VALUES (%s, %s, %s, %s)', (record.dkimSelector, record.dkimDomain, record.timestamp, ''))
+            cur.execute('INSERT INTO "DkimRecord" ("dkimSelector", "dkimDomain", "fetchedAt", "value") VALUES (%s, %s, %s, %s)', (record.dkimSelector, record.dkimDomain, record.timestamp, record.value))
             conn.commit()
         cur.close()
     except (psycopg2.DatabaseError) as error:
@@ -46,7 +47,6 @@ def addRecordsToDb(records: list[DkimRecord]):
         if conn is not None:
             conn.close()
             print('Database connection closed.')
-
 
 def connect_to_sqlite3_db():
     conn = sqlite3.connect('emails.db')
@@ -71,19 +71,6 @@ def get_domain_selectors_dict():
             res[domain].append(selector)
     return res
 
-
-'''
-decode a DNS DKIM record such as "v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUA"
-to a dict: {'v': 'DKIM1', 'k': 'rsa', 'p': 'MIGfMA0GCSqGSIb3DQEBAQUA'}
-'''
-def decode_dkim_record(dkimData):
-    parts = list(map(lambda x: x.strip(), dkimData.split(';')))
-    res = {}
-    for part in parts:
-        key, value = part.split('=')
-        res[key] = value
-    return res
-
 def getDkimRecords():
     res = []
     domainSelectorsDict = get_domain_selectors_dict()
@@ -92,20 +79,16 @@ def getDkimRecords():
         print('DOMAIN', domain)
         for selector in domainSelectorsDict[domain]:
             print('SELECTOR', selector)
-            response = dns.resolver.resolve(f'{selector}._domainkey.{domain}', 'TXT')
-            records = []
-            for row in response:
-                dkimData = b''.join(row.strings).decode()
-                print(dkimData)
-                records.append(dkimData)
-            if len(records) == 0:
-                print('NO RECORDS FOUND')
+            qname = f'{selector}._domainkey.{domain}'
+            response = dns.resolver.resolve(qname, 'TXT')
+            if len(response) == 0:
+                print(f'warning: no records found for {qname}')
                 continue
-            if len(records) > 1:
-                print('warning: > 1 record found, using first one')
-            decoded_dkim_data = decode_dkim_record(records[0])
-            print(decoded_dkim_data)
-            dkimRecord = DkimRecord(dkimSelector=selector, dkimDomain=domain, timestamp=datetime.now())
+            if len(response) > 1:
+                print(f'warning: > 1 record found for {qname}, using first one')
+            dkimData = b''.join(response[0].strings).decode()
+            print(dkimData)
+            dkimRecord = DkimRecord(dkimSelector=selector, dkimDomain=domain, value=dkimData, timestamp=datetime.now())
             res.append(dkimRecord)
     return res
 
