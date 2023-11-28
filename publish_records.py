@@ -33,11 +33,11 @@ def addRecordsToDb(records: list[DkimRecord]):
         print(cur.fetchone())
         for record in records:
             print(record)
-            cur.execute("SELECT * FROM dkim_records WHERE dkimSelector = %s AND dkimDomain = %s", (record.dkimSelector, record.dkimDomain))
+            cur.execute('SELECT * FROM "DkimRecord" WHERE "dkimSelector" = %s AND "dkimDomain" = %s', (record.dkimSelector, record.dkimDomain))
             if cur.fetchone():
                 print('record already exists')
                 continue
-            cur.execute("INSERT INTO dkim_records (dkimSelector, dkimDomain, timestamp) VALUES (%s, %s, %s)", (record.dkimSelector, record.dkimDomain, record.timestamp))
+            cur.execute('INSERT INTO "DkimRecord" ("dkimSelector", "dkimDomain", "fetchedAt", "value") VALUES (%s, %s, %s, %s)', (record.dkimSelector, record.dkimDomain, record.timestamp, ''))
             conn.commit()
         cur.close()
     except (psycopg2.DatabaseError) as error:

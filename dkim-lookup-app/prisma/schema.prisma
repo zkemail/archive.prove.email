@@ -9,9 +9,9 @@ datasource db {
 }
 
 model DkimRecord {
-  id           String     @default(cuid()) @id
+  id           Int      @id @default(autoincrement())
   dkimSelector String
   dkimDomain   String
-  fetchedAt    DateTime  @default(now())
+  fetchedAt    DateTime @default(now())
   value        String
 }
