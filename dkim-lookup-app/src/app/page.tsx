@@ -5,11 +5,6 @@ export default async function Home() {
   const prisma = new PrismaClient()
 
   let records = await prisma.dkimRecord.findMany();
-  console.log(Prisma.DkimRecordScalarFieldEnum)
-
-  Object.keys(Prisma.DkimRecordScalarFieldEnum).forEach((key) => {
-    console.log(key)
-  });
 
   return (
     <main className="flex min-h-screen flex-col items-center">
@@ -28,7 +23,7 @@ export default async function Home() {
           </thead>
           <tbody>
             {records.map((record) => (
-              <tr>
+              <tr key={record.id}>
                 <td>{record.id}</td>
                 <td>{record.dkimDomain}</td>
                 <td>{record.dkimSelector}</td>
