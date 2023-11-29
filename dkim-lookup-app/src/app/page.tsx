@@ -12,6 +12,7 @@ const DomainSearchResults: React.FC<DomainSearchResultProps> = ({ records }) => 
           <tr>
             <th>Selector</th>
             <th>Fetched date</th>
+            <th>Value</th>
           </tr>
         </thead>
         <tbody>
@@ -19,6 +20,11 @@ const DomainSearchResults: React.FC<DomainSearchResultProps> = ({ records }) => 
             <tr key={record.id}>
               <td className='px-4'>{record.dkimSelector}</td>
               <td className='px-4'>{record.fetchedAt.toLocaleString()}</td>
+              <td className='px-4'>
+                <textarea className='w-80 h-40' readOnly>
+                  {record.value}
+                </textarea>
+              </td>
             </tr>
           ))}
         </tbody>
