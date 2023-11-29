@@ -1,21 +1,33 @@
 #!/usr/bin/env python
 import os
-import psycopg2
-from dotenv import load_dotenv
+from datetime import datetime
+from typing import NamedTuple
 import sqlite3
+import psycopg2
 import dns.resolver
 import dns.rdatatype
 
-load_dotenv()
+class DkimRecord(NamedTuple):
+    dkimSelector: str
+    dkimDomain: str
+    timestamp: datetime
 
-def connect():
+def addRecordsToDb(records: list[DkimRecord]):
     """ Connect to the PostgreSQL database server """
     conn = None
     try:
-        conn = psycopg2.connect(database="dkim_lookup", user=os.getenv('DB_USER'), password=os.getenv('DB_PASSWORD'))
+        conn = psycopg2.connect(database="dkim_lookup")
         cur = conn.cursor()
         cur.execute('SELECT version()')
         print(cur.fetchone())
+        for record in records:
+            print(record)
+            cur.execute("SELECT * FROM dkim_records WHERE dkimSelector = %s AND dkimDomain = %s", (record.dkimSelector, record.dkimDomain))
+            if cur.fetchone():
+                print('record already exists')
+                continue
+            cur.execute("INSERT INTO dkim_records (dkimSelector, dkimDomain, timestamp) VALUES (%s, %s, %s)", (record.dkimSelector, record.dkimDomain, record.timestamp))
+            conn.commit()
         cur.close()
     except (psycopg2.DatabaseError) as error:
         print(error)
@@ -61,8 +73,8 @@ def decode_dkim_record(dkimData):
         res[key] = value
     return res
 
-def run():
-    connect()
+def getDkimRecords():
+    res = []
     domainSelectorsDict = get_domain_selectors_dict()
     print(domainSelectorsDict)
     for domain in domainSelectorsDict:
@@ -82,6 +94,12 @@ def run():
                 print('warning: > 1 record found, using first one')
             decoded_dkim_data = decode_dkim_record(records[0])
             print(decoded_dkim_data)
+            dkimRecord = DkimRecord(dkimSelector=selector, dkimDomain=domain, timestamp=datetime.now())
+            res.append(dkimRecord)
+    return res
 
+def run():
+    records = getDkimRecords()
+    addRecordsToDb(records)
 
 run()
