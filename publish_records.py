@@ -83,7 +83,11 @@ def fetch_dkim_records_from_dns(domainSelectorsDict):
         for selector in domainSelectorsDict[domain]:
             print(f'fetching {selector}._domainkey.{domain}')
             qname = f'{selector}._domainkey.{domain}'
-            response = dns.resolver.resolve(qname, 'TXT')
+            try:
+                response = dns.resolver.resolve(qname, 'TXT')
+            except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer) as e:
+                print(f'dns resolver error: {e}')
+                continue
             if len(response) == 0:
                 print(f'warning: no records found for {qname}')
                 continue
