@@ -27,6 +27,30 @@ const DomainSearchResults: React.FC<DomainSearchResultProps> = ({ records }) => 
   );
 };
 
+interface SearchFormProps {
+  domainQuery: string | undefined;
+}
+
+const SearchForm: React.FC<SearchFormProps> = ({ domainQuery }) => {
+  return (
+    <div className='search-form'>
+      <form action="/" method="get">
+        <label htmlFor="domain" className='px-2'>
+          Domain name:
+        </label>
+        <input
+          type="text"
+          id="domain"
+          name="domain"
+          placeholder="example.com"
+          defaultValue={domainQuery}
+        />
+        <button className='border border-black' type="submit">Search</button>
+      </form>
+    </div>
+  );
+};
+
 export default async function Home({ searchParams }: {
   searchParams: { [key: string]: string | string[] | undefined }
 }) {
@@ -46,6 +70,7 @@ export default async function Home({ searchParams }: {
       <h1 className='p-8 text-xl font-bold'>
         DKIM Lookup
       </h1>
+      <SearchForm domainQuery={domainQuery} />
       {domainQuery
         ? records.length > 0
           ? <div><p className='p-4'>Search results for "{domainQuery}"</p><DomainSearchResults records={records} /></div>
