@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import os
 from datetime import datetime
+import sys
 from typing import NamedTuple
 import sqlite3
 import psycopg2
@@ -61,27 +62,23 @@ def connect_to_sqlite3_db():
     return c, conn
 
 
-def get_domain_selectors_dict():
-    c, conn = connect_to_sqlite3_db()
-    c.execute('SELECT dkimSelector, dkimDomain FROM emails')
-    raw_results = list(set(c.fetchall()))
-    print(raw_results)
-    conn.close()
-    res = {}
-    for selector_domain in raw_results:
-        selector, domain = selector_domain
-        if (not selector) or (not domain):
-            continue
-        if domain not in res:
-            res[domain] = []
-        if selector not in res[domain]:
-            res[domain].append(selector)
-    return res
+def load_domains_and_selectors_from_tsv(outputDict, filename):
+    with open(filename, 'r') as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            domain, selector = line.split('\t')
+            if (not selector) or (not domain):
+                continue
+            if domain not in outputDict:
+                outputDict[domain] = []
+            if selector not in outputDict[domain]:
+                outputDict[domain].append(selector)
 
 
 def fetch_dkim_records_from_dns(domainSelectorsDict):
     res = []
-    domainSelectorsDict = get_domain_selectors_dict()
     for domain in domainSelectorsDict:
         for selector in domainSelectorsDict[domain]:
             print(f'fetching {selector}._domainkey.{domain}')
@@ -102,8 +99,16 @@ def fetch_dkim_records_from_dns(domainSelectorsDict):
 
 def main():
     load_dotenv()
+    tsvFiles = sys.argv[1:]
+    if len(tsvFiles) < 1:
+        print('usage: publish_records.py file1.tsv [file2.tsv ...]')
+        sys.exit(1)
     print('loading domains and selectors')
-    domainSelectorsDict = get_domain_selectors_dict()
+    domainSelectorsDict = {}
+    for f in tsvFiles:
+        print(f'loading domains and selectors from {f}')
+        load_domains_and_selectors_from_tsv(domainSelectorsDict, f)
+
     print('fetching dkim records from dns')
     records = fetch_dkim_records_from_dns(domainSelectorsDict)
     print('adding records to database')
