@@ -82,6 +82,7 @@ export default async function Home({ searchParams }: {
           ? <div><p className='p-4'>Search results for "{domainQuery}"</p><DomainSearchResults records={records} /></div>
           : <p>No records found for "{domainQuery}"</p>
         : <p>Enter a search term</p>}
+      <p className='p-8'>Visit the project on <a href="https://github.com/foolo/dkim-lookup">GitHub</a></p>
     </main>
   )
 }

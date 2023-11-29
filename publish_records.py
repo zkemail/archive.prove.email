@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+
+# read domains and selectors from a TSV file and publish them to a PostgreSQL database
+
 import os
 import sys
 import psycopg2
