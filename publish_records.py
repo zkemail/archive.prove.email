@@ -6,17 +6,28 @@ import sqlite3
 import psycopg2
 import dns.resolver
 import dns.rdatatype
+from dotenv import load_dotenv
 
 class DkimRecord(NamedTuple):
     dkimSelector: str
     dkimDomain: str
     timestamp: datetime
 
+def getOsEnv(key: str):
+    value = os.getenv(key)
+    if not value:
+        raise Exception(f'environment variable {key} not found')
+    return value
+
 def addRecordsToDb(records: list[DkimRecord]):
     """ Connect to the PostgreSQL database server """
     conn = None
     try:
-        conn = psycopg2.connect(database="dkim_lookup")
+        conn = psycopg2.connect(
+            host = getOsEnv('POSTGRESQL_HOST'),
+            database = getOsEnv('POSTGRESQL_DATABASE'),
+            user = getOsEnv('POSTGRESQL_USER'),
+            password = getOsEnv('POSTGRESQL_PASSWORD'))
         cur = conn.cursor()
         cur.execute('SELECT version()')
         print(cur.fetchone())
@@ -99,6 +110,7 @@ def getDkimRecords():
     return res
 
 def run():
+    load_dotenv()
     records = getDkimRecords()
     addRecordsToDb(records)
 
