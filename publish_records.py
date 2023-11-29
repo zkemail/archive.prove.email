@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 import os
-from datetime import datetime
 import sys
-from typing import NamedTuple
-import sqlite3
 import psycopg2
 import dns.resolver
 import dns.rdatatype
+from datetime import datetime
+from typing import NamedTuple
 from dotenv import load_dotenv
 
 
@@ -53,13 +52,6 @@ def add_records_to_db(records: list[DkimRecord]):
         if conn is not None:
             conn.close()
             print('Database connection closed.')
-
-
-def connect_to_sqlite3_db():
-    conn = sqlite3.connect('emails.db')
-    c = conn.cursor()
-    conn.commit()
-    return c, conn
 
 
 def load_domains_and_selectors_from_tsv(outputDict, filename):
