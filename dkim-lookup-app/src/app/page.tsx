@@ -66,7 +66,10 @@ export default async function Home({ searchParams }: {
 	if (domainQuery) {
 		records = await prisma.dkimRecord.findMany({
 			where: {
-				dkimDomain: domainQuery,
+				dkimDomain: {
+					equals: domainQuery,
+					mode: Prisma.QueryMode.insensitive,
+				},
 			},
 		})
 	}
