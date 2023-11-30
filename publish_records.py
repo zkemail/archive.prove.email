@@ -26,37 +26,6 @@ def get_os_env(key: str):
     return value
 
 
-def add_records_to_db(records: list[DkimRecord]):
-    """ Connect to the PostgreSQL database server """
-    conn = None
-    try:
-        conn = psycopg2.connect(
-            host=get_os_env('POSTGRESQL_HOST'),
-            database=get_os_env('POSTGRESQL_DATABASE'),
-            user=get_os_env('POSTGRESQL_USER'),
-            password=get_os_env('POSTGRESQL_PASSWORD'))
-        cur = conn.cursor()
-        cur.execute('SELECT version()')
-        print(cur.fetchone())
-        for record in records:
-            cur.execute('SELECT * FROM "DkimRecord" WHERE "dkimDomain" = %s AND "dkimSelector" = %s',
-                        (record.domain, record.selector))
-            if cur.fetchone():
-                print(f'{record.domain}, {record.selector} already exists, skipping')
-                continue
-            print(f'adding {record.domain}, {record.selector} to database')
-            cur.execute('INSERT INTO "DkimRecord" ("dkimDomain", "dkimSelector", "fetchedAt", "value") VALUES (%s, %s, %s, %s)',
-                        (record.domain, record.selector, record.timestamp, record.value))
-            conn.commit()
-        cur.close()
-    except (psycopg2.DatabaseError) as error:
-        print(error)
-    finally:
-        if conn is not None:
-            conn.close()
-            print('Database connection closed.')
-
-
 def load_domains_and_selectors_from_tsv(outputDict, filename):
     with open(filename, 'r') as f:
         for line in f:
@@ -94,6 +63,37 @@ def fetch_dkim_records_from_dns(domainSelectorsDict):
                 selector=selector, domain=domain, value=dkimData, timestamp=datetime.now())
             res.append(dkimRecord)
     return res
+
+
+def add_records_to_db(records: list[DkimRecord]):
+    """ Connect to the PostgreSQL database server """
+    conn = None
+    try:
+        conn = psycopg2.connect(
+            host=get_os_env('POSTGRESQL_HOST'),
+            database=get_os_env('POSTGRESQL_DATABASE'),
+            user=get_os_env('POSTGRESQL_USER'),
+            password=get_os_env('POSTGRESQL_PASSWORD'))
+        cur = conn.cursor()
+        cur.execute('SELECT version()')
+        print(cur.fetchone())
+        for record in records:
+            cur.execute('SELECT * FROM "DkimRecord" WHERE "dkimDomain" = %s AND "dkimSelector" = %s',
+                        (record.domain, record.selector))
+            if cur.fetchone():
+                print(f'{record.domain}, {record.selector} already exists, skipping')
+                continue
+            print(f'adding {record.domain}, {record.selector} to database')
+            cur.execute('INSERT INTO "DkimRecord" ("dkimDomain", "dkimSelector", "fetchedAt", "value") VALUES (%s, %s, %s, %s)',
+                        (record.domain, record.selector, record.timestamp, record.value))
+            conn.commit()
+        cur.close()
+    except (psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if conn is not None:
+            conn.close()
+            print('Database connection closed.')
 
 
 def main():
