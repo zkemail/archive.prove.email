@@ -16,6 +16,8 @@ def decode_dkim_header_field(dkimData):
 		if not s:
 			continue
 		key, value = s.split('=', 1)
+		key = key.strip()
+		value = value.strip()
 		res[key] = value
 	return res
 

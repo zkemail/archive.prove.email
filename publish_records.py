@@ -33,12 +33,12 @@ def load_domains_and_selectors_from_tsv(outputDict, filename):
 			line = line.rstrip('\r\n')
 			parts = line.split('\t')
 			if len(parts) != 2:
-				print(f'warning: skipping line {i+1} in {filename}, expected 2 tab-separated columns, got {len(parts)}')
-				continue
+				print(f'error: {filename} line {i+1}, expected 2 tab-separated columns, got {len(parts)}')
+				sys.exit(1)
 			domain, selector = parts
 			if (not selector) or (not domain):
-				print(f'warning: skipping line {i+1} in {filename}, selector or domain is empty')
-				continue
+				print(f'error: {filename} line {i+1}, selector or domain is empty')
+				sys.exit(1)
 			if domain not in outputDict:
 				outputDict[domain] = []
 			if selector not in outputDict[domain]:
