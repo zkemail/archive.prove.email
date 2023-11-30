@@ -43,6 +43,9 @@ def get_domain_selectors(outputDict, mboxFile):
 def main():
 	domainSelectorsDict = {}
 	mboxFiles = sys.argv[1:]
+	if len(mboxFiles) == 0:
+		print('usage: mbox_to_tsv.py file1.mbox [file2.mbox ...] > output.tsv')
+		sys.exit(1)
 	for f in mboxFiles:
 		print(f'processing {f}', file=sys.stderr)
 		get_domain_selectors(domainSelectorsDict, f)
