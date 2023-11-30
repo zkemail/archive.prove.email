@@ -28,18 +28,20 @@ def get_os_env(key: str):
 
 def load_domains_and_selectors_from_tsv(outputDict, filename):
 	with open(filename, 'r') as f:
-		for line in f:
-			line = line.strip()
-			if not line:
+		for i, line in enumerate(f):
+			line = line.rstrip('\r\n')
+			parts = line.split('\t')
+			if len(parts) != 2:
+				print(f'warning: skipping line {i+1} in {filename}, expected 2 tab-separated columns, got {len(parts)}')
 				continue
-			domain, selector = line.split('\t')
+			domain, selector = parts
 			if (not selector) or (not domain):
+				print(f'warning: skipping line {i+1} in {filename}, selector or domain is empty')
 				continue
 			if domain not in outputDict:
 				outputDict[domain] = []
 			if selector not in outputDict[domain]:
 				outputDict[domain].append(selector)
-
 
 def fetch_dkim_records_from_dns(domainSelectorsDict):
 	res = []
@@ -50,14 +52,13 @@ def fetch_dkim_records_from_dns(domainSelectorsDict):
 			try:
 				response = dns.resolver.resolve(qname, dns.rdatatype.TXT)
 			except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer) as e:
-				print(f'dns resolver error: {e}')
+				print(f'warning: dns resolver error: {e}')
 				continue
 			if len(response) == 0:
 				print(f'warning: no records found for {qname}')
 				continue
 			if len(response) > 1:
-				print(
-					f'warning: > 1 record found for {qname}, using first one')
+				print(f'warning: > 1 record found for {qname}, using first one')
 			dkimData = b''.join(response[0].strings).decode()
 			dkimRecord = DkimRecord(
 				selector=selector, domain=domain, value=dkimData, timestamp=datetime.now())
@@ -93,7 +94,6 @@ def add_records_to_db(records: list[DkimRecord]):
 	finally:
 		if conn is not None:
 			conn.close()
-			print('Database connection closed.')
 
 
 def main():
