@@ -79,10 +79,10 @@ def add_records_to_db(records: list[DkimRecord]):
 		cur.execute('SELECT version()')
 		print(cur.fetchone())
 		for record in records:
-			cur.execute('SELECT * FROM "DkimRecord" WHERE "dkimDomain" = %s AND "dkimSelector" = %s',
-						(record.domain, record.selector))
+			cur.execute('SELECT * FROM "DkimRecord" WHERE "dkimDomain" = %s AND "dkimSelector" = %s AND "value" = %s',
+						(record.domain, record.selector, record.value))
 			if cur.fetchone():
-				print(f'{record.domain}, {record.selector} already exists, skipping')
+				print(f'key for: {record.domain}, {record.selector} found in database, skipping')
 				continue
 			print(f'adding {record.domain}, {record.selector} to database')
 			cur.execute('INSERT INTO "DkimRecord" ("dkimDomain", "dkimSelector", "fetchedAt", "value") VALUES (%s, %s, %s, %s)',
