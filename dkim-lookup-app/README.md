@@ -11,11 +11,19 @@ yarn install
 Copy ```.env.example``` to ```.env``` and configure database URLs
 
 
-Run the development server
+## Running the development server
 
 ```
 yarn dev
 ```
+
+## Fetch DKIM keys from DNS and upload to database
+
+```
+yarn update_records domains_and_selectors.tsv
+```
+
+A tsv file with domains and selectors can be created with ```mbox_to_tsv.py```
 
 ## Database management
 

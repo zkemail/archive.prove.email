@@ -4,6 +4,8 @@
 
 ### DKIM archive website
 
+Website for searching archived DKIM selectors. It also contains a tool (`yarn update_records`) to fetch new keys via DNS.
+
 See [dkim-lookup-app](dkim-lookup-app/)
 
 ### Fetch and upload script
