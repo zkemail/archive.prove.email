@@ -4,6 +4,20 @@ interface DomainSearchResultProps {
 	records: DkimRecord[];
 }
 
+function parseDkimRecord(dkimValue: string): Record<string, string | null> {
+	const result: Record<string, string | null> = {};
+	const parts = dkimValue.split(';');
+	for (const part of parts) {
+		const [key, value] = part.split('=');
+		result[key.trim()] = value.trim() || null;
+	}
+	return result;
+}
+
+function dkimValueHasPrivateKey(dkimValue: string): boolean {
+	return parseDkimRecord(dkimValue).p !== null;
+}
+
 const DomainSearchResults: React.FC<DomainSearchResultProps> = ({ records }) => {
 	return (
 		<div className='dkim-records'>
@@ -73,6 +87,8 @@ export default async function Home({ searchParams }: {
 			},
 		})
 	}
+
+	records = records.filter((record) => dkimValueHasPrivateKey(record.value));
 
 	return (
 		<main className="flex min-h-screen flex-col items-center">
