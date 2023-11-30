@@ -53,7 +53,13 @@ def main():
 		get_domain_selectors(domainSelectorsDict, f)
 	domainSelectorsDict = dict(sorted(domainSelectorsDict.items()))
 	for domain, selectors in domainSelectorsDict.items():
+		if '\t' in domain:
+			print(f'warning: domain {domain} includes a tab character, skipping', file=sys.stderr)
+			continue
 		for selector in selectors:
+			if '\t' in selector:
+				print(f'warning: selector {selector} includes a tab character, skipping', file=sys.stderr)
+				continue
 			print(f'{domain}\t{selector}')
 
 
