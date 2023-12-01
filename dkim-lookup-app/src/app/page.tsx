@@ -1,3 +1,4 @@
+import { SelectorResult } from '@/components/SelectorResult';
 import { PrismaClient, Prisma, DkimRecord } from '@prisma/client'
 
 interface DomainSearchResultProps {
@@ -21,26 +22,9 @@ function dkimValueHasPrivateKey(dkimValue: string): boolean {
 const DomainSearchResults: React.FC<DomainSearchResultProps> = ({ records }) => {
 	return (
 		<div className='dkim-records'>
-			<table>
-				<thead>
-					<tr>
-						<th>Selector</th>
-						<th>Fetched date</th>
-						<th>Value</th>
-					</tr>
-				</thead>
-				<tbody>
-					{records.map((record) => (
-						<tr key={record.id}>
-							<td className='px-4'>{record.dkimSelector}</td>
-							<td className='px-4'>{record.fetchedAt.toLocaleString()}</td>
-							<td className='px-4'>
-								<textarea className='w-80 h-40' readOnly defaultValue={record.value}></textarea>
-							</td>
-						</tr>
-					))}
-				</tbody>
-			</table>
+			{records.map((record) => (
+				<SelectorResult key={record.id} record={record} />
+			))}
 		</div>
 	);
 };
