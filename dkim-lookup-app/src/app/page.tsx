@@ -51,13 +51,19 @@ const SearchForm: React.FC<SearchFormProps> = ({ domainQuery }) => {
 					Domain name:
 				</label>
 				<input
+					className='border border-gray-400 px-3 py-1.5 m-2 rounded-md'
 					type="text"
 					id="domain"
 					name="domain"
 					placeholder="example.com"
 					defaultValue={domainQuery}
 				/>
-				<button className='border border-black' type="submit">Search</button>
+				<button
+					className='rounded-md text-white bg-sky-600 px-3 py-1.5'
+					type="submit"
+				>
+					Search
+				</button>
 			</form>
 		</div>
 	);

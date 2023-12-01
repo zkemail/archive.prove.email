@@ -7,7 +7,7 @@ interface CardProps {
 
 export const Card: FC<CardProps> = ({ children, as: Tag = 'div' }) => {
 	return (
-		<Tag className={'rounded-xl border border-gray-300 bg-white p-4 m-4'}>
+		<Tag className={'drop-shadow-md rounded-xl border border-gray-200 bg-white p-4 m-4'}>
 			{children}
 		</Tag>
 	);
