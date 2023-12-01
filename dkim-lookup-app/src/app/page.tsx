@@ -1,10 +1,6 @@
 import { SelectorResult } from '@/components/SelectorResult';
 import { PrismaClient, Prisma, DkimRecord } from '@prisma/client'
 
-interface DomainSearchResultProps {
-	records: DkimRecord[];
-}
-
 function parseDkimRecord(dkimValue: string): Record<string, string | null> {
 	const result: Record<string, string | null> = {};
 	const parts = dkimValue.split(';');
@@ -19,12 +15,26 @@ function dkimValueHasPrivateKey(dkimValue: string): boolean {
 	return parseDkimRecord(dkimValue).p !== null;
 }
 
-const DomainSearchResults: React.FC<DomainSearchResultProps> = ({ records }) => {
+interface DomainSearchResultProps {
+	records: DkimRecord[];
+	domainQuery: string | undefined;
+}
+
+const DomainSearchResults: React.FC<DomainSearchResultProps> = ({ records, domainQuery }) => {
+	if (!domainQuery) {
+		return <p>Enter a search term</p>
+	};
+	if (!records) {
+		return <p>No records found for "{domainQuery}"</p>
+	}
 	return (
-		<div className='dkim-records'>
-			{records.map((record) => (
-				<SelectorResult key={record.id} record={record} />
-			))}
+		<div>
+			<p className='p-4'>Search results for "{domainQuery}"</p>
+			<div className='dkim-records'>
+				{records.map((record) => (
+					<SelectorResult key={record.id} record={record} />
+				))}
+			</div>
 		</div>
 	);
 };
@@ -78,11 +88,7 @@ export default async function Home({ searchParams }: {
 				DKIM Lookup
 			</h1>
 			<SearchForm domainQuery={domainQuery} />
-			{domainQuery
-				? records.length > 0
-					? <div><p className='p-4'>Search results for "{domainQuery}"</p><DomainSearchResults records={records} /></div>
-					: <p>No records found for "{domainQuery}"</p>
-				: <p>Enter a search term</p>}
+			<DomainSearchResults records={records} domainQuery={domainQuery} />
 			<p className='p-8'>Visit the project on <a href="https://github.com/foolo/dkim-lookup">GitHub</a></p>
 		</main>
 	)
