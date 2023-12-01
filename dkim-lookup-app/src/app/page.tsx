@@ -35,9 +35,7 @@ const DomainSearchResults: React.FC<DomainSearchResultProps> = ({ records }) => 
 							<td className='px-4'>{record.dkimSelector}</td>
 							<td className='px-4'>{record.fetchedAt.toLocaleString()}</td>
 							<td className='px-4'>
-								<textarea className='w-80 h-40' readOnly>
-									{record.value}
-								</textarea>
+								<textarea className='w-80 h-40' readOnly defaultValue={record.value}></textarea>
 							</td>
 						</tr>
 					))}
