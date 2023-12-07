@@ -1,5 +1,8 @@
 # DKIM archive website and tools
 
+These tools are in contribution to [ZK Email](https://github.com/zkemail/zk-email-verify),
+and in particular this [issue](https://github.com/zkemail/zk-email-verify/issues/81).
+
 ## In this repository
 
 ### DKIM archive website
