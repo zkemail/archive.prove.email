@@ -104,12 +104,6 @@ async function addRecordToDb(record: DnsDkimFetchResult): Promise<boolean> {
 	return false;
 }
 
-async function addRecordsToDb(records: DnsDkimFetchResult[]) {
-	for (let record of records) {
-		await addRecordToDb(record);
-	}
-}
-
 function main() {
 	const tsvFiles = process.argv.slice(2);
 	if (tsvFiles.length < 1) {
