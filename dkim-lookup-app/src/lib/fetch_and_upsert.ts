@@ -11,7 +11,6 @@ interface DnsDkimFetchResult {
 	timestamp: Date;
 }
 
-// returns true iff a record was added
 async function upsertRecord(record: DnsDkimFetchResult, prisma: PrismaClient): Promise<boolean> {
 	let currentRecord = await prisma.dkimRecord.findFirst({
 		where: {
@@ -47,8 +46,9 @@ async function upsertRecord(record: DnsDkimFetchResult, prisma: PrismaClient): P
 	return false;
 }
 
-
-// returns true iff a record was added
+/**
+ * @returns true iff a record was added
+ */
 export async function fetchAndUpsertRecord(domain: string, selector: string, prisma: PrismaClient): Promise<boolean> {
 	console.log(`fetching ${selector}._domainkey.${domain}`);
 	const qname = `${selector}._domainkey.${domain}`;
@@ -74,5 +74,3 @@ export async function fetchAndUpsertRecord(domain: string, selector: string, pri
 	});
 	return false;
 }
-
-

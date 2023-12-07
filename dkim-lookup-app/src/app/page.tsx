@@ -1,4 +1,5 @@
 import { SelectorResult } from '@/components/SelectorResult';
+import { fetchAndUpsertRecord } from '@/lib/fetch_and_upsert';
 import { PrismaClient, Prisma, DkimRecord } from '@prisma/client'
 
 function parseDkimRecord(dkimValue: string): Record<string, string | null> {
@@ -69,6 +70,17 @@ const SearchForm: React.FC<SearchFormProps> = ({ domainQuery }) => {
 	);
 };
 
+async function findRecords(domainQuery: string, prisma: PrismaClient): Promise<DkimRecord[]> {
+	return await prisma.dkimRecord.findMany({
+		where: {
+			dkimDomain: {
+				equals: domainQuery,
+				mode: Prisma.QueryMode.insensitive,
+			},
+		},
+	});
+}
+
 export default async function Home({ searchParams }: {
 	searchParams: { [key: string]: string | string[] | undefined }
 }) {
@@ -76,14 +88,14 @@ export default async function Home({ searchParams }: {
 	const domainQuery = searchParams?.domain?.toString();
 	let records: DkimRecord[] = [];
 	if (domainQuery) {
-		records = await prisma.dkimRecord.findMany({
-			where: {
-				dkimDomain: {
-					equals: domainQuery,
-					mode: Prisma.QueryMode.insensitive,
-				},
-			},
-		})
+		records = await findRecords(domainQuery, prisma);
+		let updated = false;
+		for (const record of records) {
+			updated = updated || await fetchAndUpsertRecord(record.dkimDomain, record.dkimSelector, prisma);
+		}
+		if (updated) {
+			records = await findRecords(domainQuery, prisma);
+		}
 	}
 
 	records = records.filter((record) => dkimValueHasPrivateKey(record.value));
