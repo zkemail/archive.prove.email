@@ -33,21 +33,19 @@ interface DnsDkimFetchResult {
 	timestamp: Date;
 }
 
-async function fetchDkimRecordsFromDns(domainSelectorsDict: Record<string, string[]>): Promise<DnsDkimFetchResult[]> {
-	const res: DnsDkimFetchResult[] = [];
+async function fetchDkimRecordsFromDns(domainSelectorsDict: Record<string, string[]>) {
 	for (const domain in domainSelectorsDict) {
 		for (const selector of domainSelectorsDict[domain]) {
 			console.log(`fetching ${selector}._domainkey.${domain}`);
 			const qname = `${selector}._domainkey.${domain}`;
-			try {
-				let response = await dnsPromises.resolve(qname, 'TXT');
+			dnsPromises.resolve(qname, 'TXT').then((response) => {
 				if (response.length === 0) {
 					console.log(`warning: no records found for ${qname}`);
-					continue
+					return;
 				}
 				if (response.length > 1) {
 					console.log(`warning: > 1 record found for ${qname}, using first one`);
-					continue
+					return;
 				}
 				const dkimData = response[0].join('');
 				const dkimRecord: DnsDkimFetchResult = {
@@ -56,49 +54,50 @@ async function fetchDkimRecordsFromDns(domainSelectorsDict: Record<string, strin
 					value: dkimData,
 					timestamp: new Date(),
 				};
-				res.push(dkimRecord);
-			}
-			catch (e) {
+				addRecordToDb(dkimRecord);
+			}).catch((e) => {
 				console.log(`warning: dns resolver error: ${e}`);
-				continue;
-			}
+			});
 		}
 	}
-	return res;
+}
+
+async function addRecordToDb(record: DnsDkimFetchResult) {
+	let currentRecord = await prisma.dkimRecord.findFirst({
+		where: {
+			dkimDomain: {
+				equals: record.domain,
+				mode: Prisma.QueryMode.insensitive,
+			},
+			dkimSelector: {
+				equals: record.selector,
+				mode: Prisma.QueryMode.insensitive,
+			},
+			value: record.value
+		},
+	})
+	if (currentRecord) {
+		console.log(`record already exists: ${record.domain} ${record.selector}`);
+		return;
+	}
+
+	prisma.dkimRecord.create({
+		data: {
+			dkimDomain: record.domain,
+			dkimSelector: record.selector,
+			value: record.value,
+			fetchedAt: record.timestamp,
+		},
+	}).then((record) => {
+		console.log(`created record ${record.dkimDomain} ${record.dkimSelector}`);
+	}).catch((e) => {
+		console.log(`could not create record: ${e}`);
+	})
 }
 
 async function addRecordsToDb(records: DnsDkimFetchResult[]) {
 	for (let record of records) {
-		let currentRecord = await prisma.dkimRecord.findFirst({
-			where: {
-				dkimDomain: {
-					equals: record.domain,
-					mode: Prisma.QueryMode.insensitive,
-				},
-				dkimSelector: {
-					equals: record.selector,
-					mode: Prisma.QueryMode.insensitive,
-				},
-				value: record.value
-			},
-		})
-		if (currentRecord) {
-			console.log(`record already exists: ${record.domain} ${record.selector}`);
-			continue
-		}
-
-		prisma.dkimRecord.create({
-			data: {
-				dkimDomain: record.domain,
-				dkimSelector: record.selector,
-				value: record.value,
-				fetchedAt: record.timestamp,
-			},
-		}).then((record) => {
-			console.log(`created record ${record.dkimDomain} ${record.dkimSelector}`);
-		}).catch((e) => {
-			console.log(`could not create record: ${e}`);
-		})
+		await addRecordToDb(record);
 	}
 }
 
@@ -115,11 +114,7 @@ function main() {
 		load_domains_and_selectors_from_tsv(domainSelectorsDict, file);
 	}
 	console.log('fetching dkim records from dns');
-	fetchDkimRecordsFromDns(domainSelectorsDict).then((records) => {
-		console.log(`fetched ${records.length} records from dns`);
-		console.log('adding records to database');
-		addRecordsToDb(records);
-	});
+	fetchDkimRecordsFromDns(domainSelectorsDict);
 }
 
 main();
