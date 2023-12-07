@@ -1,7 +1,6 @@
 import dns from 'dns';
 import { Prisma, PrismaClient } from '@prisma/client'
 const dnsPromises = dns.promises;
-const prisma = new PrismaClient()
 
 function load_domains_and_selectors_from_tsv(outputDict: { [domain: string]: string[] }, filename: string): void {
 	const fs = require('fs');
@@ -34,7 +33,7 @@ interface DnsDkimFetchResult {
 }
 
 // returns true iff a record was added
-async function fetchAndAddRecord(domain: string, selector: string): Promise<boolean> {
+async function fetchAndAddRecord(domain: string, selector: string, prisma: PrismaClient): Promise<boolean> {
 	console.log(`fetching ${selector}._domainkey.${domain}`);
 	const qname = `${selector}._domainkey.${domain}`;
 	dnsPromises.resolve(qname, 'TXT').then((response) => {
@@ -53,23 +52,23 @@ async function fetchAndAddRecord(domain: string, selector: string): Promise<bool
 			value: dkimData,
 			timestamp: new Date(),
 		};
-		return addRecordToDb(dkimRecord);
+		return addRecordToDb(dkimRecord, prisma);
 	}).catch((e) => {
 		console.log(`warning: dns resolver error: ${e}`);
 	});
 	return false;
 }
 
-async function fetchDkimRecordsFromDns(domainSelectorsDict: Record<string, string[]>) {
+async function fetchDkimRecordsFromDns(domainSelectorsDict: Record<string, string[]>, prisma: PrismaClient) {
 	for (const domain in domainSelectorsDict) {
 		for (const selector of domainSelectorsDict[domain]) {
-			await fetchAndAddRecord(domain, selector);
+			await fetchAndAddRecord(domain, selector, prisma);
 		}
 	}
 }
 
 // returns true iff a record was added
-async function addRecordToDb(record: DnsDkimFetchResult): Promise<boolean> {
+async function addRecordToDb(record: DnsDkimFetchResult, prisma: PrismaClient): Promise<boolean> {
 	let currentRecord = await prisma.dkimRecord.findFirst({
 		where: {
 			dkimDomain: {
@@ -116,8 +115,9 @@ function main() {
 		console.log(`loading domains and selectors from ${file}`);
 		load_domains_and_selectors_from_tsv(domainSelectorsDict, file);
 	}
+	const prisma = new PrismaClient()
 	console.log('fetching dkim records from dns');
-	fetchDkimRecordsFromDns(domainSelectorsDict);
+	fetchDkimRecordsFromDns(domainSelectorsDict, prisma);
 }
 
 main();
