@@ -19,6 +19,8 @@ yarn dev
 
 ## Fetch DKIM keys from DNS and upload to database
 
+The ```update_records``` script reads a list of domains and selectors, fetches the corresponding DKIM records via DNS lookup, and publishes the results to a database.
+
 ```
 yarn update_records domains_and_selectors.tsv
 ```

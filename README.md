@@ -11,11 +11,7 @@ Website for searching archived DKIM selectors. It also contains a tool (`yarn up
 
 See [dkim-lookup-app](dkim-lookup-app/)
 
-### Fetch and upload script
-
-The ```publish_records.py``` tool reads a list of domains and selectors, fetches the corresponding DKIM records via DNS lookup, and publishes the results to a database
-
 ### Mbox selector scraper
 
 As a complement to [Gmail Metadata Scraper](https://github.com/zkemail/selector-scraper),
-the ```mbox_selector_scraper.py``` tool allows for fetching domains and selectors from emails from any provider via the mbox format.
+the [mbox selector scraper](mbox_selector_scraper.py) allows for fetching domains and selectors from emails from any provider via the mbox format.
