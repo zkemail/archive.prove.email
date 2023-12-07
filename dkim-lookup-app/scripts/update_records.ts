@@ -33,7 +33,7 @@ interface DnsDkimFetchResult {
 }
 
 // returns true iff a record was added
-async function fetchAndAddRecord(domain: string, selector: string, prisma: PrismaClient): Promise<boolean> {
+async function fetchAndUpsertRecord(domain: string, selector: string, prisma: PrismaClient): Promise<boolean> {
 	console.log(`fetching ${selector}._domainkey.${domain}`);
 	const qname = `${selector}._domainkey.${domain}`;
 	dnsPromises.resolve(qname, 'TXT').then((response) => {
@@ -52,7 +52,7 @@ async function fetchAndAddRecord(domain: string, selector: string, prisma: Prism
 			value: dkimData,
 			timestamp: new Date(),
 		};
-		return addRecordToDb(dkimRecord, prisma);
+		return upsertRecord(dkimRecord, prisma);
 	}).catch((e) => {
 		console.log(`warning: dns resolver error: ${e}`);
 	});
@@ -62,13 +62,13 @@ async function fetchAndAddRecord(domain: string, selector: string, prisma: Prism
 async function fetchDkimRecordsFromDns(domainSelectorsDict: Record<string, string[]>, prisma: PrismaClient) {
 	for (const domain in domainSelectorsDict) {
 		for (const selector of domainSelectorsDict[domain]) {
-			await fetchAndAddRecord(domain, selector, prisma);
+			await fetchAndUpsertRecord(domain, selector, prisma);
 		}
 	}
 }
 
 // returns true iff a record was added
-async function addRecordToDb(record: DnsDkimFetchResult, prisma: PrismaClient): Promise<boolean> {
+async function upsertRecord(record: DnsDkimFetchResult, prisma: PrismaClient): Promise<boolean> {
 	let currentRecord = await prisma.dkimRecord.findFirst({
 		where: {
 			dkimDomain: {
