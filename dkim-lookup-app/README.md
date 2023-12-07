@@ -23,7 +23,8 @@ yarn dev
 yarn update_records domains_and_selectors.tsv
 ```
 
-A tsv file with domains and selectors can be created with ```mbox_to_tsv.py```
+A TSV file with domains and selectors can be created with the [mbox selector scraper](../mbox_selector_scraper.py)
+or with [Gmail Metadata Scraper](https://github.com/zkemail/selector-scraper)
 
 ## Database management
 

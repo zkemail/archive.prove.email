@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-# extracts DKIM domains and selectors from mbox files and output them as TSV
-# usage: mbox_to_tsv.py file1.mbox [file2.mbox ...] > output.tsv
+# extracts DKIM domains and selectors from mbox files and outputs them as TSV
+# usage: mbox_selector_scraper.py file1.mbox [file2.mbox ...] > output.tsv
 
 import sys
 import mailbox
@@ -46,7 +46,7 @@ def main():
 	domainSelectorsDict = {}
 	mboxFiles = sys.argv[1:]
 	if len(mboxFiles) == 0:
-		print('usage: mbox_to_tsv.py file1.mbox [file2.mbox ...] > output.tsv')
+		print('usage: mbox_selector_scraper.py file1.mbox [file2.mbox ...] > output.tsv')
 		sys.exit(1)
 	for f in mboxFiles:
 		print(f'processing {f}', file=sys.stderr)
