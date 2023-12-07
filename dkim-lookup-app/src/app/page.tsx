@@ -29,7 +29,7 @@ const DomainSearchResults: React.FC<DomainSearchResultProps> = ({ records, domai
 	}
 	return (
 		<div>
-			<p className='p-4'>Search results for "{domainQuery}"</p>
+			<p className='p-4'>Search results for <b>{domainQuery}</b></p>
 			<div className='dkim-records'>
 				{records.map((record) => (
 					<SelectorResult key={record.id} record={record} />
@@ -59,7 +59,7 @@ const SearchForm: React.FC<SearchFormProps> = ({ domainQuery }) => {
 					defaultValue={domainQuery}
 				/>
 				<button
-					className='rounded-md text-white bg-sky-600 px-3 py-1.5'
+					className='rounded-md text-white bg-sky-600 hover:bg-sky-500 px-3 py-1.5'
 					type="submit"
 				>
 					Search
