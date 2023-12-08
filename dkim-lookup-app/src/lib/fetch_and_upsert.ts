@@ -22,6 +22,18 @@ function recordToString(record: DkimRecord): string {
 	return `#${record.id}, "${valueTruncated}"`;
 }
 
+async function updateSelectorTimestamp(selector: Selector, timestamp: Date, prisma: PrismaClient) {
+	let updatedSelector = await prisma.selector.update({
+		where: {
+			id: selector.id
+		},
+		data: {
+			lastRecordUpdate: timestamp
+		}
+	})
+	console.log(`updated selector ${selectorToString(updatedSelector)}`);
+}
+
 async function upsertRecord(newRecord: DnsDkimFetchResult, prisma: PrismaClient): Promise<boolean> {
 	let currentSelector = await prisma.selector.findFirst({
 		where: {
@@ -53,6 +65,7 @@ async function upsertRecord(newRecord: DnsDkimFetchResult, prisma: PrismaClient)
 	})
 	if (currentRecord) {
 		console.log(`record already exists: ${recordToString(currentRecord)} for selector ${selectorToString(currentSelector)}`);
+		updateSelectorTimestamp(currentSelector, new Date(), prisma);
 		return false;
 	}
 
@@ -65,15 +78,7 @@ async function upsertRecord(newRecord: DnsDkimFetchResult, prisma: PrismaClient)
 	})
 	console.log(`created dkim record ${recordToString(dkimRecord)} for selector ${selectorToString(currentSelector)}`);
 
-	let selector = await prisma.selector.update({
-		where: {
-			id: currentSelector.id
-		},
-		data: {
-			lastRecordUpdate: dkimRecord.fetchedAt
-		}
-	})
-	console.log(`updated selector ${selectorToString(selector)}`);
+	updateSelectorTimestamp(currentSelector, dkimRecord.fetchedAt, prisma);
 	return false;
 }
 
