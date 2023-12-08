@@ -2,6 +2,8 @@ import { SelectorResult } from '@/components/SelectorResult';
 import { fetchAndUpsertRecord } from '@/lib/fetch_and_upsert';
 import { PrismaClient, Prisma, DkimRecord } from '@prisma/client'
 
+const prisma = new PrismaClient();
+
 function parseDkimRecord(dkimValue: string): Record<string, string | null> {
 	const result: Record<string, string | null> = {};
 	const parts = dkimValue.split(';');
@@ -84,7 +86,6 @@ async function findRecords(domainQuery: string, prisma: PrismaClient): Promise<D
 export default async function Home({ searchParams }: {
 	searchParams: { [key: string]: string | string[] | undefined }
 }) {
-	const prisma = new PrismaClient()
 	const domainQuery = searchParams?.domain?.toString();
 	let records: DkimRecord[] = [];
 	if (domainQuery) {
