@@ -41,7 +41,7 @@ const DomainSearchResults: React.FC<DomainSearchResultProps> = ({ records, domai
 	if (!domainQuery) {
 		return <p>Enter a search term</p>
 	};
-	if (!records) {
+	if (!records?.length) {
 		return <p>No records found for "{domainQuery}"</p>
 	}
 	return (
