@@ -12,7 +12,7 @@ interface DnsDkimFetchResult {
 }
 
 function selectorToString(selector: Selector): string {
-	return `#${selector.id}, ${selector.domain}, ${selector.selectorName}`;
+	return `#${selector.id}, ${selector.domain}, ${selector.name}`;
 }
 
 function recordToString(record: DkimRecord): string {
@@ -29,7 +29,7 @@ async function upsertRecord(newRecord: DnsDkimFetchResult, prisma: PrismaClient)
 				equals: newRecord.domain,
 				mode: Prisma.QueryMode.insensitive,
 			},
-			selectorName: {
+			name: {
 				equals: newRecord.selector,
 				mode: Prisma.QueryMode.insensitive
 			}
@@ -39,7 +39,7 @@ async function upsertRecord(newRecord: DnsDkimFetchResult, prisma: PrismaClient)
 		currentSelector = await prisma.selector.create({
 			data: {
 				domain: newRecord.domain,
-				selectorName: newRecord.selector
+				name: newRecord.selector
 			}
 		})
 		console.log(`created selector ${selectorToString(currentSelector)}`);

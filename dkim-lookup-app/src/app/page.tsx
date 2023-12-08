@@ -8,7 +8,7 @@ export type RecordWithSelector = ({
 	selector: {
 		id: number;
 		domain: string;
-		selectorName: string;
+		name: string;
 		lastRecordUpdate: Date | null;
 	};
 } & {
@@ -111,7 +111,7 @@ export default async function Home({ searchParams }: {
 		records = await findRecords(domainQuery, prisma);
 		let updated = false;
 		for (const record of records) {
-			updated = updated || await fetchAndUpsertRecord(record.selector.domain, record.selector.selectorName, prisma);
+			updated = updated || await fetchAndUpsertRecord(record.selector.domain, record.selector.name, prisma);
 		}
 		if (updated) {
 			records = await findRecords(domainQuery, prisma);

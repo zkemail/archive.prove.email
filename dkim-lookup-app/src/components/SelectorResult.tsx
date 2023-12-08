@@ -23,7 +23,7 @@ interface SelectorResultProps {
 export const SelectorResult: React.FC<SelectorResultProps> = ({ record }) => {
 	return (
 		<Card>
-			<Row label='Selector:'>{record.selector.selectorName}</Row>
+			<Row label='Selector:'>{record.selector.name}</Row>
 			<Row label='Fetched date:'>{record.fetchedAt.toLocaleString()}</Row>
 			<Row label='Value:'>
 				<pre className='break-words whitespace-pre-wrap max-w-lg'>{record.value}</pre>
