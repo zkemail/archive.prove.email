@@ -25,7 +25,7 @@ The ```update_records``` script reads a list of domains and selectors, fetches t
 yarn update_records domains_and_selectors.tsv
 ```
 
-A TSV file with domains and selectors can be created with the [mbox selector scraper](../mbox_selector_scraper.py)
+A TSV file with domains and selectors can be created with the [mbox selector scraper](../util/mbox_selector_scraper.py)
 or with [Gmail Metadata Scraper](https://github.com/zkemail/selector-scraper)
 
 ## Database management

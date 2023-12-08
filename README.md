@@ -14,4 +14,4 @@ See [dkim-lookup-app](dkim-lookup-app/)
 ### Mbox selector scraper
 
 As a complement to [Gmail Metadata Scraper](https://github.com/zkemail/selector-scraper),
-the [mbox selector scraper](mbox_selector_scraper.py) allows for fetching domains and selectors from emails from any provider via the mbox format.
+the [mbox selector scraper](util/mbox_selector_scraper.py) allows for fetching domains and selectors from emails from any provider via the mbox format.
