@@ -1,6 +1,6 @@
-import { DkimRecord } from '@prisma/client'
 import { Card } from './layout/Card';
 import { FC, ReactNode } from 'react';
+import { RecordWithSelector } from '@/app/page';
 
 interface RowProps {
 	label: string;
@@ -17,13 +17,13 @@ const Row: FC<RowProps> = ({ label: title, children }) => {
 };
 
 interface SelectorResultProps {
-	record: DkimRecord;
+	record: RecordWithSelector;
 }
 
 export const SelectorResult: React.FC<SelectorResultProps> = ({ record }) => {
 	return (
 		<Card>
-			<Row label='Selector:'>{record.dkimSelector}</Row>
+			<Row label='Selector:'>{record.selector.selectorName}</Row>
 			<Row label='Fetched date:'>{record.fetchedAt.toLocaleString()}</Row>
 			<Row label='Value:'>
 				<pre className='break-words whitespace-pre-wrap max-w-lg'>{record.value}</pre>

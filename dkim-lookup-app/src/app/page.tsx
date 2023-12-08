@@ -1,8 +1,22 @@
 import { SelectorResult } from '@/components/SelectorResult';
 import { fetchAndUpsertRecord } from '@/lib/fetch_and_upsert';
-import { PrismaClient, Prisma, DkimRecord } from '@prisma/client'
+import { PrismaClient, Prisma } from '@prisma/client'
 
 const prisma = new PrismaClient();
+
+export type RecordWithSelector = ({
+	selector: {
+		id: number;
+		domain: string;
+		selectorName: string;
+		lastRecordUpdate: Date | null;
+	};
+} & {
+	id: number;
+	selectorId: number;
+	fetchedAt: Date;
+	value: string;
+});
 
 function parseDkimRecord(dkimValue: string): Record<string, string | null> {
 	const result: Record<string, string | null> = {};
@@ -19,7 +33,7 @@ function dkimValueHasPrivateKey(dkimValue: string): boolean {
 }
 
 interface DomainSearchResultProps {
-	records: DkimRecord[];
+	records: RecordWithSelector[];
 	domainQuery: string | undefined;
 }
 
@@ -72,14 +86,19 @@ const SearchForm: React.FC<SearchFormProps> = ({ domainQuery }) => {
 	);
 };
 
-async function findRecords(domainQuery: string, prisma: PrismaClient): Promise<DkimRecord[]> {
+async function findRecords(domainQuery: string, prisma: PrismaClient): Promise<RecordWithSelector[]> {
 	return await prisma.dkimRecord.findMany({
 		where: {
-			dkimDomain: {
-				equals: domainQuery,
-				mode: Prisma.QueryMode.insensitive,
-			},
+			selector: {
+				domain: {
+					equals: domainQuery,
+					mode: Prisma.QueryMode.insensitive,
+				},
+			}
 		},
+		include: {
+			selector: true
+		}
 	});
 }
 
@@ -87,12 +106,12 @@ export default async function Home({ searchParams }: {
 	searchParams: { [key: string]: string | string[] | undefined }
 }) {
 	const domainQuery = searchParams?.domain?.toString();
-	let records: DkimRecord[] = [];
+	let records: RecordWithSelector[] = [];
 	if (domainQuery) {
 		records = await findRecords(domainQuery, prisma);
 		let updated = false;
 		for (const record of records) {
-			updated = updated || await fetchAndUpsertRecord(record.dkimDomain, record.dkimSelector, prisma);
+			updated = updated || await fetchAndUpsertRecord(record.selector.domain, record.selector.selectorName, prisma);
 		}
 		if (updated) {
 			records = await findRecords(domainQuery, prisma);
