@@ -1,5 +1,5 @@
 import dns from 'dns';
-import { Prisma, PrismaClient } from '@prisma/client'
+import { Prisma, PrismaClient, Selector, DkimRecord } from '@prisma/client'
 
 const dnsPromises = dns.promises;
 
@@ -11,38 +11,69 @@ interface DnsDkimFetchResult {
 	timestamp: Date;
 }
 
-async function upsertRecord(record: DnsDkimFetchResult, prisma: PrismaClient): Promise<boolean> {
+function selectorToString(selector: Selector): string {
+	return `#${selector.id}, ${selector.domain}, ${selector.selectorName}`;
+}
+
+function recordToString(record: DkimRecord): string {
+	let value = record.value;
+	const maxLen = 50;
+	let valueTruncated = (value.length > maxLen) ? value.slice(0, maxLen - 1) + '…' : value;
+	return `#${record.id}, "${valueTruncated}"`;
+}
+
+async function upsertRecord(newRecord: DnsDkimFetchResult, prisma: PrismaClient): Promise<boolean> {
+	let currentSelector = await prisma.selector.findFirst({
+		where: {
+			domain: {
+				equals: newRecord.domain,
+				mode: Prisma.QueryMode.insensitive,
+			},
+			selectorName: {
+				equals: newRecord.selector,
+				mode: Prisma.QueryMode.insensitive
+			}
+		}
+	});
+	if (!currentSelector) {
+		currentSelector = await prisma.selector.create({
+			data: {
+				domain: newRecord.domain,
+				selectorName: newRecord.selector
+			}
+		})
+		console.log(`created selector ${selectorToString(currentSelector)}`);
+	}
+
 	let currentRecord = await prisma.dkimRecord.findFirst({
 		where: {
-			dkimDomain: {
-				equals: record.domain,
-				mode: Prisma.QueryMode.insensitive,
-			},
-			dkimSelector: {
-				equals: record.selector,
-				mode: Prisma.QueryMode.insensitive,
-			},
-			value: record.value
+			selector: currentSelector,
+			value: newRecord.value
 		},
 	})
 	if (currentRecord) {
-		console.log(`record already exists: ${record.domain} ${record.selector}`);
+		console.log(`record already exists: ${recordToString(currentRecord)} for selector ${selectorToString(currentSelector)}`);
 		return false;
 	}
 
-	prisma.dkimRecord.create({
+	let dkimRecord = await prisma.dkimRecord.create({
 		data: {
-			dkimDomain: record.domain,
-			dkimSelector: record.selector,
-			value: record.value,
-			fetchedAt: record.timestamp,
+			selectorId: currentSelector.id,
+			value: newRecord.value,
+			fetchedAt: newRecord.timestamp,
 		},
-	}).then((record) => {
-		console.log(`created record ${record.dkimDomain} ${record.dkimSelector}`);
-		return true;
-	}).catch((e) => {
-		console.log(`could not create record: ${e}`);
 	})
+	console.log(`created dkim record ${recordToString(dkimRecord)} for selector ${selectorToString(currentSelector)}`);
+
+	let selector = await prisma.selector.update({
+		where: {
+			id: currentSelector.id
+		},
+		data: {
+			lastRecordUpdate: dkimRecord.fetchedAt
+		}
+	})
+	console.log(`updated selector ${selectorToString(selector)}`);
 	return false;
 }
 
