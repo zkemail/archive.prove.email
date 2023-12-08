@@ -6,6 +6,10 @@ body {
   background: #fafbfd;
 }
 
+html {
+  @apply text-pagetext
+}
+
 a {
   color: #0784c0;
 }

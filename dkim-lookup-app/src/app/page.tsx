@@ -123,7 +123,7 @@ export default async function Home({ searchParams }: {
 	return (
 		<main className="flex min-h-screen flex-col items-center">
 			<h1 className='p-8 text-xl font-bold'>
-				DKIM Lookup
+				<a href='/' className='text-pagetext hover:text-pagetext'>DKIM Lookup</a>
 			</h1>
 			<SearchForm domainQuery={domainQuery} />
 			<DomainSearchResults records={records} domainQuery={domainQuery} />
