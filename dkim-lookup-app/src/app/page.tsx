@@ -1,22 +1,10 @@
 import { SelectorResult } from '@/components/SelectorResult';
 import { fetchAndUpsertRecord } from '@/lib/fetch_and_upsert';
-import { PrismaClient, Prisma } from '@prisma/client'
+import { PrismaClient, Prisma, DkimRecord, Selector } from '@prisma/client'
 
 const prisma = new PrismaClient();
 
-export type RecordWithSelector = ({
-	selector: {
-		id: number;
-		domain: string;
-		name: string;
-		lastRecordUpdate: Date | null;
-	};
-} & {
-	id: number;
-	selectorId: number;
-	fetchedAt: Date;
-	value: string;
-});
+export type RecordWithSelector = (DkimRecord & { selector: Selector });
 
 function parseDkimRecord(dkimValue: string): Record<string, string | null> {
 	const result: Record<string, string | null> = {};
