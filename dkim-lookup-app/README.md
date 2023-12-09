@@ -2,16 +2,23 @@
 
 A website that lets the user search for a domain and returns archived DKIM selectors and keys for that domain
 
-## Setup
+## Local development
 
 ```bash
 yarn install
 ```
 
+Access to a [PostgreSQL](https://www.postgresql.org/) database is needed for development.
+
 Copy `.env.example` to `.env` and configure the variables
 
+Initialize the database from `schema.prisma`
 
-## Running the development server
+```bash
+yarn prisma db push
+```
+
+Start the development server
 
 ```bash
 yarn dev
@@ -30,19 +37,21 @@ or with [Gmail Metadata Scraper](https://github.com/zkemail/selector-scraper)
 
 ## Database management
 
-Create the database from `schema.prisma`
-
-```bash
-yarn prisma db push
-```
-
 Start the Prisma Studio database manager
 
 ```bash
 yarn prisma db studio
 ```
 
-Calling the cron job on local development server
+Resetting the database
+
+```bash
+yarn prisma migrate reset
+```
+
+## Batch update cron job
+
+Calling the `batch_update`` cron job on local development server
 
 ```bash
 curl http://localhost:3000/api/batch_update -H "Accept: application/json" -H "Authorization: Bearer $CRON_SECRET"
