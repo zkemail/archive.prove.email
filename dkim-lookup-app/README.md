@@ -8,7 +8,7 @@ A website that lets the user search for a domain and returns archived DKIM selec
 yarn install
 ```
 
-Copy `.env.example` to `.env` and configure database URLs
+Copy `.env.example` to `.env` and configure the variables
 
 
 ## Running the development server
@@ -40,4 +40,10 @@ Start the Prisma Studio database manager
 
 ```bash
 yarn prisma db studio
+```
+
+Calling the cron job on local development server
+
+```bash
+curl http://localhost:3000/api/batch_update -H "Accept: application/json" -H "Authorization: Bearer $CRON_SECRET"
 ```
