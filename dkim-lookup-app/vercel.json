@@ -1,0 +1,8 @@
+{
+	"crons": [
+		{
+			"path": "/api/batch_update",
+			"schedule": "10 17 * * *"
+		}
+	]
+}
