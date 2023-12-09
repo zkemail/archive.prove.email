@@ -7,9 +7,7 @@ and in particular this [issue](https://github.com/zkemail/zk-email-verify/issues
 
 ### DKIM archive website
 
-Website for searching archived DKIM selectors. It also contains a tool (`yarn update_records`) to fetch new keys via DNS.
-
-See [dkim-lookup-app](dkim-lookup-app/)
+Website for searching archived DKIM selectors. See [dkim-lookup-app](dkim-lookup-app/)
 
 ### Mbox selector scraper
 
