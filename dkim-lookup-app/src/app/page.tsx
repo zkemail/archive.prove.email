@@ -1,10 +1,9 @@
 import { SelectorResult } from '@/components/SelectorResult';
+import { RecordWithSelector, findRecords } from '@/lib/db';
 import { fetchAndUpsertRecord } from '@/lib/fetch_and_upsert';
-import { PrismaClient, Prisma, DkimRecord, Selector } from '@prisma/client'
+import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient();
-
-export type RecordWithSelector = (DkimRecord & { selector: Selector });
 
 function parseDkimRecord(dkimValue: string): Record<string, string | null> {
 	const result: Record<string, string | null> = {};
@@ -73,22 +72,6 @@ const SearchForm: React.FC<SearchFormProps> = ({ domainQuery }) => {
 		</div>
 	);
 };
-
-async function findRecords(domainQuery: string, prisma: PrismaClient): Promise<RecordWithSelector[]> {
-	return await prisma.dkimRecord.findMany({
-		where: {
-			selector: {
-				domain: {
-					equals: domainQuery,
-					mode: Prisma.QueryMode.insensitive,
-				},
-			}
-		},
-		include: {
-			selector: true
-		}
-	});
-}
 
 export default async function Home({ searchParams }: {
 	searchParams: { [key: string]: string | string[] | undefined }

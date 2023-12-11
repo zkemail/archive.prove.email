@@ -1,6 +1,6 @@
+import { RecordWithSelector } from '@/lib/db';
 import { Card } from './layout/Card';
 import { FC, ReactNode } from 'react';
-import { RecordWithSelector } from '@/app/page';
 
 interface RowProps {
 	label: string;
