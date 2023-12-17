@@ -56,3 +56,9 @@ Calling the `batch_update`` cron job on local development server
 ```bash
 curl http://localhost:3000/api/batch_update -H "Accept: application/json" -H "Authorization: Bearer $CRON_SECRET"
 ```
+
+Calling the `batch_update`` cron job on production server
+
+```bash
+curl https://dkim-lookup.vercel.app/api/batch_update -H "Accept: application/json" -H "Authorization: Bearer $CRON_SECRET"
+```
