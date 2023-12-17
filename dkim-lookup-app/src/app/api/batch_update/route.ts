@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
 			}
 		);
 		for (const result of records) {
-			fetchAndUpsertRecord(result.domain, result.name, prisma);
+			await fetchAndUpsertRecord(result.domain, result.name, prisma);
 		}
 		return NextResponse.json(
 			{ updatedRecords: records },
