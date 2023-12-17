@@ -1,8 +1,7 @@
 import dns from 'dns';
 import { Prisma, PrismaClient, Selector, DkimRecord } from '@prisma/client'
 
-const dnsPromises = dns.promises;
-
+let resolver = new dns.promises.Resolver({ timeout: 2500 });
 
 interface DnsDkimFetchResult {
 	domain: string;
@@ -96,7 +95,7 @@ export async function fetchAndUpsertRecord(domain: string, selector: string, pri
 	const qname = `${selector}._domainkey.${domain}`;
 
 	try {
-		let response = await dnsPromises.resolve(qname, 'TXT');
+		let response = await resolver.resolve(qname, 'TXT');
 		if (response.length === 0) {
 			console.log(`warning: no records found for ${qname}`);
 			return false;
@@ -119,7 +118,7 @@ export async function fetchAndUpsertRecord(domain: string, selector: string, pri
 		updateSelectorTimestamp(selectorInDb, new Date(), prisma);
 		return updated;
 	}
-	catch(e) {
+	catch (e) {
 		console.log(`fetchAndUpsertRecord error: ${e}`);
 	}
 	return false;
