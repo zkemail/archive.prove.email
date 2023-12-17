@@ -12,11 +12,18 @@ export async function GET(request: NextRequest) {
 		return new Response('Unauthorized', { status: 401 });
 	}
 
+	let numRecords = Number(request.nextUrl.searchParams.get('numRecords') || '10');
+	if (isNaN(numRecords)) {
+		numRecords = 10;
+	}
+
+	console.log(`updating ${numRecords} records`);
+
 	try {
 		const records = await prisma.selector.findMany(
 			{
 				orderBy: { lastRecordUpdate: 'asc' },
-				take: 10
+				take: numRecords,
 			}
 		);
 		for (const result of records) {
