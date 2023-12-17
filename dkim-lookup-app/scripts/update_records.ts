@@ -1,3 +1,4 @@
+import { createPrismaClient } from '@/lib/db';
 import { fetchAndUpsertRecord } from '@/lib/fetch_and_upsert';
 import { PrismaClient } from '@prisma/client'
 
@@ -44,7 +45,7 @@ function main() {
 		console.log(`loading domains and selectors from ${file}`);
 		load_domains_and_selectors_from_tsv(domainSelectorsDict, file);
 	}
-	const prisma = new PrismaClient()
+	const prisma = createPrismaClient();
 	console.log('fetching dkim records from dns');
 	fetchDkimRecordsFromDns(domainSelectorsDict, prisma);
 }

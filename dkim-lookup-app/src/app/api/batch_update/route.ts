@@ -1,9 +1,9 @@
+import { createPrismaClient } from '@/lib/db';
 import { fetchAndUpsertRecord } from '@/lib/fetch_and_upsert';
-import { PrismaClient } from '@prisma/client';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 export async function GET(request: NextRequest) {
 
