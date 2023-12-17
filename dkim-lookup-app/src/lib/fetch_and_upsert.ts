@@ -31,19 +31,18 @@ async function updateSelectorTimestamp(selector: Selector, timestamp: Date, pris
 			lastRecordUpdate: timestamp
 		}
 	})
-	console.log(`updated selector ${selectorToString(updatedSelector)}`);
+	console.log(`updated selector timestamp ${selectorToString(updatedSelector)}`);
 }
 
-async function upsertRecord(newRecord: DnsDkimFetchResult, prisma: PrismaClient): Promise<boolean> {
-	console.log(`upserting record, ${newRecord.selector}, ${newRecord.domain}`);
+async function findOrCreateSelector(domain: string, selector: string, prisma: PrismaClient): Promise<Selector> {
 	let currentSelector = await prisma.selector.findFirst({
 		where: {
 			domain: {
-				equals: newRecord.domain,
+				equals: domain,
 				mode: Prisma.QueryMode.insensitive,
 			},
 			name: {
-				equals: newRecord.selector,
+				equals: selector,
 				mode: Prisma.QueryMode.insensitive
 			}
 		}
@@ -54,13 +53,18 @@ async function upsertRecord(newRecord: DnsDkimFetchResult, prisma: PrismaClient)
 	else {
 		currentSelector = await prisma.selector.create({
 			data: {
-				domain: newRecord.domain,
-				name: newRecord.selector
+				domain: domain,
+				name: selector
 			}
 		})
 		console.log(`created selector ${selectorToString(currentSelector)}`);
 	}
+	return currentSelector;
+}
 
+async function upsertRecord(newRecord: DnsDkimFetchResult, prisma: PrismaClient): Promise<boolean> {
+	console.log(`upserting record, ${newRecord.selector}, ${newRecord.domain}`);
+	let currentSelector = await findOrCreateSelector(newRecord.domain, newRecord.selector, prisma);
 	let currentRecord = await prisma.dkimRecord.findFirst({
 		where: {
 			selector: currentSelector,
@@ -69,7 +73,6 @@ async function upsertRecord(newRecord: DnsDkimFetchResult, prisma: PrismaClient)
 	})
 	if (currentRecord) {
 		console.log(`record already exists: ${recordToString(currentRecord)} for selector ${selectorToString(currentSelector)}`);
-		updateSelectorTimestamp(currentSelector, new Date(), prisma);
 		return false;
 	}
 	console.log(`creating record for selector ${selectorToString(currentSelector)}`);
@@ -82,9 +85,7 @@ async function upsertRecord(newRecord: DnsDkimFetchResult, prisma: PrismaClient)
 		},
 	})
 	console.log(`created dkim record ${recordToString(dkimRecord)} for selector ${selectorToString(currentSelector)}`);
-
-	updateSelectorTimestamp(currentSelector, dkimRecord.fetchedAt, prisma);
-	return false;
+	return true;
 }
 
 /**
@@ -93,14 +94,16 @@ async function upsertRecord(newRecord: DnsDkimFetchResult, prisma: PrismaClient)
 export async function fetchAndUpsertRecord(domain: string, selector: string, prisma: PrismaClient): Promise<boolean> {
 	console.log(`fetching ${selector}._domainkey.${domain} from dns`);
 	const qname = `${selector}._domainkey.${domain}`;
-	dnsPromises.resolve(qname, 'TXT').then((response) => {
+
+	try {
+		let response = await dnsPromises.resolve(qname, 'TXT');
 		if (response.length === 0) {
 			console.log(`warning: no records found for ${qname}`);
-			return;
+			return false;
 		}
 		if (response.length > 1) {
 			console.log(`warning: > 1 record found for ${qname}, using first one`);
-			return;
+			return false;
 		}
 		console.log(`found dns record for ${qname}`);
 		const dkimData = response[0].join('');
@@ -110,9 +113,14 @@ export async function fetchAndUpsertRecord(domain: string, selector: string, pri
 			value: dkimData,
 			timestamp: new Date(),
 		};
-		return upsertRecord(dkimRecord, prisma);
-	}).catch((e) => {
-		console.log(`warning: dns resolver error: ${e}`);
-	});
+		let updated = await upsertRecord(dkimRecord, prisma);
+		console.log(`updating selector timestamp for ${selector}, ${domain}`);
+		let selectorInDb = await findOrCreateSelector(domain, selector, prisma);
+		updateSelectorTimestamp(selectorInDb, new Date(), prisma);
+		return updated;
+	}
+	catch(e) {
+		console.log(`fetchAndUpsertRecord error: ${e}`);
+	}
 	return false;
 }
