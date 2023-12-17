@@ -35,6 +35,7 @@ async function updateSelectorTimestamp(selector: Selector, timestamp: Date, pris
 }
 
 async function upsertRecord(newRecord: DnsDkimFetchResult, prisma: PrismaClient): Promise<boolean> {
+	console.log(`upserting record, ${newRecord.selector}, ${newRecord.domain}`);
 	let currentSelector = await prisma.selector.findFirst({
 		where: {
 			domain: {
@@ -47,7 +48,10 @@ async function upsertRecord(newRecord: DnsDkimFetchResult, prisma: PrismaClient)
 			}
 		}
 	});
-	if (!currentSelector) {
+	if (currentSelector) {
+		console.log(`found selector ${selectorToString(currentSelector)}`);
+	}
+	else {
 		currentSelector = await prisma.selector.create({
 			data: {
 				domain: newRecord.domain,
@@ -68,6 +72,7 @@ async function upsertRecord(newRecord: DnsDkimFetchResult, prisma: PrismaClient)
 		updateSelectorTimestamp(currentSelector, new Date(), prisma);
 		return false;
 	}
+	console.log(`creating record for selector ${selectorToString(currentSelector)}`);
 
 	let dkimRecord = await prisma.dkimRecord.create({
 		data: {
@@ -86,7 +91,7 @@ async function upsertRecord(newRecord: DnsDkimFetchResult, prisma: PrismaClient)
  * @returns true iff a record was added
  */
 export async function fetchAndUpsertRecord(domain: string, selector: string, prisma: PrismaClient): Promise<boolean> {
-	console.log(`fetching ${selector}._domainkey.${domain}`);
+	console.log(`fetching ${selector}._domainkey.${domain} from dns`);
 	const qname = `${selector}._domainkey.${domain}`;
 	dnsPromises.resolve(qname, 'TXT').then((response) => {
 		if (response.length === 0) {
@@ -97,6 +102,7 @@ export async function fetchAndUpsertRecord(domain: string, selector: string, pri
 			console.log(`warning: > 1 record found for ${qname}, using first one`);
 			return;
 		}
+		console.log(`found dns record for ${qname}`);
 		const dkimData = response[0].join('');
 		const dkimRecord: DnsDkimFetchResult = {
 			selector,
