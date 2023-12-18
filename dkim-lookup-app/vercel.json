@@ -2,7 +2,7 @@
 	"crons": [
 		{
 			"path": "/api/batch_update?numRecords=50",
-			"schedule": "10 17 * * *"
+			"schedule": "10 12 * * *"
 		}
 	]
 }
