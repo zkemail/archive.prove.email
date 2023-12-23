@@ -5,6 +5,23 @@ import type { NextRequest } from 'next/server';
 
 const prisma = createPrismaClient();
 
+
+function getNumRecords() {
+	let takeParam = process.env.BATCH_UPDATE_NUM_RECORDS;
+	if (takeParam) {
+		console.log(`using process.env.BATCH_UPDATE_NUM_RECORDS: ${takeParam}`);
+		let take = Number(takeParam);
+		if (isNaN(take)) {
+			console.log(`invalid process.env.BATCH_UPDATE_NUM_RECORDS: ${takeParam}, using 0`);
+			return 0;
+		}
+		return take;
+	} else {
+		console.log('process.env.BATCH_UPDATE_NUM_RECORDS not set, using 0');
+		return 0;
+	}
+}
+
 export async function GET(request: NextRequest) {
 
 	const authHeader = request.headers.get('authorization');
@@ -12,10 +29,7 @@ export async function GET(request: NextRequest) {
 		return new Response('Unauthorized', { status: 401 });
 	}
 
-	let numRecords = Number(request.nextUrl.searchParams.get('numRecords') || '10');
-	if (isNaN(numRecords)) {
-		numRecords = 10;
-	}
+	let numRecords = getNumRecords();
 
 	console.log(`updating ${numRecords} records`);
 

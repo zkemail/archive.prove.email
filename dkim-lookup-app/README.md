@@ -54,7 +54,8 @@ yarn prisma migrate reset
 
 
 A Vercel cron job is configured in `dkim-lookup-app/vercel.json` to call the API endpoint `/api/batch_update` at regular intervals.
-The function updates the *numRecords* oldest database records via DNS lookups.
+The function updates the *N* oldest database records via DNS lookups.
+Enable the feature by defining *N* through the `BATCH_UPDATE_NUM_RECORDS` environment variable.
 
 To manually call `batch_update` on a local development server, run:
 
