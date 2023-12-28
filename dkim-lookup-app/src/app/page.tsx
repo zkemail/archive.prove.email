@@ -76,18 +76,7 @@ export default async function Home({ searchParams }: {
 	searchParams: { [key: string]: string | string[] | undefined }
 }) {
 	const domainQuery = searchParams?.domain?.toString();
-	let records: RecordWithSelector[] = [];
-	if (domainQuery) {
-		records = await findRecords(domainQuery, prisma);
-		let updated = false;
-		for (const record of records) {
-			updated = updated || await fetchAndUpsertRecord(record.selector.domain, record.selector.name, prisma);
-		}
-		if (updated) {
-			records = await findRecords(domainQuery, prisma);
-		}
-	}
-
+	let records = domainQuery ? (await findRecords(domainQuery, prisma)) : []
 	records = records.filter((record) => dkimValueHasPrivateKey(record.value));
 
 	return (
