@@ -8,7 +8,7 @@ import collections
 
 
 def main():
-	domainSelectorDict = collections.defaultdict(list)
+	domainSelectorDict: dict[str, list[str]] = collections.defaultdict(list)
 	if len(sys.argv) != 2:
 		print('usage: selector_statistics.py file.tsv')
 		sys.exit(1)

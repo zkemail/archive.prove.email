@@ -7,11 +7,11 @@ import sys
 import mailbox
 
 
-def decode_dkim_header_field(dkimData):
+def decode_dkim_header_field(dkimData: str):
 	# decode a DKIM-Signature header field such as "v=1; a=rsa-sha256; d=example.net; s=brisbane;"
 	# to a dictionary such as {'v': '1', 'a': 'rsa-sha256', 'd': 'example.net', 's': 'brisbane'}
 	tagValuePairStrings = list(map(lambda x: x.strip(), dkimData.split(';')))
-	res = {}
+	res: dict[str, str] = {}
 	for s in tagValuePairStrings:
 		if not s:
 			continue
@@ -22,16 +22,16 @@ def decode_dkim_header_field(dkimData):
 	return res
 
 
-def add_to_dict(dict, domain, selector):
+def add_to_dict(dct: dict[str, list[str]], domain: str, selector: str):
 	if (not selector) or (not domain):
 		return
-	if domain not in dict:
-		dict[domain] = []
-	if selector not in dict[domain]:
-		dict[domain].append(selector)
+	if domain not in dct:
+		dct[domain] = []
+	if selector not in dct[domain]:
+		dct[domain].append(selector)
 
 
-def get_domain_selectors(outputDict, mboxFile):
+def get_domain_selectors(outputDict: dict[str, list[str]], mboxFile: str):
 	for message in mailbox.mbox(mboxFile):
 		dkimSignature = message['DKIM-Signature']
 		if not dkimSignature:
@@ -43,7 +43,7 @@ def get_domain_selectors(outputDict, mboxFile):
 
 
 def main():
-	domainSelectorsDict = {}
+	domainSelectorsDict: dict[str, list[str]] = {}
 	mboxFiles = sys.argv[1:]
 	if len(mboxFiles) == 0:
 		print('usage: mbox_selector_scraper.py file1.mbox [file2.mbox ...] > output.tsv')
