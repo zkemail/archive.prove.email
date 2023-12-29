@@ -21,10 +21,7 @@ def main():
 			domainSelectorDict[selector].append(domain)
 
 	# sort by number of domains
-	domainSelectorDict = dict(
-	    sorted(domainSelectorDict.items(),
-	           key=lambda x: len(x[1]),
-	           reverse=True))
+	domainSelectorDict = dict(sorted(domainSelectorDict.items(), key=lambda x: len(x[1]), reverse=True))
 	for selector, domains in domainSelectorDict.items():
 		print(selector)
 		for domain in domains:
