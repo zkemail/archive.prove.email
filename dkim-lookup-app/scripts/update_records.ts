@@ -36,7 +36,7 @@ async function fetchDkimRecordsFromDns(domainSelectorsDict: Record<string, strin
 function main() {
 	const tsvFiles = process.argv.slice(2);
 	if (tsvFiles.length < 1) {
-		console.log('usage: publish_records.js file1.tsv [file2.tsv ...]');
+		console.log('usage: yarn update_records file1.tsv [file2.tsv ...]');
 		process.exit(1);
 	}
 	console.log('loading domains and selectors');
