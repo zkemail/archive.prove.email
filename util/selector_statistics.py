@@ -22,10 +22,17 @@ def main():
 
 	# sort by number of domains
 	domainSelectorDict = dict(sorted(domainSelectorDict.items(), key=lambda x: len(x[1]), reverse=True))
+
+	print('Selectors and corresponding domains:')
 	for selector, domains in domainSelectorDict.items():
 		print(selector)
 		for domain in domains:
 			print(f'\t{domain}')
+
+	print()
+	print('Selectors and number of domains for each selector:')
+	for selector, domains in domainSelectorDict.items():
+		print(f'{selector}\t{len(domains)}')
 
 
 if __name__ == '__main__':
