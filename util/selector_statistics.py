@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-# load a .tsv file with two columns (domain and selector), group by selector
-# and print the selectors and corresponding domains sorted by the number of domains
+# load a .tsv file with two columns (domain and selector),
+# group by selector and show the number of domains covered
 
 import sys
 import collections
@@ -26,13 +26,20 @@ def main():
 	print('Selectors and corresponding domains:')
 	for selector, domains in domainSelectorDict.items():
 		print(selector)
-		for domain in domains:
-			print(f'\t{domain}')
+		print(f'\t{", ".join(domains)}')
 
 	print()
-	print('Selectors and number of domains for each selector:')
-	for selector, domains in domainSelectorDict.items():
-		print(f'{selector}\t{len(domains)}')
+	print('Selectors, number and percentage of domains for each selector, and accumulated percentage of domains covered when using the N most common selectors:')
+	totalDomains = sum(len(domains) for domains in domainSelectorDict.values())
+	accumulatedDomains = 0
+	for index, (selector, domains) in enumerate(domainSelectorDict.items()):
+		if len(domains) <= 1:
+			break
+		oneBasedIndex = index + 1
+		domainsPercentage = len(domains) / totalDomains * 100
+		accumulatedDomains += len(domains)
+		accumulatedDomainsPercentage = accumulatedDomains / totalDomains * 100
+		print(f'{oneBasedIndex}: {selector}, {len(domains)} domains ({domainsPercentage:.1f}%), accumulated: {accumulatedDomainsPercentage:.1f}%')
 
 
 if __name__ == '__main__':
