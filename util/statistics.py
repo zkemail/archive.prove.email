@@ -81,7 +81,8 @@ def selector_statistics(tsvFile: str):
 if __name__ == '__main__':
 	argparser = argparse.ArgumentParser(description='Collect various statistics about domains, selectors, and DKIM signatures')
 	argparser.add_argument('--mboxFile', help='Show statistics about DKIM sigatures and domains for an .mbox file')
-	argparser.add_argument('--tsvFile',  help='For a .tsv file with two columns(domain, selector), show a list of selectors, with percentage of domains convered for each selector. Also print accumulated percentage of domains covered when using the N most common selectors')
+	tsvHelp = 'For a .tsv file with two columns(domain, selector), show a list of selectors, with percentage of domains convered for each selector. Also print accumulated percentage of domains covered when using the N most common selectors'
+	argparser.add_argument('--tsvFile',  help=tsvHelp)
 	args = argparser.parse_args()
 
 	if (not args.mboxFile and not args.tsvFile):
