@@ -67,29 +67,21 @@ def selector_statistics(tsvFile: str):
 	# sort by number of domains
 	domainSelectorDict = dict(sorted(domainSelectorDict.items(), key=lambda x: len(x[1]), reverse=True))
 
-	print('Selectors and corresponding domains:')
-	for selector, domains in domainSelectorDict.items():
-		print(selector)
-		print(f'\t{", ".join(domains)}')
-
-	print()
-	print('Selectors, number and percentage of domains for each selector, and accumulated percentage of domains covered when using the N most common selectors:')
 	totalDomains = sum(len(domains) for domains in domainSelectorDict.values())
 	accumulatedDomains = 0
-	for index, (selector, domains) in enumerate(domainSelectorDict.items()):
+	for selector, domains in domainSelectorDict.items():
 		if len(domains) <= 1:
 			break
-		oneBasedIndex = index + 1
 		domainsPercentage = len(domains) / totalDomains * 100
 		accumulatedDomains += len(domains)
 		accumulatedDomainsPercentage = accumulatedDomains / totalDomains * 100
-		print(f'{oneBasedIndex}: {selector}, {len(domains)} domains ({domainsPercentage:.1f}%), accumulated: {accumulatedDomainsPercentage:.1f}%')
+		print(f'{selector}\t{len(domains)} domains ({domainsPercentage:.1f}%), accumulated: {accumulatedDomainsPercentage:.1f}%')
 
 
 if __name__ == '__main__':
-	argparser = argparse.ArgumentParser(description='collect various statistics about domains, selectors, and DKIM signatures')
-	argparser.add_argument('--mboxFile', help='show statistics about DKIM sigatures and domains for an .mbox file')
-	argparser.add_argument('--tsvFile', help='show statistics about domains and selectors for a .tsv file with two columns (domain and selector)')
+	argparser = argparse.ArgumentParser(description='Collect various statistics about domains, selectors, and DKIM signatures')
+	argparser.add_argument('--mboxFile', help='Show statistics about DKIM sigatures and domains for an .mbox file')
+	argparser.add_argument('--tsvFile',  help='For a .tsv file with two columns(domain, selector), show a list of selectors, with percentage of domains convered for each selector. Also print accumulated percentage of domains covered when using the N most common selectors')
 	args = argparser.parse_args()
 
 	if (not args.mboxFile and not args.tsvFile):
