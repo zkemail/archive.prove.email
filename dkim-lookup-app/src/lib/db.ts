@@ -1,10 +1,12 @@
 import { PrismaClient, Prisma, DkimRecord, Selector } from '@prisma/client'
 
 export function createPrismaClient(): PrismaClient {
+	let prismaUrl = new URL(process.env.POSTGRES_PRISMA_URL as string);
+	prismaUrl.searchParams.set('pool_timeout', '0');
 	return new PrismaClient({
 		datasources: {
 			db: {
-				url: process.env.POSTGRES_PRISMA_URL + '&pool_timeout=0'
+				url: prismaUrl.toString()
 			},
 		},
 	});
