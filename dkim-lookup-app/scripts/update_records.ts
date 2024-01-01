@@ -1,17 +1,13 @@
 import { createPrismaClient } from '@/lib/db';
 import { fetchAndUpsertRecord } from '@/lib/fetch_and_upsert';
 import { PrismaClient } from '@prisma/client'
+import { readFileSync } from 'node:fs';
 
 function load_domains_and_selectors_from_tsv(outputDict: { [domain: string]: string[] }, filename: string): void {
-	const fs = require('fs');
-	const fileContents = fs.readFileSync(filename, 'utf8');
-	const lines = fileContents.split('\n');
-	for (let [i, line] of lines.entries()) {
-		line = line.trim();
-		if (!line) {
-			continue;
-		}
-		const [domain, selector] = line.split('\t');
+	const fileContents = readFileSync(filename, 'utf8');
+	const lines = fileContents.split('\n').map(line => line.trim()).filter(line => line);
+	for (let i = 0; i < lines.length; i++) {
+		const [domain, selector] = lines[i].split('\t');
 		if (!selector || !domain) {
 			console.error(`error: ${filename} line ${i}, selector or domain is empty`);
 			process.exit(1);
