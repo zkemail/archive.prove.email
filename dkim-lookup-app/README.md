@@ -16,7 +16,7 @@ Copy `.env.example` to `.env` and configure the variables
 Initialize the database from `schema.prisma`
 
 ```bash
-yarn prisma db push
+yarn prisma migrate deploy
 ```
 
 Start the development server
@@ -63,8 +63,8 @@ To manually call `batch_update` on a local development server, run:
 curl http://localhost:3000/api/batch_update -H "Accept: application/json" -H "Authorization: Bearer $CRON_SECRET"
 ```
 
-To manually call `batch_update` on a production server, run:
+To manually call `batch_update` on a production server on example.com, run:
 
 ```bash
-curl https://dkim-lookup.vercel.app/api/batch_update -H "Accept: application/json" -H "Authorization: Bearer $CRON_SECRET"
+curl https://example.com/api/batch_update -H "Accept: application/json" -H "Authorization: Bearer $CRON_SECRET"
 ```
