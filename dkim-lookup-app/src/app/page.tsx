@@ -1,6 +1,5 @@
 import { SelectorResult } from '@/components/SelectorResult';
 import { RecordWithSelector, createPrismaClient, findRecords } from '@/lib/db';
-import { fetchAndUpsertRecord } from '@/lib/fetch_and_upsert';
 
 const prisma = createPrismaClient();
 

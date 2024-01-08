@@ -41,7 +41,12 @@ export async function GET(request: NextRequest) {
 			}
 		);
 		for (const result of records) {
-			await fetchAndUpsertRecord(result.domain, result.name, prisma);
+			try {
+				await fetchAndUpsertRecord(result.domain, result.name, prisma);
+			}
+			catch (error) {
+				console.log(`error updating ${result.domain}, ${result.name}: ${error}`);
+			}
 		}
 		return NextResponse.json(
 			{ updatedRecords: records },

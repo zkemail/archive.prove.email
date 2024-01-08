@@ -24,8 +24,13 @@ async function main() {
 	let newFoundRecords = [];
 	for (const domain of domains) {
 		for (const selector of selectors) {
-			if (await fetchAndUpsertRecord(domain, selector, prisma)) {
-				newFoundRecords.push(`${selector}, ${domain}`);
+			try {
+				if (await fetchAndUpsertRecord(domain, selector, prisma)) {
+					newFoundRecords.push(`${selector}, ${domain}`);
+				}
+			}
+			catch (error) {
+				console.log(`error updating ${domain}, ${selector}: ${error}`);
 			}
 		}
 	}
