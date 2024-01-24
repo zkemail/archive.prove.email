@@ -3,7 +3,7 @@
 import { load_domains_and_selectors_from_tsv } from "@/lib/tsv";
 import axios from "axios";
 import React, { useRef } from "react";
-import { useSession, signIn } from "next-auth/react"
+import { useSession, signIn, signOut } from "next-auth/react"
 
 export default function Page() {
 
@@ -97,9 +97,10 @@ export default function Page() {
 	return (
 		<div className="p-4">
 			{(status == "authenticated" && session?.user?.email) &&
-				<p>Signed in as
-					<span className="font-bold"> {session?.user?.email}</span> – <a href="/api/auth/signout">Sign out</a>
-				</p>
+				<div>
+					Signed in as<span className="font-bold"> {session?.user?.email}</span>
+					<button className="mx-2 border border-black bg-gray-200 p-0.5 px-2 rounded" onClick={() => signOut()}>Sign out</button>
+				</div>
 			}
 			<p>
 				Add records to the database by providing a TSV file with domains and selectors.
