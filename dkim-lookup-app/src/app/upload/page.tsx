@@ -50,20 +50,22 @@ export default function Page() {
 					let url = new URL(baseUrl.toString());
 					url.searchParams.set('domain', domain);
 					url.searchParams.set('selector', selector);
-					await axios.get(url.toString())
+					let result = await axios.get(url.toString())
 						.then(response => {
 							console.log('response.data: ', response.data);
 							logmsg(`${domain} ${selector} ${response.data.message}`);
 							if (scrollDiv.current) {
 								scrollDiv.current.scrollTop = scrollDiv.current.scrollHeight;
 							}
+							return true;
 						}).catch(error => {
 							logmsg(`error calling ${url}`);
 							logmsg(error.message);
-							if (error.response) {
-								logmsg(error.response.data);
-							}
+							return false;
 						});
+					if (!result) {
+						return;
+					}
 				}
 			}
 			logmsg("upload complete");
