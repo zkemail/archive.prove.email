@@ -2,14 +2,16 @@ import { createPrismaClient } from '@/lib/db';
 import { upsertRecord } from '@/lib/fetch_and_upsert';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { getServerSession } from "next-auth/next"
+import { authOptions } from "@/app/auth";
 
 const prisma = createPrismaClient();
 
 export async function GET(request: NextRequest) {
+	const session = await getServerSession(authOptions);
 
-	const authHeader = request.headers.get('authorization');
-	if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-		return new Response('Unauthorized', { status: 401 });
+	if (!session) {
+		return new Response('Unauthorized. Sign in via api/auth/signin', { status: 401 });
 	}
 	try {
 		console.log(`request url: ${request.nextUrl}`);
