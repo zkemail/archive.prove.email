@@ -15,10 +15,10 @@ export default function Page() {
 	const { data: session, status } = useSession()
 
 	if (status == "unauthenticated") {
-		return <p className="m-4">
+		return <div className="m-4">
 			<p>You need to be signed in to use this page.</p>
 			<button className="border border-black bg-gray-200 p-0.5 px-2 rounded" onClick={() => signIn()}>Sign in</button>
-		</p>
+		</div>
 	}
 	if (status == "loading") {
 		return <p className="m-4">loading...</p>
@@ -106,11 +106,11 @@ export default function Page() {
 				Add records to the database by providing a TSV file with domains and selectors.
 				This page will parse the file and add the records to the database via the <code>api/upsert_dkim_record</code> API.
 			</p>
-			<p className="mt-2 mb-2">
+			<div className="mt-2 mb-2">
 				<p>Select a file:</p>
 				<input type="file" onChange={fileSelectCallback} accept=".tsv,.txt" />
 
-			</p>
+			</div>
 			<div>
 				<button
 					disabled={!startEnabled}
