@@ -12,14 +12,11 @@ export default function Page() {
 	const [selectedFile, setSelectedFile] = React.useState<File | undefined>();
 	const [started, setStarted] = React.useState<boolean>(false);
 
-	const signinUrl = new URL('api/auth/signin', window.location.origin);
-
 	const { data: session, status } = useSession()
 
 	if (status == "unauthenticated") {
 		return <p>
-			You need to be signed in to use this page. Sign in via
-			<a href={signinUrl.toString()}> {signinUrl.toString()}</a>
+			You need to be signed in to use this page. <a href="api/auth/signin">Sign in</a>
 		</p>
 	}
 	if (status == "loading") {
