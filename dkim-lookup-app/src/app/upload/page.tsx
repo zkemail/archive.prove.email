@@ -105,28 +105,30 @@ export default function Page() {
 			}
 			<p>
 				Add records to the database by providing a TSV file with domains and selectors.
-				This page will parse the file and add the records to the database via the api/upsert_dkim_record API.
+				This page will parse the file and add the records to the database via the <code>api/upsert_dkim_record</code> API.
 			</p>
 			<p className="mt-2 mb-2">
-				Select a file:
+				<p>Select a file:</p>
 				<input type="file" onChange={fileSelectCallback} accept=".tsv,.txt" />
 
 			</p>
 			<div>
 				<button
 					disabled={!startEnabled}
-					className="border border-black bg-gray-200 px-3 rounded disabled:text-gray-400 disabled:border-gray-400"
+					className="border border-black bg-gray-200 p-0.5 px-2 rounded disabled:text-gray-400 disabled:border-gray-400"
 					onClick={startStopButton}
 				>
 					{started ? "Running..." : "Start"}
 				</button>
-
 			</div>
-			<p>Log:</p>
-			<div className='overflow-y-scroll mt-4 pb-8 bg-white text-xs h-[75vh] border border-black' ref={scrollDiv} >
-				{log.map((line, index) =>
-					<pre key={index}>{line}</pre>
-				)}
+			<div className="mt-2">
+				<p>Log:</p>
+				<div className='overflow-y-scroll pb-8 bg-white text-xs h-[75vh] border border-black' ref={scrollDiv} >
+					{log.map((line, index) =>
+						<pre key={index}>{line}</pre>
+					)}
+				</div>
+
 			</div>
 		</div >
 	)
