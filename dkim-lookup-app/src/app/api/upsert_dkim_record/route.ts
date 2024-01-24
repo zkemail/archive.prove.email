@@ -1,5 +1,5 @@
 import { createPrismaClient } from '@/lib/db';
-import { upsertRecord } from '@/lib/fetch_and_upsert';
+import { fetchAndUpsertRecord } from '@/lib/fetch_and_upsert';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getServerSession } from "next-auth/next"
@@ -23,23 +23,15 @@ export async function GET(request: NextRequest) {
 		if (!domain) {
 			throw 'missing domain parameter in query';
 		}
-
 		let selector = request.nextUrl.searchParams.get('selector');
 		if (!selector) {
 			throw 'missing selector parameter in query';
 		}
 
-		let value = request.nextUrl.searchParams.get('dkimValue');
-		if (!value) {
-			throw 'missing dkimValue parameter in query';
-		}
-
-		let timestamp = new Date()
-
-		let added = await upsertRecord({ domain, selector, value, timestamp }, prisma);
+		await fetchAndUpsertRecord(domain, selector, prisma);
 
 		return NextResponse.json(
-			{ message: `${added ? 'added' : 'updated'} ${domain}, ${selector}` },
+			{ message: `updated ${domain}, ${selector}` },
 			{ status: 200 }
 		);
 	} catch (error) {

@@ -3,24 +3,7 @@ import { createPrismaClient } from '@/lib/db';
 import { fetchAndUpsertRecord, fetchRecord } from '@/lib/fetch_and_upsert';
 import { PrismaClient } from '@prisma/client'
 import { readFileSync } from 'node:fs';
-
-function load_domains_and_selectors_from_tsv(outputDict: { [domain: string]: string[] }, filename: string): void {
-	const fileContents = readFileSync(filename, 'utf8');
-	const lines = fileContents.split('\n').map(line => line.trim()).filter(line => line);
-	for (let i = 0; i < lines.length; i++) {
-		const [domain, selector] = lines[i].split('\t');
-		if (!selector || !domain) {
-			console.error(`error: ${filename} line ${i}, selector or domain is empty`);
-			process.exit(1);
-		}
-		if (!outputDict[domain]) {
-			outputDict[domain] = [];
-		}
-		if (!outputDict[domain].includes(selector)) {
-			outputDict[domain].push(selector);
-		}
-	}
-}
+import { load_domains_and_selectors_from_tsv } from '@/lib/tsv';
 
 abstract class Updater {
 	abstract update(domain: string, selector: string): Promise<void>;
