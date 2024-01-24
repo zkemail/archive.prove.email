@@ -3,6 +3,7 @@
 import { load_domains_and_selectors_from_tsv } from "@/lib/tsv";
 import axios from "axios";
 import React, { useRef } from "react";
+import { useSession } from "next-auth/react"
 
 export default function Page() {
 
@@ -10,6 +11,20 @@ export default function Page() {
 	const scrollDiv = useRef<HTMLInputElement>(null);
 	const [selectedFile, setSelectedFile] = React.useState<File | undefined>();
 	const [started, setStarted] = React.useState<boolean>(false);
+
+	const signinUrl = new URL('api/auth/signin', window.location.origin);
+
+	const { data: session, status } = useSession()
+
+	if (status == "unauthenticated") {
+		return <p>
+			You need to be signed in to use this page. Sign in via
+			<a href={signinUrl.toString()}> {signinUrl.toString()}</a>
+		</p>
+	}
+	if (status == "loading") {
+		return <p className="m-4">loading...</p>
+	}
 
 	function fileSelectCallback(event: React.ChangeEvent<HTMLInputElement>) {
 		const file = event.target.files?.[0];
@@ -83,6 +98,11 @@ export default function Page() {
 
 	return (
 		<div className="p-4">
+			{(status == "authenticated" && session?.user?.email) &&
+				<p>Signed in as
+					<span className="font-bold"> {session?.user?.email}</span> – <a href="/api/auth/signout">Sign out</a>
+				</p>
+			}
 			<p>
 				Add records to the database by providing a TSV file with domains and selectors.
 				This page will parse the file and add the records to the database via the api/upsert_dkim_record API.
