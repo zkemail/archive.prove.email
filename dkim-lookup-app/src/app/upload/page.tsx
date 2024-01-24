@@ -3,7 +3,7 @@
 import { load_domains_and_selectors_from_tsv } from "@/lib/tsv";
 import axios from "axios";
 import React, { useRef } from "react";
-import { useSession } from "next-auth/react"
+import { useSession, signIn } from "next-auth/react"
 
 export default function Page() {
 
@@ -15,8 +15,9 @@ export default function Page() {
 	const { data: session, status } = useSession()
 
 	if (status == "unauthenticated") {
-		return <p>
-			You need to be signed in to use this page. <a href="api/auth/signin">Sign in</a>
+		return <p className="m-4">
+			<p>You need to be signed in to use this page.</p>
+			<button className="border border-black bg-gray-200 p-0.5 px-2 rounded" onClick={() => signIn()}>Sign in</button>
 		</p>
 	}
 	if (status == "loading") {
