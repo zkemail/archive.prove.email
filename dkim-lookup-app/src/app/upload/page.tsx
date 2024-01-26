@@ -54,31 +54,28 @@ export default function Page() {
 				logmsg("error: file content is not a string");
 				return;
 			}
-			const domainSelectorsDict: Record<string, string[]> = {};
-			load_domains_and_selectors_from_tsv(domainSelectorsDict, fileContent);
+			let domainSelectorPairs = load_domains_and_selectors_from_tsv(fileContent);
 			const baseUrl = new URL('api/upsert_dkim_record', window.location.origin);
 			logmsg(`starting upload to ${baseUrl}`);
-			for (const domain in domainSelectorsDict) {
-				for (const selector of domainSelectorsDict[domain]) {
-					let url = new URL(baseUrl.toString());
-					url.searchParams.set('domain', domain);
-					url.searchParams.set('selector', selector);
-					let result = await axios.get(url.toString())
-						.then(response => {
-							console.log('response.data: ', response.data);
-							logmsg(`${domain} ${selector} ${response.data.message}`);
-							if (scrollDiv.current) {
-								scrollDiv.current.scrollTop = scrollDiv.current.scrollHeight;
-							}
-							return true;
-						}).catch(error => {
-							logmsg(`error calling ${url}`);
-							logmsg(error.message);
-							return false;
-						});
-					if (!result) {
-						return;
-					}
+			for (const { domain, selector } of domainSelectorPairs) {
+				let url = new URL(baseUrl.toString());
+				url.searchParams.set('domain', domain);
+				url.searchParams.set('selector', selector);
+				let result = await axios.get(url.toString())
+					.then(response => {
+						console.log('response.data: ', response.data);
+						logmsg(`${domain} ${selector} ${response.data.message}`);
+						if (scrollDiv.current) {
+							scrollDiv.current.scrollTop = scrollDiv.current.scrollHeight;
+						}
+						return true;
+					}).catch(error => {
+						logmsg(`error calling ${url}`);
+						logmsg(error.message);
+						return false;
+					});
+				if (!result) {
+					return;
 				}
 			}
 			logmsg("upload complete");
