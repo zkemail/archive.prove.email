@@ -11,8 +11,9 @@ export default function Page() {
 	const scrollDiv = useRef<HTMLInputElement>(null);
 	const [selectedFile, setSelectedFile] = React.useState<File | undefined>();
 	const [started, setStarted] = React.useState<boolean>(false);
-
 	const { data: session, status } = useSession()
+
+	const baseUrl = new URL('api/upsert_dkim_record', window.location.origin);
 
 	if (status == "unauthenticated") {
 		return <div>
@@ -37,55 +38,57 @@ export default function Page() {
 		}
 	}
 
-	function uploadFile() {
-		if (!selectedFile) {
-			logmsg("no file selected");
-			return;
-		}
-		const reader = new FileReader();
-		reader.readAsText(selectedFile);
-		reader.onload = async function (event) {
-			let fileContent = event.target?.result;
-			if (!fileContent) {
-				logmsg("error: no file content");
-				return;
-			}
-			if (typeof fileContent !== "string") {
-				logmsg("error: file content is not a string");
-				return;
-			}
-			let domainSelectorPairs = load_domains_and_selectors_from_tsv(fileContent);
-			const baseUrl = new URL('api/upsert_dkim_record', window.location.origin);
-			logmsg(`starting upload to ${baseUrl}`);
-			for (const { domain, selector } of domainSelectorPairs) {
-				let url = new URL(baseUrl.toString());
-				url.searchParams.set('domain', domain);
-				url.searchParams.set('selector', selector);
-				let result = await axios.get(url.toString())
-					.then(response => {
-						console.log('response.data: ', response.data);
-						logmsg(`${domain} ${selector} ${response.data.message}`);
-						if (scrollDiv.current) {
-							scrollDiv.current.scrollTop = scrollDiv.current.scrollHeight;
-						}
-						return true;
-					}).catch(error => {
-						logmsg(`error calling ${url}`);
-						logmsg(error.message);
-						return false;
-					});
-				if (!result) {
-					return;
-				}
-			}
-			logmsg("upload complete");
-		};
+	function readFile(file: File) {
+		return new Promise((resolve, reject) => {
+			var fr = new FileReader();
+			fr.onload = () => {
+				resolve(fr.result)
+			};
+			fr.onerror = reject;
+			fr.readAsText(file);
+		});
 	}
 
-	function startStopButton() {
+	async function uploadFile() {
+		if (!selectedFile) {
+			throw "no file selected";
+		}
+		let fileContent = await readFile(selectedFile);
+		if (!fileContent || (typeof fileContent !== "string")) {
+			throw "error: invalid file content:" + fileContent;
+		}
+
+		let domainSelectorPairs = load_domains_and_selectors_from_tsv(fileContent);
+
+		logmsg(`starting upload to ${baseUrl}`);
+		for (const { domain, selector } of domainSelectorPairs) {
+			let url = new URL(baseUrl.toString());
+			url.searchParams.set('domain', domain);
+			url.searchParams.set('selector', selector);
+			await axios.get(url.toString())
+				.then(response => {
+					console.log('response.data: ', response.data);
+					logmsg(`${domain} ${selector} ${response.data.message}`);
+					if (scrollDiv.current) {
+						scrollDiv.current.scrollTop = scrollDiv.current.scrollHeight;
+					}
+				})
+		}
+	}
+
+	async function startStopButton() {
 		if (!started) {
 			setStarted(true);
-			uploadFile();
+			try {
+				await uploadFile();
+				logmsg("upload complete");
+			}
+			catch (error) {
+				logmsg("error: " + error);
+			}
+			finally {
+				setStarted(false);
+			}
 		}
 	}
 
