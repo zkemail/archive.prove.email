@@ -15,13 +15,13 @@ export default function Page() {
 	const { data: session, status } = useSession()
 
 	if (status == "unauthenticated") {
-		return <div className="m-4">
+		return <div>
 			<p>You need to be signed in to use this page.</p>
-			<button className="border border-black bg-gray-200 p-0.5 px-2 rounded" onClick={() => signIn()}>Sign in</button>
+			<button onClick={() => signIn()}>Sign in</button>
 		</div>
 	}
 	if (status == "loading") {
-		return <p className="m-4">loading...</p>
+		return <p>loading...</p>
 	}
 
 	function fileSelectCallback(event: React.ChangeEvent<HTMLInputElement>) {
@@ -95,36 +95,39 @@ export default function Page() {
 	const startEnabled = selectedFile && !started;
 
 	return (
-		<div className="p-4">
+		<div>
 			{(status == "authenticated" && session?.user?.email) &&
 				<div>
-					Signed in as<span className="font-bold"> {session?.user?.email}</span>
-					<button className="mx-2 border border-black bg-gray-200 p-0.5 px-2 rounded" onClick={() => signOut()}>Sign out</button>
+					<div>Signed in as {session?.user?.email}</div>
+					<button onClick={() => signOut()}>Sign out</button>
 				</div>
 			}
 			<p>
 				Add records to the database by providing a TSV file with domains and selectors.
 				This page will parse the file and add the records to the database via the <code>api/upsert_dkim_record</code> API.
 			</p>
-			<div className="mt-2 mb-2">
-				<p>Select a file:</p>
-				<input type="file" onChange={fileSelectCallback} accept=".tsv,.txt" />
-
-			</div>
 			<div>
-				<button
-					disabled={!startEnabled}
-					className="border border-black bg-gray-200 p-0.5 px-2 rounded disabled:text-gray-400 disabled:border-gray-400"
-					onClick={startStopButton}
-				>
+				<div>Select a file:</div>
+				<input type="file" onChange={fileSelectCallback} accept=".tsv,.txt" />
+			</div>
+			<p>
+				<button disabled={!startEnabled} onClick={startStopButton}>
 					{started ? "Running..." : "Start"}
 				</button>
-			</div>
-			<div className="mt-2">
-				<p>Log:</p>
-				<div className='overflow-y-scroll pb-8 bg-white text-xs h-[75vh] border border-black' ref={scrollDiv} >
+			</p>
+			<div>
+				<div>Log:</div>
+				<div style={{
+					overflowY: 'scroll',
+					paddingBottom: '2rem',
+					backgroundColor: 'white',
+					borderStyle: 'inset',
+					borderWidth: '2px',
+					height: '50vh',
+				}}
+					ref={scrollDiv} >
 					{log.map((line, index) =>
-						<pre key={index}>{line}</pre>
+						<pre style={{ margin: 0 }} key={index}>{line}</pre>
 					)}
 				</div>
 

@@ -24,15 +24,15 @@ interface DomainSearchResultProps {
 
 const DomainSearchResults: React.FC<DomainSearchResultProps> = ({ records, domainQuery }) => {
 	if (!domainQuery) {
-		return <p>Enter a search term</p>
+		return <div>Enter a search term</div>
 	};
 	if (!records?.length) {
-		return <p>No records found for "{domainQuery}"</p>
+		return <div>No records found for "{domainQuery}"</div>
 	}
 	return (
 		<div>
-			<p className='p-4'>Search results for <b>{domainQuery}</b></p>
-			<div className='dkim-records'>
+			<p>Search results for <b>{domainQuery}</b></p>
+			<div>
 				{records.map((record) => (
 					<SelectorResult key={record.id} record={record} />
 				))}
@@ -47,13 +47,13 @@ interface SearchFormProps {
 
 const SearchForm: React.FC<SearchFormProps> = ({ domainQuery }) => {
 	return (
-		<div className='search-form'>
+		<div>
 			<form action="/" method="get">
-				<label htmlFor="domain" className='px-2'>
+				<label htmlFor="domain" style={{ paddingRight: '0.5rem' }}>
 					Domain name:
 				</label>
 				<input
-					className='border border-gray-400 px-3 py-1.5 m-2 rounded-md'
+					className='search-input-box'
 					type="text"
 					id="domain"
 					name="domain"
@@ -61,7 +61,7 @@ const SearchForm: React.FC<SearchFormProps> = ({ domainQuery }) => {
 					defaultValue={domainQuery}
 				/>
 				<button
-					className='rounded-md text-white bg-sky-600 hover:bg-sky-500 px-3 py-1.5'
+					className='search-button'
 					type="submit"
 				>
 					Search
@@ -79,13 +79,13 @@ export default async function Home({ searchParams }: {
 	records = records.filter((record) => dkimValueHasPrivateKey(record.value));
 
 	return (
-		<main className="flex min-h-screen flex-col items-center">
-			<h1 className='p-8 text-xl font-bold'>
-				<a href='/' className='text-pagetext hover:text-pagetext'>DKIM Lookup</a>
-			</h1>
+		<main style={{ display: 'flex', minHeight: '100vh', flexDirection: 'column', alignItems: 'center' }}>
+			<h2 style={{ padding: '2rem' }}>
+				<a href='/' className='defaultcolor'>DKIM Lookup</a>
+			</h2>
 			<SearchForm domainQuery={domainQuery} />
 			<DomainSearchResults records={records} domainQuery={domainQuery} />
-			<p className='p-8'>Visit the project on <a href="https://github.com/foolo/dkim-lookup">GitHub</a></p>
+			<p>Visit the project on <a href="https://github.com/foolo/dkim-lookup">GitHub</a></p>
 		</main>
 	)
 }

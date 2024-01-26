@@ -1,19 +1,68 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
 body {
   background: #fafbfd;
 }
 
 html {
-  @apply text-pagetext
+  color: black;
+  line-height: 1.5;
 }
 
 a {
   color: #0784c0;
+  text-decoration: none;
 }
 
 a:hover {
-  color: rgb(4,90,135);
+  color: #045a87;
+}
+
+.defaultcolor, .defaultcolor:hover  {
+  color: inherit;
+}
+
+.border {
+  border-width: 1px;
+}
+
+input::placeholder,
+textarea::placeholder {
+  opacity: 1;
+  color: #aaa;
+}
+.search-input-box {
+  font: inherit;
+  border-width: 1px;
+  border-color: #9ca3af;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  height: 2.25rem;
+  margin: 0.5rem;
+  border-radius: 0.375rem;
+  border-style: solid;
+  box-sizing: border-box;
+}
+
+.search-button {
+  font: inherit;
+  border: none;
+  color: white;
+  background-color: #0284c7;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  border-radius: 0.375rem;
+  height: 2.25rem;
+}
+
+.card {
+  filter:
+    drop-shadow(0 4px 3px rgb(0 0 0 / 0.07))
+    drop-shadow(0 2px 2px rgb(0 0 0 / 0.06));
+  border-radius: 0.75rem;
+  border-width: 1px;
+  border-color: #e5e7eb;
+  background-color: white;
+  padding: 1rem;
+  margin-top: 1rem;
+  border-style: solid;
 }
