@@ -1,10 +1,7 @@
-import { createPrismaClient } from '@/lib/db';
+import { prisma } from '@/lib/db';
 import { fetchAndUpsertRecord } from '@/lib/fetch_and_upsert';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-
-const prisma = createPrismaClient();
-
 
 function getNumRecords() {
 	let takeParam = process.env.BATCH_UPDATE_NUM_RECORDS;

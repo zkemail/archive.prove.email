@@ -1,7 +1,6 @@
 import { SelectorResult } from '@/components/SelectorResult';
-import { RecordWithSelector, createPrismaClient, findRecords } from '@/lib/db';
+import { RecordWithSelector, prisma, findRecords } from '@/lib/db';
 
-const prisma = createPrismaClient();
 
 function parseDkimRecord(dkimValue: string): Record<string, string | null> {
 	const result: Record<string, string | null> = {};

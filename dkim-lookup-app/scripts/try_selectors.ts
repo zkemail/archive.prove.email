@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
-import { createPrismaClient } from '@/lib/db';
 import { fetchAndUpsertRecord } from '@/lib/fetch_and_upsert';
+import { prisma } from '@/lib/db';
 
 // loads a list of selectors and a list of domains (the list of selectors can be generated with statistics.py)
 // tries every selector with every domain and adds the domain/selector pair to the database if it doesn't already exist
@@ -19,7 +19,6 @@ async function main() {
 	let [domainsFilename, selectorsFilename] = inputFiles;
 	const domains = load_list(domainsFilename);
 	const selectors = readFileSync(selectorsFilename, 'utf8').split('\n').map(line => line.trim()).filter(line => line).map(line => line.split('\t')[0].trim());
-	const prisma = createPrismaClient();
 
 	let newFoundRecords = [];
 	for (const domain of domains) {

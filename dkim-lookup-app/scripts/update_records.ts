@@ -1,7 +1,6 @@
 import axios from 'axios';
-import { createPrismaClient } from '@/lib/db';
+import { prisma } from '@/lib/db';
 import { fetchAndUpsertRecord, fetchRecord } from '@/lib/fetch_and_upsert';
-import { PrismaClient } from '@prisma/client'
 import { readFileSync } from 'node:fs';
 import { load_domains_and_selectors_from_tsv } from '@/lib/tsv';
 
@@ -10,10 +9,9 @@ abstract class Updater {
 }
 
 class PrismaUpdater extends Updater {
-	prismaClient: PrismaClient = createPrismaClient();
 	async update(domain: string, selector: string) {
 		try {
-			await fetchAndUpsertRecord(domain, selector, this.prismaClient);
+			await fetchAndUpsertRecord(domain, selector, prisma);
 		}
 		catch (error) {
 			console.log(`error updating ${domain}, ${selector}: ${error}`);

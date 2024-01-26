@@ -1,6 +1,6 @@
 import { PrismaClient, Prisma, DkimRecord, Selector } from '@prisma/client'
 
-export function createPrismaClient(): PrismaClient {
+const createPrismaClient = () => {
 	let prismaUrl = new URL(process.env.POSTGRES_PRISMA_URL as string);
 	prismaUrl.searchParams.set('pool_timeout', '0');
 	return new PrismaClient({
@@ -11,6 +11,15 @@ export function createPrismaClient(): PrismaClient {
 		},
 	});
 }
+
+declare global {
+	var prismaClient: undefined | ReturnType<typeof createPrismaClient>
+}
+export const prisma = globalThis.prismaClient ?? createPrismaClient();
+if (process.env.NODE_ENV !== 'production') {
+	globalThis.prismaClient = prisma;
+}
+
 
 export type RecordWithSelector = (DkimRecord & { selector: Selector });
 
