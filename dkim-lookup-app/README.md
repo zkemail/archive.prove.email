@@ -1,7 +1,7 @@
 # DKIM archive website
 
 A website that lets the user search for a domain and returns archived DKIM selectors and keys for that domain.
-Visit the website at https://dkim-lookup.vercel.app/
+Visit the website at https://dkim-lookup.onrender.com/
 
 ## Local development
 
@@ -50,10 +50,9 @@ Resetting the database
 yarn prisma migrate reset
 ```
 
-## Batch update cron job
+## Batch updates
 
-
-A Vercel cron job is configured in `dkim-lookup-app/vercel.json` to call the API endpoint `/api/batch_update` at regular intervals.
+The API endpoint `/api/batch_update` is designed to be called at regular intervals, for example as a cron job.
 The function updates the *N* oldest database records via DNS lookups.
 Enable the feature by defining *N* through the `BATCH_UPDATE_NUM_RECORDS` environment variable.
 
