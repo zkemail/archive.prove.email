@@ -80,7 +80,8 @@ function main() {
 	const domainSelectorsDict = {};
 	console.log(`loading domains and selectors from ${filename}`);
 	const updater = api_hostname ? new ApiUpdater(api_hostname) : new PrismaUpdater();
-	load_domains_and_selectors_from_tsv(domainSelectorsDict, filename);
+	const fileContents = readFileSync(filename, 'utf8');
+	load_domains_and_selectors_from_tsv(domainSelectorsDict, fileContents);
 	console.log('fetching dkim records from dns');
 	fetchDkimRecordsFromDns(domainSelectorsDict, updater);
 }
