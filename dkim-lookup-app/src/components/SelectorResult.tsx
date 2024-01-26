@@ -1,5 +1,6 @@
 import { RecordWithSelector } from '@/lib/db';
 import { FC, ReactNode } from 'react';
+import { cardStyle } from './styles';
 
 interface RowProps {
 	label: string;
@@ -22,7 +23,7 @@ interface SelectorResultProps {
 export const SelectorResult: React.FC<SelectorResultProps> = ({ record }) => {
 
 	return (
-		<div className='card'>
+		<div style={cardStyle}>
 			<Row label='Selector:'>{record.selector.name}</Row>
 			<Row label='Fetched date:'>{record.fetchedAt.toLocaleString()}</Row>
 			<Row label='Value:'>

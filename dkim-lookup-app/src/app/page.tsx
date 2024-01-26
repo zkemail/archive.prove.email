@@ -1,4 +1,5 @@
 import { SelectorResult } from '@/components/SelectorResult';
+import { searchButtonStyle, searchInputBoxStyle } from '@/components/styles';
 import { RecordWithSelector, prisma, findRecords } from '@/lib/db';
 
 
@@ -52,17 +53,14 @@ const SearchForm: React.FC<SearchFormProps> = ({ domainQuery }) => {
 					Domain name:
 				</label>
 				<input
-					className='search-input-box'
+					style={searchInputBoxStyle}
 					type="text"
 					id="domain"
 					name="domain"
 					placeholder="example.com"
 					defaultValue={domainQuery}
 				/>
-				<button
-					className='search-button'
-					type="submit"
-				>
+				<button style={searchButtonStyle} type="submit">
 					Search
 				</button>
 			</form>
