@@ -13,8 +13,6 @@ export default function Page() {
 	const [started, setStarted] = React.useState<boolean>(false);
 	const { data: session, status } = useSession()
 
-	const baseUrl = new URL('api/upsert_dkim_record', window.location.origin);
-
 	if (status == "unauthenticated") {
 		return <div>
 			<p>You need to be signed in to use this page.</p>
@@ -60,12 +58,10 @@ export default function Page() {
 
 		let domainSelectorPairs = load_domains_and_selectors_from_tsv(fileContent);
 
-		logmsg(`starting upload to ${baseUrl}`);
+		const upsertApiUrl = 'api/upsert_dkim_record';
+		logmsg(`starting upload to ${upsertApiUrl}`);
 		for (const { domain, selector } of domainSelectorPairs) {
-			let url = new URL(baseUrl.toString());
-			url.searchParams.set('domain', domain);
-			url.searchParams.set('selector', selector);
-			await axios.get(url.toString())
+			await axios.get(upsertApiUrl, { params: { domain, selector } })
 				.then(response => {
 					console.log('response.data: ', response.data);
 					logmsg(`${domain} ${selector} ${response.data.message}`);
