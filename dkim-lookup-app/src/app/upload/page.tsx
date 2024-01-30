@@ -116,7 +116,7 @@ export default function Page() {
 				</button>
 			</p>
 			<div>
-				<div>Log:</div>
+				<div>Log: <button onClick={() => setLog([])}>Clear</button></div>
 				<div style={{
 					overflowY: 'scroll',
 					paddingBottom: '2rem',
