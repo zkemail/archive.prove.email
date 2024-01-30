@@ -2,13 +2,13 @@
 
 import { load_domains_and_selectors_from_tsv } from "@/lib/tsv";
 import axios from "axios";
-import React, { useRef } from "react";
+import React from "react";
 import { useSession, signIn, signOut } from "next-auth/react"
+import { LogConsole } from "@/components/LogConsole";
 
 export default function Page() {
 
 	const [log, setLog] = React.useState<string[]>([]);
-	const scrollDiv = useRef<HTMLInputElement>(null);
 	const [selectedFile, setSelectedFile] = React.useState<File | undefined>();
 	const [started, setStarted] = React.useState<boolean>(false);
 	const { data: session, status } = useSession()
@@ -31,9 +31,6 @@ export default function Page() {
 	function logmsg(message: string) {
 		console.log(message);
 		setLog(log => [...log, message]);
-		if (scrollDiv.current) {
-			scrollDiv.current.scrollTop = scrollDiv.current.scrollHeight;
-		}
 	}
 
 	function readFile(file: File) {
@@ -114,23 +111,7 @@ export default function Page() {
 					{started ? "Running..." : "Start"}
 				</button>
 			</p>
-			<div>
-				<div>Log: <button onClick={() => setLog([])}>Clear</button></div>
-				<div style={{
-					overflowY: 'scroll',
-					paddingBottom: '2rem',
-					backgroundColor: 'white',
-					borderStyle: 'inset',
-					borderWidth: '2px',
-					height: '50vh',
-				}}
-					ref={scrollDiv} >
-					{log.map((line, index) =>
-						<div style={{ margin: 0, fontFamily: 'monospace' }} key={index}>{line}</div>
-					)}
-				</div>
-
-			</div>
+			<LogConsole log={log} setLog={setLog} />
 		</div >
 	)
 }
