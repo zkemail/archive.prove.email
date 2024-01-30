@@ -3,6 +3,7 @@
 import React from "react";
 import { useSession, signIn, signOut } from "next-auth/react"
 import UploadTsv from "./UploadTsv";
+import UploadGmail from "./UploadGmail";
 
 export default function Page() {
 
@@ -26,6 +27,7 @@ export default function Page() {
 					<button onClick={() => signOut()}>Sign out</button>
 				</div>
 			}
+			<UploadGmail />
 			<UploadTsv />
 		</div >
 	)

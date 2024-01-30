@@ -1,17 +1,7 @@
 import { SelectorResult } from '@/components/SelectorResult';
 import { searchButtonStyle, searchInputBoxStyle } from '@/components/styles';
 import { RecordWithSelector, prisma, findRecords } from '@/lib/db';
-
-
-function parseDkimRecord(dkimValue: string): Record<string, string | null> {
-	const result: Record<string, string | null> = {};
-	const parts = dkimValue.split(';');
-	for (const part of parts) {
-		const [key, value] = part.split('=');
-		result[key.trim()] = value?.trim() || null;
-	}
-	return result;
-}
+import { parseDkimRecord } from '@/lib/utils';
 
 function dkimValueHasPrivateKey(dkimValue: string): boolean {
 	return parseDkimRecord(dkimValue).p !== null;

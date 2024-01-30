@@ -89,7 +89,6 @@ export async function upsertRecord(newRecord: DnsDkimFetchResult, prisma: Prisma
 
 
 export async function fetchRecord(domain: string, selector: string): Promise<DnsDkimFetchResult | null> {
-	console.log(`fetching ${selector}._domainkey.${domain} from dns`);
 	const qname = `${selector}._domainkey.${domain}`;
 	let response;
 	try {

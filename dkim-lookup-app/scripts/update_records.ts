@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/db';
 import { fetchAndUpsertRecord } from '@/lib/fetch_and_upsert';
 import { readFileSync } from 'node:fs';
-import { load_domains_and_selectors_from_tsv } from '@/lib/tsv';
+import { load_domains_and_selectors_from_tsv } from '@/lib/utils';
 
 abstract class Updater {
 	abstract update(domain: string, selector: string): Promise<void>;

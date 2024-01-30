@@ -1,9 +1,10 @@
 "use client";
 
-import { load_domains_and_selectors_from_tsv } from "@/lib/tsv";
+import { load_domains_and_selectors_from_tsv } from "@/lib/utils";
 import axios from "axios";
 import React from "react";
 import { LogConsole } from "@/components/LogConsole";
+import { upsert } from "@/lib/api_calls";
 
 export default function Page() {
 
@@ -47,16 +48,7 @@ export default function Page() {
 		logmsg(`starting upload to ${upsertApiUrl}`);
 		for (const { domain, selector } of domainSelectorPairs) {
 			logmsg(`uploading ${domain} ${selector}`);
-			await axios.get(upsertApiUrl, { params: { domain, selector } })
-				.then(response => {
-					console.log('response.data: ', response.data);
-					logmsg(`response: ${response.data.message}`);
-				}).catch(error => {
-					console.log(error);
-					let data = error?.response?.data;
-					let message = `${error}` + (data ? ` - ${data}` : "");
-					throw message;
-				})
+			upsert(domain, selector);
 		}
 	}
 

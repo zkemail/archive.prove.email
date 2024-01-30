@@ -1,3 +1,13 @@
+export function parseDkimRecord(dkimValue: string): Record<string, string | null> {
+	const result: Record<string, string | null> = {};
+	const parts = dkimValue.split(';');
+	for (const part of parts) {
+		const [key, value] = part.split('=');
+		result[key.trim()] = value?.trim() || null;
+	}
+	return result;
+}
+
 
 export type DomainSelectorPair = {domain: string, selector: string};
 
