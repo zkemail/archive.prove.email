@@ -72,6 +72,11 @@ export default function Page() {
 					if (scrollDiv.current) {
 						scrollDiv.current.scrollTop = scrollDiv.current.scrollHeight;
 					}
+				}).catch(error => {
+					console.log(error);
+					let data = error?.response?.data;
+					let message = `${error}` + (data ? ` - ${data}` : "");
+					throw message;
 				})
 		}
 	}
@@ -84,7 +89,7 @@ export default function Page() {
 				logmsg("upload complete");
 			}
 			catch (error) {
-				logmsg("error: " + error);
+				logmsg(`upload failed: ${error}`);
 			}
 			finally {
 				setStarted(false);
