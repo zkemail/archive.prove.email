@@ -61,13 +61,11 @@ export default function Page() {
 		const upsertApiUrl = 'api/upsert_dkim_record';
 		logmsg(`starting upload to ${upsertApiUrl}`);
 		for (const { domain, selector } of domainSelectorPairs) {
+			logmsg(`uploading ${domain} ${selector}`);
 			await axios.get(upsertApiUrl, { params: { domain, selector } })
 				.then(response => {
 					console.log('response.data: ', response.data);
-					logmsg(`${domain} ${selector} ${response.data.message}`);
-					if (scrollDiv.current) {
-						scrollDiv.current.scrollTop = scrollDiv.current.scrollHeight;
-					}
+					logmsg(`response: ${response.data.message}`);
 				}).catch(error => {
 					console.log(error);
 					let data = error?.response?.data;
