@@ -128,7 +128,7 @@ export default function Page() {
 				}}
 					ref={scrollDiv} >
 					{log.map((line, index) =>
-						<pre style={{ margin: 0 }} key={index}>{line}</pre>
+						<div style={{ margin: 0, fontFamily: 'monospace' }} key={index}>{line}</div>
 					)}
 				</div>
 
