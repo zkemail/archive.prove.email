@@ -32,7 +32,7 @@ async function handleMessage(messageId: string, gmail: gmail_v1.Gmail, resultArr
 }
 
 
-export async function GET(request: NextRequest) {
+async function handleRequest(request: NextRequest) {
 	const session = await getServerSession(authOptions);
 	if (!session || !session.user?.email) {
 		return new Response('Unauthorized. Sign in via api/auth/signin', { status: 401 });
@@ -74,4 +74,14 @@ export async function GET(request: NextRequest) {
 	}
 	let nextPageToken = listResults.data.nextPageToken;
 	return NextResponse.json({ domainSelectorPairs, nextPageToken }, { status: 200 });
+}
+
+export async function GET(request: NextRequest) {
+	try {
+		return await handleRequest(request);
+	}
+	catch (e) {
+		console.log('handleRequest error ', e);
+		return NextResponse.json(`${e}`, { status: 500 });
+	}
 }

@@ -39,9 +39,8 @@ export default function Page() {
 					}
 					done = !nextPageToken;
 				}).catch(error => {
+					let message = `${error} - ${JSON.stringify(error?.response?.data)}`;
 					console.log(error);
-					let data = error?.response?.data;
-					let message = `${error}` + (data ? ` - ${data}` : "");
 					throw message;
 				})
 		}
