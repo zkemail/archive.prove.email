@@ -21,9 +21,9 @@ export default function Page() {
 
 	return (
 		<div>
-			{(status == "authenticated" && session?.user?.email) &&
+			{(status == "authenticated") &&
 				<div>
-					<div>Signed in as {session?.user?.email}</div>
+					{session?.user?.email  && <div>Signed in as {session?.user?.email}</div>}
 					<button onClick={() => signOut()}>Sign out</button>
 				</div>
 			}

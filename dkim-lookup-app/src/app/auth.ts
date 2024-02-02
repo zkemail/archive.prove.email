@@ -1,14 +1,17 @@
+import { TokenSet } from "next-auth"
 import GoogleProvider from "next-auth/providers/google"
+
+// https://authjs.dev/guides/basics/refresh-token-rotation?frameworks=core
 
 export const authOptions = {
 	providers: [
 		GoogleProvider({
 			clientId: process.env.GOOGLE_CLIENT_ID || '',
 			clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
-			checks: 'none',
 			authorization: {
 				params: {
 					prompt: "consent",
+					access_type: "offline",
 					scope: 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/gmail.metadata',
 				},
 			},
@@ -17,10 +20,53 @@ export const authOptions = {
 	callbacks: {
 		async jwt({ token, account }: { token: any, account: any }) {
 			if (account) {
-				token.accessToken = account.access_token
-				token.refreshToken = account.refresh_token
+				token.access_token = account.access_token
+				token.refresh_token = account.refresh_token
+				token.expires_at = Math.floor(Date.now() / 1000 + account.expires_in)
+				return token
+
 			}
-			return token
+			else if (Date.now() < token.expires_at * 1000) {
+				return token
+			}
+			else {
+				try {
+					// https://accounts.google.com/.well-known/openid-configuration
+					const response = await fetch("https://oauth2.googleapis.com/token", {
+						headers: { "Content-Type": "application/x-www-form-urlencoded" },
+						body: new URLSearchParams({
+							client_id: process.env.GOOGLE_CLIENT_ID || '',
+							client_secret: process.env.GOOGLE_CLIENT_SECRET || '',
+							grant_type: "refresh_token",
+							refresh_token: token.refresh_token,
+						}),
+						method: "POST",
+					})
+					console.log('response', response);
+					const tokens: TokenSet = await response.json()
+
+					if (!response.ok) {
+						console.error("!response.ok")
+						throw tokens
+					}
+
+					return {
+						...token,
+						access_token: tokens.access_token,
+						expires_at: Math.floor(Date.now() / 1000 + (tokens.expires_in as any)),
+						refresh_token: tokens.refresh_token ?? token.refresh_token,
+					}
+				}
+				catch (error) {
+					return { ...token, error: "RefreshAccessTokenError" as const }
+				}
+			}
+		},
+		async session({ session, token }: { session: any, token: any }) {
+			console.log('session callback token', token);
+			console.log('session callback session', session);
+			session.error = token.error
+			return session
 		},
 	}
 }
