@@ -68,7 +68,7 @@ export default async function Home({ searchParams }: {
 	return (
 		<main style={{ display: 'flex', minHeight: '100vh', flexDirection: 'column', alignItems: 'center' }}>
 			<h2 style={{ padding: '2rem' }}>
-				<a href='/' className='defaultcolor'>DKIM Lookup</a>
+				<a href='/' className='defaultcolor'>DKIM Registry</a>
 			</h2>
 			<SearchForm domainQuery={domainQuery} />
 			<DomainSearchResults records={records} domainQuery={domainQuery} />
@@ -78,6 +78,7 @@ export default async function Home({ searchParams }: {
 				<div>Visit the project on <a href="https://github.com/foolo/dkim-lookup">GitHub</a></div>
 				<div>Visit <a href="https://prove.email/">Proof of Email</a></div>
 				<div><a href="upload">Contribute</a> to the registry</div>
+				<div>Read the <a href="privacy-policy">Privacy policy</a></div>
 			</div>
 		</main>
 	)
