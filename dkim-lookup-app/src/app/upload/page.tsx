@@ -23,10 +23,16 @@ export default function Page() {
 		<div>
 			{(status == "authenticated") &&
 				<div>
-					{session?.user?.email  && <div>Signed in as {session?.user?.email}</div>}
+					{session?.user?.email && <div>Signed in as {session?.user?.email}</div>}
 					<button onClick={() => signOut()}>Sign out</button>
 				</div>
 			}
+
+			<p>
+				On this page, you can contribute to the project by uploading domains and selectors
+				from your own Gmail account or from a TSV file.
+			</p>
+
 			<UploadGmail />
 			<UploadTsv />
 		</div >
