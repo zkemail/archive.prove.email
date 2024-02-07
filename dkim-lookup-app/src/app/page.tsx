@@ -75,6 +75,7 @@ export default async function Home({ searchParams }: {
 
 			<div style={{ textAlign: 'center', marginTop: '5rem', fontSize: '0.8rem' }}>
 				<hr style={{ width: '50%', margin: '1rem auto', borderTop: '1px solid black' }} />
+				<div><a href="about">About</a> this site</div>
 				<div>Visit the project on <a href="https://github.com/foolo/dkim-lookup">GitHub</a></div>
 				<div>Visit <a href="https://prove.email/">Proof of Email</a></div>
 				<div><a href="upload">Contribute</a> to the registry</div>

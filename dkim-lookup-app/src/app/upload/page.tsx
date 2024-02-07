@@ -21,6 +21,7 @@ export default function Page() {
 
 	return (
 		<div>
+			<h1>Contribute</h1>
 			{(status == "authenticated") &&
 				<div>
 					{session?.user?.email && <div>Signed in as {session?.user?.email}</div>}
