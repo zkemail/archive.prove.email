@@ -62,29 +62,28 @@ async function findOrCreateSelector(domain: string, selector: string): Promise<S
 	return currentSelector;
 }
 
-export async function upsertRecord(newRecord: DnsDkimFetchResult): Promise<boolean> {
+export async function upsertRecord(selectorInDb: Selector, newRecord: DnsDkimFetchResult): Promise<boolean> {
 	console.log(`upserting record, ${newRecord.selector}, ${newRecord.domain}`);
-	let currentSelector = await findOrCreateSelector(newRecord.domain, newRecord.selector);
 	let currentRecord = await prisma.dkimRecord.findFirst({
 		where: {
-			selector: currentSelector,
+			selector: selectorInDb,
 			value: newRecord.value
 		},
 	})
 	if (currentRecord) {
-		console.log(`record already exists: ${recordToString(currentRecord)} for selector ${selectorToString(currentSelector)}`);
+		console.log(`record already exists: ${recordToString(currentRecord)} for selector ${selectorToString(selectorInDb)}`);
 		return false;
 	}
-	console.log(`creating record for selector ${selectorToString(currentSelector)}`);
+	console.log(`creating record for selector ${selectorToString(selectorInDb)}`);
 
 	let dkimRecord = await prisma.dkimRecord.create({
 		data: {
-			selectorId: currentSelector.id,
+			selectorId: selectorInDb.id,
 			value: newRecord.value,
 			fetchedAt: newRecord.timestamp,
 		},
 	})
-	console.log(`created dkim record ${recordToString(dkimRecord)} for selector ${selectorToString(currentSelector)}`);
+	console.log(`created dkim record ${recordToString(dkimRecord)} for selector ${selectorToString(selectorInDb)}`);
 	return true;
 }
 
@@ -127,9 +126,9 @@ export async function fetchAndUpsertRecord(domain: string, selector: string): Pr
 		console.log(`no record found for ${selector}, ${domain}`);
 		return false;
 	}
-	let added = await upsertRecord(dkimRecord);
-	console.log(`updating selector timestamp for ${selector}, ${domain}`);
 	let selectorInDb = await findOrCreateSelector(domain, selector);
+	let added = await upsertRecord(selectorInDb, dkimRecord);
+	console.log(`updating selector timestamp for ${selector}, ${domain}`);
 	updateSelectorTimestamp(selectorInDb, new Date());
 	return added;
 }
