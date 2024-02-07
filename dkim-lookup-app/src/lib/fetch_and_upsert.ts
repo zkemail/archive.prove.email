@@ -1,5 +1,5 @@
 import dns from 'dns';
-import { Prisma, PrismaClient, Selector, DkimRecord } from '@prisma/client'
+import { Prisma, Selector, DkimRecord } from '@prisma/client'
 import { prisma } from './db';
 
 let resolver = new dns.promises.Resolver({ timeout: 2500 });

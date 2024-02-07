@@ -1,7 +1,6 @@
 "use client";
 
 import { load_domains_and_selectors_from_tsv } from "@/lib/utils";
-import axios from "axios";
 import React from "react";
 import { LogConsole } from "@/components/LogConsole";
 import { upsert } from "@/lib/api_calls";
