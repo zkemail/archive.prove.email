@@ -1,5 +1,6 @@
 import dns from 'dns';
 import { Prisma, PrismaClient, Selector, DkimRecord } from '@prisma/client'
+import { prisma } from './db';
 
 let resolver = new dns.promises.Resolver({ timeout: 2500 });
 
@@ -21,7 +22,7 @@ function recordToString(record: DkimRecord): string {
 	return `#${record.id}, "${valueTruncated}"`;
 }
 
-async function updateSelectorTimestamp(selector: Selector, timestamp: Date, prisma: PrismaClient) {
+async function updateSelectorTimestamp(selector: Selector, timestamp: Date) {
 	let updatedSelector = await prisma.selector.update({
 		where: {
 			id: selector.id
@@ -33,7 +34,7 @@ async function updateSelectorTimestamp(selector: Selector, timestamp: Date, pris
 	console.log(`updated selector timestamp ${selectorToString(updatedSelector)}`);
 }
 
-async function findOrCreateSelector(domain: string, selector: string, prisma: PrismaClient): Promise<Selector> {
+async function findOrCreateSelector(domain: string, selector: string): Promise<Selector> {
 	let currentSelector = await prisma.selector.findFirst({
 		where: {
 			domain: {
@@ -61,9 +62,9 @@ async function findOrCreateSelector(domain: string, selector: string, prisma: Pr
 	return currentSelector;
 }
 
-export async function upsertRecord(newRecord: DnsDkimFetchResult, prisma: PrismaClient): Promise<boolean> {
+export async function upsertRecord(newRecord: DnsDkimFetchResult): Promise<boolean> {
 	console.log(`upserting record, ${newRecord.selector}, ${newRecord.domain}`);
-	let currentSelector = await findOrCreateSelector(newRecord.domain, newRecord.selector, prisma);
+	let currentSelector = await findOrCreateSelector(newRecord.domain, newRecord.selector);
 	let currentRecord = await prisma.dkimRecord.findFirst({
 		where: {
 			selector: currentSelector,
@@ -119,16 +120,16 @@ export async function fetchRecord(domain: string, selector: string): Promise<Dns
 /**
  * @returns true iff a record was added
  */
-export async function fetchAndUpsertRecord(domain: string, selector: string, prisma: PrismaClient): Promise<boolean> {
+export async function fetchAndUpsertRecord(domain: string, selector: string): Promise<boolean> {
 	console.log(`fetching ${selector}._domainkey.${domain} from dns`);
 	let dkimRecord = await fetchRecord(domain, selector);
 	if (!dkimRecord) {
 		console.log(`no record found for ${selector}, ${domain}`);
 		return false;
 	}
-	let added = await upsertRecord(dkimRecord, prisma);
+	let added = await upsertRecord(dkimRecord);
 	console.log(`updating selector timestamp for ${selector}, ${domain}`);
-	let selectorInDb = await findOrCreateSelector(domain, selector, prisma);
-	updateSelectorTimestamp(selectorInDb, new Date(), prisma);
+	let selectorInDb = await findOrCreateSelector(domain, selector);
+	updateSelectorTimestamp(selectorInDb, new Date());
 	return added;
 }

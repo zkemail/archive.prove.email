@@ -1,4 +1,3 @@
-import { prisma } from '@/lib/db';
 import { fetchAndUpsertRecord } from '@/lib/fetch_and_upsert';
 import { readFileSync } from 'node:fs';
 import { load_domains_and_selectors_from_tsv } from '@/lib/utils';
@@ -10,7 +9,7 @@ abstract class Updater {
 class PrismaUpdater extends Updater {
 	async update(domain: string, selector: string) {
 		try {
-			await fetchAndUpsertRecord(domain, selector, prisma);
+			await fetchAndUpsertRecord(domain, selector);
 		}
 		catch (error) {
 			console.log(`error updating ${domain}, ${selector}: ${error}`);

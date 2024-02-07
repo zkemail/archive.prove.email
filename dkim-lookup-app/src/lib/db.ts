@@ -23,7 +23,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 export type RecordWithSelector = (DkimRecord & { selector: Selector });
 
-export async function findRecords(domainQuery: string, prisma: PrismaClient): Promise<RecordWithSelector[]> {
+export async function findRecords(domainQuery: string): Promise<RecordWithSelector[]> {
 	return await prisma.dkimRecord.findMany({
 		where: {
 			selector: {

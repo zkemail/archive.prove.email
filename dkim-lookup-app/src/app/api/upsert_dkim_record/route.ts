@@ -1,4 +1,3 @@
-import { prisma } from '@/lib/db';
 import { fetchAndUpsertRecord } from '@/lib/fetch_and_upsert';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
@@ -26,7 +25,7 @@ export async function GET(request: NextRequest) {
 			throw 'missing selector parameter in query';
 		}
 
-		await fetchAndUpsertRecord(domain, selector, prisma);
+		await fetchAndUpsertRecord(domain, selector);
 
 		return NextResponse.json(
 			{ message: `updated ${domain}, ${selector}` },

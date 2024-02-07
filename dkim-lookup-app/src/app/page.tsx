@@ -1,6 +1,6 @@
 import { SelectorResult } from '@/components/SelectorResult';
 import { searchButtonStyle, searchInputBoxStyle } from '@/components/styles';
-import { RecordWithSelector, prisma, findRecords } from '@/lib/db';
+import { RecordWithSelector, findRecords } from '@/lib/db';
 import { parseDkimRecord } from '@/lib/utils';
 
 function dkimValueHasPrivateKey(dkimValue: string): boolean {
@@ -62,7 +62,7 @@ export default async function Home({ searchParams }: {
 	searchParams: { [key: string]: string | string[] | undefined }
 }) {
 	const domainQuery = searchParams?.domain?.toString();
-	let records = domainQuery ? (await findRecords(domainQuery, prisma)) : []
+	let records = domainQuery ? (await findRecords(domainQuery)) : []
 	records = records.filter((record) => dkimValueHasPrivateKey(record.value));
 
 	return (
