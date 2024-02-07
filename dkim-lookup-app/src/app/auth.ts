@@ -42,7 +42,6 @@ export const authOptions = {
 						}),
 						method: "POST",
 					})
-					console.log('response', response);
 					const tokens: TokenSet = await response.json()
 
 					if (!response.ok) {
@@ -63,8 +62,6 @@ export const authOptions = {
 			}
 		},
 		async session({ session, token }: { session: any, token: any }) {
-			console.log('session callback token', token);
-			console.log('session callback session', session);
 			session.error = token.error
 			return session
 		},
