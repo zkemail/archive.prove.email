@@ -1,0 +1,19 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "npm",
+			"script": "check-types",
+			"problemMatcher": {
+				"base": "$tsc",
+				"fileLocation": [
+					"relative",
+					"${workspaceFolder}/dkim-lookup-app"
+				],
+			},
+			"options": {
+				"cwd": "${workspaceFolder}/dkim-lookup-app"
+			}
+		}
+	]
+}
