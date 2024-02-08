@@ -24,7 +24,7 @@ export const SelectorResult: React.FC<SelectorResultProps> = ({ record }) => {
 
 	return (
 		<div style={cardStyle}>
-			<Row label='Selector:'>{record.selector.name}</Row>
+			<Row label='Selector:'>{record.domainSelectorPair.selector}</Row>
 			<Row label='Fetched date:'>{record.fetchedAt.toLocaleString()}</Row>
 			<Row label='Value:'>
 				<pre style={{

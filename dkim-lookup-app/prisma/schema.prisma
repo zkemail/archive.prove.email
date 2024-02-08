@@ -8,18 +8,18 @@ datasource db {
   directUrl = env("POSTGRES_URL_NON_POOLING") // direct connection
 }
 
-model Selector {
+model DomainSelectorPair {
   id               Int          @id @default(autoincrement())
   domain           String
-  name             String
+  selector         String
   lastRecordUpdate DateTime?
   records          DkimRecord[]
 }
 
 model DkimRecord {
   id         Int      @id @default(autoincrement())
-  selector   Selector @relation(fields: [selectorId], references: [id])
-  selectorId Int
+  domainSelectorPair   DomainSelectorPair @relation(fields: [domainSelectorPairId], references: [id])
+  domainSelectorPairId Int
   fetchedAt  DateTime @default(now())
   value      String
 }

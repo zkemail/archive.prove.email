@@ -1,4 +1,4 @@
-import { PrismaClient, Prisma, DkimRecord, Selector } from '@prisma/client'
+import { PrismaClient, Prisma, DkimRecord, DomainSelectorPair } from '@prisma/client'
 
 const createPrismaClient = () => {
 	let prismaUrl = new URL(process.env.POSTGRES_PRISMA_URL as string);
@@ -21,12 +21,12 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 
-export type RecordWithSelector = (DkimRecord & { selector: Selector });
+export type RecordWithSelector = (DkimRecord & { domainSelectorPair: DomainSelectorPair });
 
 export async function findRecords(domainQuery: string): Promise<RecordWithSelector[]> {
 	return await prisma.dkimRecord.findMany({
 		where: {
-			selector: {
+			domainSelectorPair: {
 				domain: {
 					equals: domainQuery,
 					mode: Prisma.QueryMode.insensitive,
@@ -34,7 +34,7 @@ export async function findRecords(domainQuery: string): Promise<RecordWithSelect
 			}
 		},
 		include: {
-			selector: true
+			domainSelectorPair: true
 		}
 	});
 }

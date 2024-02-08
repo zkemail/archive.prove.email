@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
 	console.log(`updating ${numRecords} records`);
 
 	try {
-		const records = await prisma.selector.findMany(
+		const records = await prisma.domainSelectorPair.findMany(
 			{
 				orderBy: { lastRecordUpdate: 'asc' },
 				take: numRecords,
@@ -39,10 +39,10 @@ export async function GET(request: NextRequest) {
 		);
 		for (const result of records) {
 			try {
-				await fetchAndUpsertRecord(result.domain, result.name);
+				await fetchAndUpsertRecord(result.domain, result.selector);
 			}
 			catch (error) {
-				console.log(`error updating ${result.domain}, ${result.name}: ${error}`);
+				console.log(`error updating ${result.domain}, ${result.selector}: ${error}`);
 			}
 		}
 		return NextResponse.json(

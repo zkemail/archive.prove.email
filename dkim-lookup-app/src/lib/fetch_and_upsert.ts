@@ -1,5 +1,5 @@
 import dns from 'dns';
-import { Prisma, Selector, DkimRecord } from '@prisma/client'
+import { Prisma, DomainSelectorPair, DkimRecord } from '@prisma/client'
 import { prisma } from './db';
 
 let resolver = new dns.promises.Resolver({ timeout: 2500 });
@@ -11,8 +11,8 @@ interface DnsDkimFetchResult {
 	timestamp: Date;
 }
 
-function selectorToString(selector: Selector): string {
-	return `#${selector.id}, ${selector.domain}, ${selector.name}`;
+function dspToString(dsp: DomainSelectorPair): string {
+	return `#${dsp.id}, ${dsp.domain}, ${dsp.selector}`;
 }
 
 function recordToString(record: DkimRecord): string {
@@ -22,68 +22,65 @@ function recordToString(record: DkimRecord): string {
 	return `#${record.id}, "${valueTruncated}"`;
 }
 
-async function updateSelectorTimestamp(selector: Selector, timestamp: Date) {
-	let updatedSelector = await prisma.selector.update({
+async function updateDspTimestamp(dsp: DomainSelectorPair, timestamp: Date) {
+	let updatedSelector = await prisma.domainSelectorPair.update({
 		where: {
-			id: selector.id
+			id: dsp.id
 		},
 		data: {
 			lastRecordUpdate: timestamp
 		}
 	})
-	console.log(`updated selector timestamp ${selectorToString(updatedSelector)}`);
+	console.log(`updated domain/selector pair timestamp ${dspToString(updatedSelector)}`);
 }
 
-async function findOrCreateSelector(domain: string, selector: string): Promise<Selector> {
-	let currentSelector = await prisma.selector.findFirst({
+async function findOrCreateDomainSelectorPair(domain: string, selector: string): Promise<DomainSelectorPair> {
+	let dsp = await prisma.domainSelectorPair.findFirst({
 		where: {
 			domain: {
 				equals: domain,
 				mode: Prisma.QueryMode.insensitive,
 			},
-			name: {
+			selector: {
 				equals: selector,
 				mode: Prisma.QueryMode.insensitive
 			}
 		}
 	});
-	if (currentSelector) {
-		console.log(`found selector ${selectorToString(currentSelector)}`);
+	if (dsp) {
+		console.log(`found domain/selector pair ${dspToString(dsp)}`);
 	}
 	else {
-		currentSelector = await prisma.selector.create({
-			data: {
-				domain: domain,
-				name: selector
-			}
+		dsp = await prisma.domainSelectorPair.create({
+			data: { domain, selector }
 		})
-		console.log(`created selector ${selectorToString(currentSelector)}`);
+		console.log(`created domain/selector pair ${dspToString(dsp)}`);
 	}
-	return currentSelector;
+	return dsp;
 }
 
-export async function upsertRecord(selectorInDb: Selector, newRecord: DnsDkimFetchResult): Promise<boolean> {
+export async function upsertRecord(dsp: DomainSelectorPair, newRecord: DnsDkimFetchResult): Promise<boolean> {
 	console.log(`upserting record, ${newRecord.selector}, ${newRecord.domain}`);
 	let currentRecord = await prisma.dkimRecord.findFirst({
 		where: {
-			selector: selectorInDb,
+			domainSelectorPair: dsp,
 			value: newRecord.value
 		},
 	})
 	if (currentRecord) {
-		console.log(`record already exists: ${recordToString(currentRecord)} for selector ${selectorToString(selectorInDb)}`);
+		console.log(`record already exists: ${recordToString(currentRecord)} for domain/selector pair ${dspToString(dsp)}`);
 		return false;
 	}
-	console.log(`creating record for selector ${selectorToString(selectorInDb)}`);
+	console.log(`creating record for domain/selector pair ${dspToString(dsp)}`);
 
 	let dkimRecord = await prisma.dkimRecord.create({
 		data: {
-			selectorId: selectorInDb.id,
+			domainSelectorPairId: dsp.id,
 			value: newRecord.value,
 			fetchedAt: newRecord.timestamp,
 		},
 	})
-	console.log(`created dkim record ${recordToString(dkimRecord)} for selector ${selectorToString(selectorInDb)}`);
+	console.log(`created dkim record ${recordToString(dkimRecord)} for domain/selector pair ${dspToString(dsp)}`);
 	return true;
 }
 
@@ -126,9 +123,9 @@ export async function fetchAndUpsertRecord(domain: string, selector: string): Pr
 		console.log(`no record found for ${selector}, ${domain}`);
 		return false;
 	}
-	let selectorInDb = await findOrCreateSelector(domain, selector);
-	let added = await upsertRecord(selectorInDb, dkimRecord);
+	let dsp = await findOrCreateDomainSelectorPair(domain, selector);
+	let added = await upsertRecord(dsp, dkimRecord);
 	console.log(`updating selector timestamp for ${selector}, ${domain}`);
-	updateSelectorTimestamp(selectorInDb, new Date());
+	updateDspTimestamp(dsp, new Date());
 	return added;
 }
