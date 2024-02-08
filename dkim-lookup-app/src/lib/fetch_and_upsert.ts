@@ -125,7 +125,7 @@ export async function fetchAndUpsertRecord(domain: string, selector: string): Pr
 	}
 	let dsp = await findOrCreateDomainSelectorPair(domain, selector);
 	let added = await upsertRecord(dsp, dkimRecord);
-	console.log(`updating selector timestamp for ${selector}, ${domain}`);
-	updateDspTimestamp(dsp, new Date());
+	console.log(`updating selector timestamp for ${dsp.selector}, ${dsp.domain} to ${dkimRecord.timestamp}`);
+	updateDspTimestamp(dsp, dkimRecord.timestamp);
 	return added;
 }
