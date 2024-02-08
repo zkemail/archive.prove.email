@@ -1,6 +1,8 @@
 import dns from 'dns';
 import { Prisma, DomainSelectorPair, DkimRecord } from '@prisma/client'
 import { prisma } from './db';
+import { WitnessClient } from '@witnesswtf/client';
+import { getCanonicalRecordString } from './utils';
 
 let resolver = new dns.promises.Resolver({ timeout: 2500 });
 
@@ -59,7 +61,8 @@ async function findOrCreateDomainSelectorPair(domain: string, selector: string):
 	return dsp;
 }
 
-export async function upsertRecord(dsp: DomainSelectorPair, newRecord: DnsDkimFetchResult): Promise<boolean> {
+// returns the new record if it was added, null if it already exists
+export async function upsertRecord(dsp: DomainSelectorPair, newRecord: DnsDkimFetchResult): Promise<DkimRecord | null> {
 	console.log(`upserting record, ${newRecord.selector}, ${newRecord.domain}`);
 	let currentRecord = await prisma.dkimRecord.findFirst({
 		where: {
@@ -69,7 +72,7 @@ export async function upsertRecord(dsp: DomainSelectorPair, newRecord: DnsDkimFe
 	})
 	if (currentRecord) {
 		console.log(`record already exists: ${recordToString(currentRecord)} for domain/selector pair ${dspToString(dsp)}`);
-		return false;
+		return null;
 	}
 	console.log(`creating record for domain/selector pair ${dspToString(dsp)}`);
 
@@ -78,10 +81,11 @@ export async function upsertRecord(dsp: DomainSelectorPair, newRecord: DnsDkimFe
 			domainSelectorPairId: dsp.id,
 			value: newRecord.value,
 			fetchedAt: newRecord.timestamp,
+			provenanceVerified: false
 		},
 	})
 	console.log(`created dkim record ${recordToString(dkimRecord)} for domain/selector pair ${dspToString(dsp)}`);
-	return true;
+	return dkimRecord;
 }
 
 
@@ -113,6 +117,19 @@ export async function fetchRecord(domain: string, selector: string): Promise<Dns
 	return dkimRecord;
 }
 
+
+async function generateWitness(canonicalRecordString: string) {
+	const witness = new WitnessClient();
+	const leafHash = witness.hash(canonicalRecordString);
+	const timestamp = await witness.postLeafAndGetTimestamp(leafHash);
+	console.log(`leaf ${leafHash} was timestamped at ${timestamp}`);
+	const proof = await witness.getProofForLeafHash(leafHash);
+	const verified = await witness.verifyProofChain(proof);
+	if (!verified) {
+		throw 'proof chain verification failed';
+	}
+}
+
 /**
  * @returns true iff a record was added
  */
@@ -124,8 +141,23 @@ export async function fetchAndUpsertRecord(domain: string, selector: string): Pr
 		return false;
 	}
 	let dsp = await findOrCreateDomainSelectorPair(domain, selector);
-	let added = await upsertRecord(dsp, dkimRecord);
+	let newRecord = await upsertRecord(dsp, dkimRecord);
+
 	console.log(`updating selector timestamp for ${dsp.selector}, ${dsp.domain} to ${dkimRecord.timestamp}`);
 	updateDspTimestamp(dsp, dkimRecord.timestamp);
-	return added;
+
+	if (newRecord) {
+		let canonicalRecordString = getCanonicalRecordString({ domain, selector }, dkimRecord.value);
+		generateWitness(canonicalRecordString);
+		await prisma.dkimRecord.update({
+			where: {
+				id: newRecord.id
+			},
+			data: {
+				provenanceVerified: true
+			}
+		});
+		return true;
+	}
+	return false;
 }

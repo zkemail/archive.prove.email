@@ -1,6 +1,8 @@
 import { RecordWithSelector } from '@/lib/db';
 import { FC, ReactNode } from 'react';
 import { cardStyle } from './styles';
+import { getCanonicalRecordString } from '@/lib/utils';
+import { WitnessClient } from '@witnesswtf/client';
 
 interface RowProps {
 	label: string;
@@ -16,6 +18,29 @@ const Row: FC<RowProps> = ({ label: title, children }) => {
 	);
 };
 
+
+const witness = new WitnessClient();
+
+interface ProvenanceIconProps {
+	record: RecordWithSelector;
+}
+
+const ProvenanceIcon: FC<ProvenanceIconProps> = ({ record }) => {
+	const canonicalRecordString = getCanonicalRecordString(record.domainSelectorPair, record.value);
+	const leafHash = witness.hash(canonicalRecordString);
+	const witnessUrl = `https://api.witness.wtf/getTimestampByLeafHash?chainId=84532&leafHash=${leafHash}`;
+	return (
+		<a href={witnessUrl} target="_blank" rel="noreferrer">
+			<img
+				src="/icons8-clock-checked-96.png" alt="witness verified icon"
+				style={{ width: '1rem' }}
+				title='Check provenance with Witness'
+			/>
+		</a>
+	);
+};
+
+
 interface SelectorResultProps {
 	record: RecordWithSelector;
 }
@@ -25,7 +50,10 @@ export const SelectorResult: React.FC<SelectorResultProps> = ({ record }) => {
 	return (
 		<div style={cardStyle}>
 			<Row label='Selector:'>{record.domainSelectorPair.selector}</Row>
-			<Row label='Fetched date:'>{record.fetchedAt.toLocaleString()}</Row>
+			<Row label='Fetched date:'>
+				{record.fetchedAt.toLocaleString()}&nbsp;
+				{record.provenanceVerified && <ProvenanceIcon record={record} />}
+			</Row>
 			<Row label='Value:'>
 				<pre style={{
 					overflowWrap: 'break-word',

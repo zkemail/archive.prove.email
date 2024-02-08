@@ -24,3 +24,7 @@ export function load_domains_and_selectors_from_tsv(fileContent: string): Domain
 	}
 	return result;
 }
+
+export function getCanonicalRecordString(dsp: DomainSelectorPair, dkimRecordValue: string): string {
+	return `${dsp.selector}._domainkey.${dsp.domain} TXT "${dkimRecordValue}"`;
+}
