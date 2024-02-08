@@ -61,34 +61,6 @@ async function findOrCreateDomainSelectorPair(domain: string, selector: string):
 	return dsp;
 }
 
-// returns the new record if it was added, null if it already exists
-export async function upsertRecord(dsp: DomainSelectorPair, newRecord: DnsDkimFetchResult): Promise<DkimRecord | null> {
-	console.log(`upserting record, ${newRecord.selector}, ${newRecord.domain}`);
-	let currentRecord = await prisma.dkimRecord.findFirst({
-		where: {
-			domainSelectorPair: dsp,
-			value: newRecord.value
-		},
-	})
-	if (currentRecord) {
-		console.log(`record already exists: ${recordToString(currentRecord)} for domain/selector pair ${dspToString(dsp)}`);
-		return null;
-	}
-	console.log(`creating record for domain/selector pair ${dspToString(dsp)}`);
-
-	let dkimRecord = await prisma.dkimRecord.create({
-		data: {
-			domainSelectorPairId: dsp.id,
-			value: newRecord.value,
-			fetchedAt: newRecord.timestamp,
-			provenanceVerified: false
-		},
-	})
-	console.log(`created dkim record ${recordToString(dkimRecord)} for domain/selector pair ${dspToString(dsp)}`);
-	return dkimRecord;
-}
-
-
 export async function fetchRecord(domain: string, selector: string): Promise<DnsDkimFetchResult | null> {
 	const qname = `${selector}._domainkey.${domain}`;
 	let response;
@@ -141,17 +113,38 @@ export async function fetchAndUpsertRecord(domain: string, selector: string): Pr
 		return false;
 	}
 	let dsp = await findOrCreateDomainSelectorPair(domain, selector);
-	let newRecord = await upsertRecord(dsp, dkimRecord);
+
+	let dbRecord = await prisma.dkimRecord.findFirst({
+		where: {
+			domainSelectorPair: dsp,
+			value: dkimRecord.value
+		},
+	});
+
+	if (dbRecord) {
+		console.log(`record already exists: ${recordToString(dbRecord)} for domain/selector pair ${dspToString(dsp)}`);
+	}
+	else {
+		dbRecord = await prisma.dkimRecord.create({
+			data: {
+				domainSelectorPairId: dsp.id,
+				value: dkimRecord.value,
+				fetchedAt: dkimRecord.timestamp,
+				provenanceVerified: false
+			},
+		});
+		console.log(`created dkim record ${recordToString(dbRecord)} for domain/selector pair ${dspToString(dsp)}`);
+	}
 
 	console.log(`updating selector timestamp for ${dsp.selector}, ${dsp.domain} to ${dkimRecord.timestamp}`);
 	updateDspTimestamp(dsp, dkimRecord.timestamp);
 
-	if (newRecord) {
+	if (!dbRecord.provenanceVerified) {
 		let canonicalRecordString = getCanonicalRecordString({ domain, selector }, dkimRecord.value);
 		generateWitness(canonicalRecordString);
 		await prisma.dkimRecord.update({
 			where: {
-				id: newRecord.id
+				id: dbRecord.id
 			},
 			data: {
 				provenanceVerified: true
