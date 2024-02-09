@@ -6,7 +6,7 @@ import { NextAuthProvider } from './session-provider'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-	title: 'DKIM Lookup',
+	title: 'DKIM Registry',
 	description: 'DKIM archive website',
 }
 
