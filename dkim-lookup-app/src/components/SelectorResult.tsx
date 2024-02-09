@@ -49,6 +49,7 @@ export const SelectorResult: React.FC<SelectorResultProps> = ({ record }) => {
 
 	return (
 		<div style={cardStyle}>
+			<Row label='Domain:'>{record.domainSelectorPair.domain}</Row>
 			<Row label='Selector:'>{record.domainSelectorPair.selector}</Row>
 			<Row label='Fetched date:'>
 				{record.fetchedAt.toLocaleString()}&nbsp;

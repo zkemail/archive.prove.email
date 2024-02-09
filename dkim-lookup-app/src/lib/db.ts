@@ -27,10 +27,20 @@ export async function findRecords(domainQuery: string): Promise<RecordWithSelect
 	return await prisma.dkimRecord.findMany({
 		where: {
 			domainSelectorPair: {
-				domain: {
-					equals: domainQuery,
-					mode: Prisma.QueryMode.insensitive,
-				},
+				OR: [
+					{
+						domain: {
+							equals: domainQuery,
+							mode: Prisma.QueryMode.insensitive,
+						}
+					},
+					{
+						domain: {
+							endsWith: '.' + domainQuery,
+							mode: Prisma.QueryMode.insensitive,
+						}
+					}
+				]
 			}
 		},
 		include: {
