@@ -10,10 +10,6 @@ export async function GET(request: NextRequest) {
 	if (!session || !session.user?.email) {
 		return new Response('Unauthorized. Sign in via api/auth/signin', { status: 401 });
 	}
-	const authorized_addresses = (process.env.AUTHORIZED_EMAIL_ADDRESSES || '').split(',').map(email => email.trim());
-	if (!authorized_addresses.includes(session.user.email)) {
-		return new Response('Unauthorized. Email not in whitelist', { status: 401 });
-	}
 	try {
 		console.log(`request url: ${request.nextUrl}`);
 		let domain = request.nextUrl.searchParams.get('domain');
