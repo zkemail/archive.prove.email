@@ -28,3 +28,9 @@ export function load_domains_and_selectors_from_tsv(fileContent: string): Domain
 export function getCanonicalRecordString(dsp: DomainSelectorPair, dkimRecordValue: string): string {
 	return `${dsp.selector}._domainkey.${dsp.domain} TXT "${dkimRecordValue}"`;
 }
+
+export function axiosErrorMessage(error: any): string {
+	const data = error?.response?.data;
+	const dataStr = data ? (data instanceof Object ? JSON.stringify(data) : data) : '';
+	throw `${error}` + dataStr ? ` - ${dataStr}` : '';
+}

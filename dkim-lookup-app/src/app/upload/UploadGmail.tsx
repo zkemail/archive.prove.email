@@ -3,8 +3,7 @@
 import axios from "axios";
 import React from "react";
 import { LogConsole } from "@/components/LogConsole";
-import { upsert } from "@/lib/api_calls";
-import { DomainSelectorPair } from "@/lib/utils";
+import { DomainSelectorPair, axiosErrorMessage } from "@/lib/utils";
 
 export default function Page() {
 
@@ -19,30 +18,32 @@ export default function Page() {
 	async function uploadFromGmail() {
 		let uploadedPairs: Set<string> = new Set();
 		const gmailApiUrl = 'api/gmail';
+		const upsertApiUrl = 'api/upsert_dkim_record';
 		let nextPageToken = "";
-		let done = false;
 		logmsg(`starting upload to ${gmailApiUrl}`);
-		while (!done) {
+		while (true) {
 			logmsg('fetching email batch...');
-			await axios.get(gmailApiUrl, { params: { pageToken: nextPageToken } })
-				.then(response => {
-					nextPageToken = response.data.nextPageToken;
-					let pairs = response.data.domainSelectorPairs as DomainSelectorPair[];
-					logmsg(`received: ${pairs.length} domain/selector pairs`);
-					for (const pair of pairs) {
-						const pairString = JSON.stringify(pair);
-						if (!uploadedPairs.has(pairString)) {
-							logmsg('new pair found, uploading: ' + JSON.stringify(pair));
-							upsert(pair.domain, pair.selector);
-							uploadedPairs.add(pairString);
-						}
+			try {
+				let response = await axios.get(gmailApiUrl, { params: { pageToken: nextPageToken } });
+				nextPageToken = response.data.nextPageToken;
+				let pairs = response.data.domainSelectorPairs as DomainSelectorPair[];
+				logmsg(`received: ${pairs.length} domain/selector pairs`);
+				for (const pair of pairs) {
+					const pairString = JSON.stringify(pair);
+					if (!uploadedPairs.has(pairString)) {
+						logmsg('new pair found, uploading: ' + JSON.stringify(pair));
+						let upsertResponse = await axios.get(upsertApiUrl, { params: pair });
+						console.log('upsert response', upsertResponse);
+						uploadedPairs.add(pairString);
 					}
-					done = !nextPageToken;
-				}).catch(error => {
-					let message = `${error} - ${JSON.stringify(error?.response?.data)}`;
-					console.log(error);
-					throw message;
-				})
+				}
+				if (!nextPageToken) {
+					break;
+				}
+			}
+			catch (error: any) {
+				throw axiosErrorMessage(error);
+			}
 		}
 	}
 

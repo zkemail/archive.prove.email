@@ -1,9 +1,9 @@
 "use client";
 
-import { load_domains_and_selectors_from_tsv } from "@/lib/utils";
+import { axiosErrorMessage, load_domains_and_selectors_from_tsv } from "@/lib/utils";
 import React from "react";
 import { LogConsole } from "@/components/LogConsole";
-import { upsert } from "@/lib/api_calls";
+import axios from "axios";
 
 export default function Page() {
 
@@ -45,9 +45,15 @@ export default function Page() {
 
 		const upsertApiUrl = 'api/upsert_dkim_record';
 		logmsg(`starting upload to ${upsertApiUrl}`);
-		for (const { domain, selector } of domainSelectorPairs) {
-			logmsg(`uploading ${domain} ${selector}`);
-			upsert(domain, selector);
+		for (const dsp of domainSelectorPairs) {
+			logmsg(`uploading ${JSON.stringify(dsp)}`);
+			try {
+				let upsertResponse = await axios.get(upsertApiUrl, { params: dsp });
+				console.log('upsert response', upsertResponse);
+			}
+			catch (error: any) {
+				throw axiosErrorMessage(error);
+			}
 		}
 	}
 
