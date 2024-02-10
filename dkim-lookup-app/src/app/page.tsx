@@ -66,7 +66,7 @@ export default async function Home({ searchParams }: {
 	records = records.filter((record) => dkimValueHasPrivateKey(record.value));
 
 	return (
-		<main style={{ display: 'flex', minHeight: '100vh', flexDirection: 'column', alignItems: 'center' }}>
+		<div style={{ display: 'flex', minHeight: '100vh', flexDirection: 'column', alignItems: 'center' }}>
 			<h2 style={{ padding: '2rem' }}>
 				<a href='/' className='defaultcolor'>DKIM Registry</a>
 			</h2>
@@ -81,6 +81,6 @@ export default async function Home({ searchParams }: {
 				<div><a href="upload">Contribute</a> to the registry</div>
 				<div>Read the <a href="privacy-policy">Privacy policy</a></div>
 			</div>
-		</main>
+		</div>
 	)
 }

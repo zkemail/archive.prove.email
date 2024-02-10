@@ -18,7 +18,20 @@ export default function RootLayout({
 	return (
 		<html lang="en">
 			<NextAuthProvider>
-				<body className={inter.className}>{children}</body>
+				<body className={inter.className} style={{ margin: 0 }}>
+					<header style={{
+						background: '#fcfdfe',
+						padding: '0.5rem',
+						borderBottom: '1px solid #aaa',
+					}}>
+						<a href='/' className='defaultcolor' style={{ fontWeight: 600 }}>
+							DKIM Registry
+						</a>
+					</header>
+					<main style={{ margin: '0.5rem' }}>
+						{children}
+					</main>
+				</body>
 			</NextAuthProvider>
 		</html>
 	)
