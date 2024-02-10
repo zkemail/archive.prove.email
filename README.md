@@ -6,17 +6,18 @@ and in particular this [issue](https://github.com/zkemail/zk-email-verify/issues
 
 ## Website
 
-The website lets the user search for a domain and returns archived DKIM selectors and keys for that domain. Visit the website at https://dkim-lookup.onrender.com/
+The website lets the user search for a domain and returns archived DKIM selectors and keys for that domain. Visit the website at https://registry.prove.email/
 
 Under `/upload`, users can contribute with new domains and selectors, which are extracted from the `DKIM-Signature` header field in each email message in the user's Gmail account.
 
 ### Local development
 
 ```bash
+cd dkim-lookup-app
 yarn install
 ```
 
-Access to a [PostgreSQL](https://www.postgresql.org/) database is needed for development.
+Access to a [PostgreSQL](https://www.postgresql.org/) database is needed for development. See [below](#ubuntu_postgresql) for an example setup of PostgreSQL on Ubuntu.
 
 Copy `.env.example` to `.env` and configure the variables
 
@@ -30,6 +31,22 @@ Start the development server
 
 ```bash
 yarn dev
+```
+
+<a name="ubuntu_postgresql"></a>
+#### Setting up a PostgreSQL database on Ubuntu
+
+Install PostgreSQL server and client with `sudo apt install postgresql`
+
+Log in with `sudo -u postgres psql` and set a password with `\password postgres`
+
+Test the login: `psql postgresql://postgres:YOURPASSWORD@localhost`
+
+Your `.env` config would now be:
+
+```
+POSTGRES_URL_NON_POOLING="postgresql://postgres:YOURPASSWORD@localhost/dkim_lookup"
+POSTGRES_PRISMA_URL="postgresql://postgres:YOURPASSWORD@localhost/dkim_lookup"
 ```
 
 ### Database management
