@@ -45,7 +45,7 @@ export const authOptions = {
 					const tokens: TokenSet = await response.json()
 
 					if (!response.ok) {
-						console.error("!response.ok")
+						console.error("!response.ok", tokens, response.status, response.statusText)
 						throw tokens
 					}
 
