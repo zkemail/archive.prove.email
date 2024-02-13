@@ -10,6 +10,17 @@ export const metadata: Metadata = {
 	description: 'DKIM archive website',
 }
 
+const DevModeNotice: React.FC = () => {
+	if (process.env.NODE_ENV !== 'development') {
+		return null;
+	}
+	return (
+		<span style={{ color: 'white', backgroundColor: 'orange', paddingLeft: '0.5rem', paddingRight: '0.5rem', marginLeft: '1rem' }}>
+			development
+		</span>
+	)
+};
+
 export default function RootLayout({
 	children,
 }: {
@@ -27,6 +38,7 @@ export default function RootLayout({
 						<a href='/' className='defaultcolor' style={{ fontWeight: 600 }}>
 							DKIM Registry
 						</a>
+						<DevModeNotice />
 					</header>
 					<main style={{ margin: '0.5rem' }}>
 						{children}
