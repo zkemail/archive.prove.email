@@ -78,7 +78,7 @@ export default async function Home({ searchParams }: {
 				<div><a href="about">About</a> this site</div>
 				<div>Visit the project on <a href="https://github.com/foolo/dkim-lookup">GitHub</a></div>
 				<div>Visit <a href="https://prove.email/">Proof of Email</a></div>
-				<div><a href="upload">Contribute</a> to the registry</div>
+				<div><a href="contribute">Contribute</a> to the registry</div>
 				<div>Read the <a href="privacy-policy">Privacy policy</a></div>
 			</div>
 		</div>
