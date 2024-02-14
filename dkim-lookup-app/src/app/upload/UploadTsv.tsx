@@ -4,9 +4,11 @@ import { axiosErrorMessage, load_domains_and_selectors_from_tsv } from "@/lib/ut
 import React from "react";
 import { LogConsole } from "@/components/LogConsole";
 import axios from "axios";
+import { useSession } from "next-auth/react";
 
 export default function Page() {
 
+	const { update } = useSession();
 	const [log, setLog] = React.useState<string[]>([]);
 	const [selectedFile, setSelectedFile] = React.useState<File | undefined>();
 	const [started, setStarted] = React.useState<boolean>(false);
@@ -49,6 +51,7 @@ export default function Page() {
 			logmsg(`uploading ${JSON.stringify(dsp)}`);
 			try {
 				let upsertResponse = await axios.get(upsertApiUrl, { params: dsp });
+				await update();
 				console.log('upsert response', upsertResponse);
 			}
 			catch (error: any) {

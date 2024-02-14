@@ -49,12 +49,11 @@ export const authOptions = {
 						throw tokens
 					}
 
-					return {
-						...token,
-						access_token: tokens.access_token,
-						expires_at: Math.floor(Date.now() / 1000 + (tokens.expires_in as any)),
-						refresh_token: tokens.refresh_token ?? token.refresh_token,
-					}
+
+					token.access_token = tokens.access_token
+					token.expires_at = Math.floor(Date.now() / 1000 + (tokens.expires_in as any))
+					token.refresh_token = tokens.refresh_token ?? token.refresh_token
+					return token
 				}
 				catch (error) {
 					return { ...token, error: "RefreshAccessTokenError" as const }

@@ -4,9 +4,11 @@ import axios from "axios";
 import React from "react";
 import { LogConsole } from "@/components/LogConsole";
 import { DomainSelectorPair, axiosErrorMessage } from "@/lib/utils";
+import { useSession } from "next-auth/react";
 
 export default function Page() {
 
+	const { update } = useSession();
 	const [log, setLog] = React.useState<string[]>([]);
 	const [started, setStarted] = React.useState<boolean>(false);
 
@@ -25,6 +27,7 @@ export default function Page() {
 			logmsg('fetching email batch...');
 			try {
 				let response = await axios.get(gmailApiUrl, { params: { pageToken: nextPageToken } });
+				await update();
 				nextPageToken = response.data.nextPageToken;
 				let pairs = response.data.domainSelectorPairs as DomainSelectorPair[];
 				logmsg(`received: ${pairs.length} domain/selector pairs`);
@@ -33,6 +36,7 @@ export default function Page() {
 					if (!uploadedPairs.has(pairString)) {
 						logmsg('new pair found, uploading: ' + JSON.stringify(pair));
 						let upsertResponse = await axios.get(upsertApiUrl, { params: pair });
+						await update();
 						console.log('upsert response', upsertResponse);
 						uploadedPairs.add(pairString);
 					}

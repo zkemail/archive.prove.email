@@ -15,25 +15,22 @@ export default function Page() {
 			<button onClick={() => signIn()}>Sign in</button>
 		</div>
 	}
-	if (status == "loading") {
+	if (status === "loading" && !session) {
 		return <p>loading...</p>
 	}
 
 	return (
 		<div>
 			<h1>Upload</h1>
-			{(status == "authenticated") &&
-				<div>
-					{session?.user?.email && <div>Signed in as {session?.user?.email}</div>}
-					<button onClick={() => signOut()}>Sign out</button>
-				</div>
-			}
+			<div>
+				{session?.user?.email && <div>Signed in as {session?.user?.email}</div>}
+				{session && <button onClick={() => signOut()}>Sign out</button>}
+			</div>
 
 			<p>
 				On this page, you can contribute to the project by uploading domains and selectors
 				from your own Gmail account or from a TSV file.
 			</p>
-
 			<UploadGmail />
 			<UploadTsv />
 		</div >
