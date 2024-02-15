@@ -141,7 +141,7 @@ export async function fetchAndUpsertRecord(domain: string, selector: string): Pr
 
 	if (!dbRecord.provenanceVerified) {
 		let canonicalRecordString = getCanonicalRecordString({ domain, selector }, dkimRecord.value);
-		generateWitness(canonicalRecordString);
+		await generateWitness(canonicalRecordString);
 		await prisma.dkimRecord.update({
 			where: {
 				id: dbRecord.id
