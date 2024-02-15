@@ -2,7 +2,7 @@ import { RecordWithSelector } from '@/lib/db';
 import { FC, ReactNode } from 'react';
 import { cardStyle } from './styles';
 import { getCanonicalRecordString } from '@/lib/utils';
-import { WitnessClient } from '@witnesswtf/client';
+import { WitnessClient } from '@witnessco/client';
 
 interface RowProps {
 	label: string;
@@ -28,7 +28,7 @@ interface ProvenanceIconProps {
 const ProvenanceIcon: FC<ProvenanceIconProps> = ({ record }) => {
 	const canonicalRecordString = getCanonicalRecordString(record.domainSelectorPair, record.value);
 	const leafHash = witness.hash(canonicalRecordString);
-	const witnessUrl = `https://api.witness.wtf/getTimestampByLeafHash?chainId=84532&leafHash=${leafHash}`;
+	const witnessUrl = `https://api.witness.co/getTimestampByLeafHash?chainId=84532&leafHash=${leafHash}`;
 	return (
 		<a href={witnessUrl} target="_blank" rel="noreferrer">
 			<img

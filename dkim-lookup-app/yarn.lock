@@ -336,10 +336,10 @@
     "@whatwg-node/fetch" "^0.9.10"
     tslib "^2.3.1"
 
-"@witnesswtf/client@^0.1.13":
-  version "0.1.13"
-  resolved "https://registry.yarnpkg.com/@witnesswtf/client/-/client-0.1.13.tgz#75fcfe564ac828a97448b84cf98d652d204eb585"
-  integrity sha512-HgR4FNMoHnfDMm+DruxiL1yW1HIr1EMQmzsOJEtRREHEO2xx+lqPlQZa0JOr8SRWLcg6d6bnxfbdUoS9MN50Fg==
+"@witnessco/client@^0.1.11":
+  version "0.1.11"
+  resolved "https://registry.yarnpkg.com/@witnessco/client/-/client-0.1.11.tgz#69bcffe6bfc1ef2bff5819a0f525d065ddb6a616"
+  integrity sha512-f88xtf3RIQhOdEgPFgSYXK6AJCMOG+OYlZ9BH08kR7quVL/idjtswTx79K74NDcaKUU/jD7a4OO1cM3Pc/w+3w==
   dependencies:
     fets "^0.6.7"
 

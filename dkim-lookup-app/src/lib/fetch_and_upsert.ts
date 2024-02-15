@@ -1,8 +1,8 @@
 import dns from 'dns';
 import { Prisma, DomainSelectorPair, DkimRecord } from '@prisma/client'
 import { prisma } from './db';
-import { WitnessClient } from '@witnesswtf/client';
 import { getCanonicalRecordString } from './utils';
+import { WitnessClient } from '@witnessco/client';
 
 let resolver = new dns.promises.Resolver({ timeout: 2500 });
 
