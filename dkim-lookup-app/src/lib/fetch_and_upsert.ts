@@ -91,7 +91,7 @@ export async function fetchRecord(domain: string, selector: string): Promise<Dns
 
 
 async function generateWitness(canonicalRecordString: string) {
-	const witness = new WitnessClient();
+	const witness = new WitnessClient(process.env.WITNESS_API_KEY);
 	const leafHash = witness.hash(canonicalRecordString);
 	const timestamp = await witness.postLeafAndGetTimestamp(leafHash);
 	console.log(`leaf ${leafHash} was timestamped at ${timestamp}`);
