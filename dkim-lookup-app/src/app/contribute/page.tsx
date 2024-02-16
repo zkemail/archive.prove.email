@@ -48,6 +48,16 @@ export default function Page() {
 			<p>
 				Read the <a href="privacy-policy">Privacy policy</a>
 			</p>
+			<h3>
+				Disclosure regarding Limited Use:
+			</h3>
+			<p>
+				DKIM Registry's use and transfer of information received from Google APIs to any other app will adhere to{' '}
+				<a href="https://developers.google.com/terms/api-services-user-data-policy#additional_requirements_for_specific_api_scopes">
+					Google API Services User Data Policy
+				</a>
+				, including the Limited Use requirements.
+			</p>
 		</div >
 	)
 }
