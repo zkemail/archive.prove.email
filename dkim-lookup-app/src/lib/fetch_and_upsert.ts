@@ -90,7 +90,7 @@ export async function fetchRecord(domain: string, selector: string): Promise<Dns
 }
 
 
-async function generateWitness(canonicalRecordString: string) {
+async function generateWitness(canonicalRecordString: string, dbRecord: DkimRecord) {
 	const witness = new WitnessClient(process.env.WITNESS_API_KEY);
 	const leafHash = witness.hash(canonicalRecordString);
 	const timestamp = await witness.postLeafAndGetTimestamp(leafHash);
@@ -100,6 +100,15 @@ async function generateWitness(canonicalRecordString: string) {
 	if (!verified) {
 		throw 'proof chain verification failed';
 	}
+	console.log(`proof chain verified, setting provenanceVerified for ${recordToString(dbRecord)}`);
+	await prisma.dkimRecord.update({
+		where: {
+			id: dbRecord.id
+		},
+		data: {
+			provenanceVerified: true
+		}
+	});
 }
 
 /**
@@ -136,20 +145,12 @@ export async function fetchAndUpsertRecord(domain: string, selector: string): Pr
 		console.log(`created dkim record ${recordToString(dbRecord)} for domain/selector pair ${dspToString(dsp)}`);
 	}
 
-	console.log(`updating selector timestamp for ${dsp.selector}, ${dsp.domain} to ${dkimRecord.timestamp}`);
 	updateDspTimestamp(dsp, dkimRecord.timestamp);
+	console.log(`updated selector timestamp for ${dsp.selector}, ${dsp.domain} to ${dkimRecord.timestamp}`);
 
 	if (!dbRecord.provenanceVerified) {
 		let canonicalRecordString = getCanonicalRecordString({ domain, selector }, dkimRecord.value);
-		await generateWitness(canonicalRecordString);
-		await prisma.dkimRecord.update({
-			where: {
-				id: dbRecord.id
-			},
-			data: {
-				provenanceVerified: true
-			}
-		});
+		generateWitness(canonicalRecordString, dbRecord);
 		return true;
 	}
 	return false;
