@@ -33,35 +33,10 @@ async function updateDspTimestamp(dsp: DomainSelectorPair, timestamp: Date) {
 			lastRecordUpdate: timestamp
 		}
 	})
-	console.log(`updated domain/selector pair timestamp ${dspToString(updatedSelector)}`);
+	console.log(`updated dsp timestamp ${dspToString(updatedSelector)}`);
 }
 
-async function findOrCreateDomainSelectorPair(domain: string, selector: string): Promise<DomainSelectorPair> {
-	let dsp = await prisma.domainSelectorPair.findFirst({
-		where: {
-			domain: {
-				equals: domain,
-				mode: Prisma.QueryMode.insensitive,
-			},
-			selector: {
-				equals: selector,
-				mode: Prisma.QueryMode.insensitive
-			}
-		}
-	});
-	if (dsp) {
-		console.log(`found domain/selector pair ${dspToString(dsp)}`);
-	}
-	else {
-		dsp = await prisma.domainSelectorPair.create({
-			data: { domain, selector }
-		})
-		console.log(`created domain/selector pair ${dspToString(dsp)}`);
-	}
-	return dsp;
-}
-
-export async function fetchRecord(domain: string, selector: string): Promise<DnsDkimFetchResult | null> {
+export async function fetchDkimDnsRecord(domain: string, selector: string): Promise<DnsDkimFetchResult | null> {
 	const qname = `${selector}._domainkey.${domain}`;
 	let response;
 	try {
@@ -90,7 +65,8 @@ export async function fetchRecord(domain: string, selector: string): Promise<Dns
 }
 
 
-async function generateWitness(canonicalRecordString: string, dbRecord: DkimRecord) {
+async function generateWitness(dsp: DomainSelectorPair, dkimRecord: DkimRecord) {
+	let canonicalRecordString = getCanonicalRecordString(dsp, dkimRecord.value);
 	const witness = new WitnessClient(process.env.WITNESS_API_KEY);
 	const leafHash = witness.hash(canonicalRecordString);
 	const timestamp = await witness.postLeafAndGetTimestamp(leafHash);
@@ -100,10 +76,10 @@ async function generateWitness(canonicalRecordString: string, dbRecord: DkimReco
 	if (!verified) {
 		throw 'proof chain verification failed';
 	}
-	console.log(`proof chain verified, setting provenanceVerified for ${recordToString(dbRecord)}`);
+	console.log(`proof chain verified, setting provenanceVerified for ${recordToString(dkimRecord)}`);
 	await prisma.dkimRecord.update({
 		where: {
-			id: dbRecord.id
+			id: dkimRecord.id
 		},
 		data: {
 			provenanceVerified: true
@@ -111,47 +87,87 @@ async function generateWitness(canonicalRecordString: string, dbRecord: DkimReco
 	});
 }
 
+async function createDkimRecord(dsp: DomainSelectorPair, dkimDsnRecord: DnsDkimFetchResult) {
+	let dkimRecord = await prisma.dkimRecord.create({
+		data: {
+			domainSelectorPairId: dsp.id,
+			value: dkimDsnRecord.value,
+			fetchedAt: dkimDsnRecord.timestamp,
+			provenanceVerified: false
+		},
+	});
+	console.log(`created dkim record ${recordToString(dkimRecord)} for domain/selector pair ${dspToString(dsp)}`);
+	return dkimRecord;
+}
+
 /**
  * @returns true iff a record was added
  */
-export async function fetchAndUpsertRecord(domain: string, selector: string): Promise<boolean> {
-	console.log(`fetching ${selector}._domainkey.${domain} from dns`);
-	let dkimRecord = await fetchRecord(domain, selector);
-	if (!dkimRecord) {
-		console.log(`no record found for ${selector}, ${domain}`);
+export async function fetchAndStoreDkimDnsRecord(dsp: DomainSelectorPair) {
+	console.log(`fetching ${dsp.selector}._domainkey.${dsp.domain} from dns`);
+	let dkimDnsRecord = await fetchDkimDnsRecord(dsp.domain, dsp.selector);
+	if (!dkimDnsRecord) {
+		console.log(`no record found for ${dsp.selector}, ${dsp.domain}`);
 		return false;
 	}
-	let dsp = await findOrCreateDomainSelectorPair(domain, selector);
-
-	let dbRecord = await prisma.dkimRecord.findFirst({
+	let dkimRecord = await prisma.dkimRecord.findFirst({
 		where: {
 			domainSelectorPair: dsp,
-			value: dkimRecord.value
+			value: dkimDnsRecord.value
 		},
 	});
 
-	if (dbRecord) {
-		console.log(`record already exists: ${recordToString(dbRecord)} for domain/selector pair ${dspToString(dsp)}`);
+	if (dkimRecord) {
+		console.log(`record already exists: ${recordToString(dkimRecord)} for domain/selector pair ${dspToString(dsp)}`);
 	}
 	else {
-		dbRecord = await prisma.dkimRecord.create({
-			data: {
-				domainSelectorPairId: dsp.id,
-				value: dkimRecord.value,
-				fetchedAt: dkimRecord.timestamp,
-				provenanceVerified: false
+		dkimRecord = await createDkimRecord(dsp, dkimDnsRecord);
+	}
+
+	console.log(`updating dsp timestamp for ${dsp.selector}, ${dsp.domain} to ${dkimDnsRecord.timestamp}`);
+	updateDspTimestamp(dsp, dkimDnsRecord.timestamp);
+
+	if (!dkimRecord.provenanceVerified) {
+		generateWitness(dsp, dkimRecord);
+	}
+}
+
+/**
+ * @returns true iff a record was added
+ */
+export async function addDomainSelectorPair(domain: string, selector: string): Promise<boolean> {
+
+	// check if record exists
+	let dsp = await prisma.domainSelectorPair.findFirst({
+		where: {
+			domain: {
+				equals: domain,
+				mode: Prisma.QueryMode.insensitive,
 			},
-		});
-		console.log(`created dkim record ${recordToString(dbRecord)} for domain/selector pair ${dspToString(dsp)}`);
+			selector: {
+				equals: selector,
+				mode: Prisma.QueryMode.insensitive
+			}
+		}
+	});
+	if (dsp) {
+		console.log(`found domain/selector pair ${dspToString(dsp)}`);
+		return false;
 	}
-
-	updateDspTimestamp(dsp, dkimRecord.timestamp);
-	console.log(`updated selector timestamp for ${dsp.selector}, ${dsp.domain} to ${dkimRecord.timestamp}`);
-
-	if (!dbRecord.provenanceVerified) {
-		let canonicalRecordString = getCanonicalRecordString({ domain, selector }, dkimRecord.value);
-		generateWitness(canonicalRecordString, dbRecord);
-		return true;
+	let dkimDnsRecord = await fetchDkimDnsRecord(domain, selector);
+	if (!dkimDnsRecord) {
+		console.log(`no dkim dns record found for ${selector}, ${domain}`);
+		return false;
 	}
-	return false;
+	dsp = await prisma.domainSelectorPair.create({
+		data: { domain, selector }
+	})
+
+	let dkimRecord = await createDkimRecord(dsp, dkimDnsRecord);
+
+	console.log(`updating dsp timestamp for ${dsp.selector}, ${dsp.domain} to ${dkimDnsRecord.timestamp}`);
+	updateDspTimestamp(dsp, dkimDnsRecord.timestamp);
+
+	generateWitness(dsp, dkimRecord);
+	return true;
 }

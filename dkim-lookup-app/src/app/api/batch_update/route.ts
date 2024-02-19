@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/db';
-import { fetchAndUpsertRecord } from '@/lib/fetch_and_upsert';
+import { fetchAndStoreDkimDnsRecord } from '@/lib/fetch_and_upsert';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
@@ -31,22 +31,22 @@ export async function GET(request: NextRequest) {
 	console.log(`updating ${numRecords} records`);
 
 	try {
-		const records = await prisma.domainSelectorPair.findMany(
+		const dsps = await prisma.domainSelectorPair.findMany(
 			{
 				orderBy: { lastRecordUpdate: 'asc' },
 				take: numRecords,
 			}
 		);
-		for (const result of records) {
+		for (const dsp of dsps) {
 			try {
-				await fetchAndUpsertRecord(result.domain, result.selector);
+				await fetchAndStoreDkimDnsRecord(dsp);
 			}
 			catch (error) {
-				console.log(`error updating ${result.domain}, ${result.selector}: ${error}`);
+				console.log(`error updating ${dsp.domain}, ${dsp.selector}: ${error}`);
 			}
 		}
 		return NextResponse.json(
-			{ updatedRecords: records },
+			{ updatedRecords: dsps },
 			{ status: 200 }
 		);
 	} catch (error) {

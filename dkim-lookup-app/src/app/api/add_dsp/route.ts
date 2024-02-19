@@ -1,4 +1,4 @@
-import { fetchAndUpsertRecord } from '@/lib/fetch_and_upsert';
+import { addDomainSelectorPair } from '@/lib/fetch_and_upsert';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getServerSession } from "next-auth/next"
@@ -20,8 +20,7 @@ export async function GET(request: NextRequest) {
 		if (!selector) {
 			throw 'missing selector parameter in query';
 		}
-
-		await fetchAndUpsertRecord(domain, selector);
+		await addDomainSelectorPair(domain, selector);
 
 		return NextResponse.json(
 			{ message: `updated ${domain}, ${selector}` },

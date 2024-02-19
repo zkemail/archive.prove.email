@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { fetchAndUpsertRecord } from '@/lib/fetch_and_upsert';
+import { addDomainSelectorPair } from '@/lib/fetch_and_upsert';
 
 // loads a list of selectors and a list of domains (the list of selectors can be generated with statistics.py)
 // tries every selector with every domain and adds the domain/selector pair to the database if it doesn't already exist
@@ -23,7 +23,7 @@ async function main() {
 	for (const domain of domains) {
 		for (const selector of selectors) {
 			try {
-				if (await fetchAndUpsertRecord(domain, selector)) {
+				if (await addDomainSelectorPair(domain, selector)) {
 					newFoundRecords.push(`${selector}, ${domain}`);
 				}
 			}

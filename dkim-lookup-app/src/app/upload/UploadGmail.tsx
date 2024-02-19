@@ -20,7 +20,7 @@ export default function Page() {
 	async function uploadFromGmail() {
 		let uploadedPairs: Set<string> = new Set();
 		const gmailApiUrl = 'api/gmail';
-		const upsertApiUrl = 'api/upsert_dkim_record';
+		const upsertApiUrl = 'api/add_dsp';
 		let nextPageToken = "";
 		logmsg(`starting upload to ${gmailApiUrl}`);
 		while (true) {

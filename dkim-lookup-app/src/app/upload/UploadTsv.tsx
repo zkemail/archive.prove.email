@@ -46,7 +46,7 @@ export default function Page() {
 
 		let domainSelectorPairs = load_domains_and_selectors_from_tsv(fileContent);
 
-		const upsertApiUrl = 'api/upsert_dkim_record';
+		const upsertApiUrl = 'api/add_dsp';
 		logmsg(`starting upload to ${upsertApiUrl}`);
 		for (const dsp of domainSelectorPairs) {
 			logmsg(`uploading ${JSON.stringify(dsp)}`);
