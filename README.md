@@ -10,6 +10,10 @@ The website lets the user search for a domain and returns archived DKIM selector
 
 Under `/upload`, users can contribute with new domains and selectors, which are extracted from the `DKIM-Signature` header field in each email message in the user's Gmail account.
 
+When domains and selectors are added, the site fetches the DKIM key via DNS and stores it in the database.
+
+For each record, the site also generates an on-chain proof with [Witness](https://witness.co), which functions as a data availability timestamp.
+
 ### Local development
 
 ```bash

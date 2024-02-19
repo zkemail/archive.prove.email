@@ -8,8 +8,12 @@ export default function Page() {
 				The site is a part of the <a href="https://prove.email/">Proof of Email</a> project.
 			</p>
 			<p>
-				On the <a href="upload">Contribute</a> page, users can contribute with new domains and selectors,
+				On the <a href="contribute">Contribute</a> page, users can contribute with new domains and selectors,
 				which are extracted from the DKIM-Signature header field in each email message in the user's Gmail account.
+				When domains and selectors are added, the site fetches the DKIM key via DNS and stores it in the database.
+			</p>
+			<p>
+				For each record, the site also generates an on-chain proof with <a href="https://witness.co/">Witness</a>, which functions as a data availability timestamp.
 			</p>
 		</div >
 	)
