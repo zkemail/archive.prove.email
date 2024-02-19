@@ -14,6 +14,9 @@ export default function Page() {
 			<p>
 				You can contribute to the project by uploading domains and selectors from your own Gmail account or from a TSV file.
 			</p>
+			<p>
+				To start contributing, visit the <strong><a href="upload">Upload</a></strong> page.
+			</p>
 			<h3>
 				How it works:
 			</h3>
@@ -41,9 +44,6 @@ export default function Page() {
 			</p>
 			<p>
 				The data will be used to build a publicly accessible archive of current and historical DKIM records.
-			</p>
-			<p>
-				To start contributing, visit the <strong><a href="upload">Upload</a></strong> page.
 			</p>
 			<p>
 				Read the <a href="privacy-policy">Privacy policy</a>

@@ -1,10 +1,6 @@
-# DKIM archive website and tools
+This repository is part of the [Proof of Email](https://prove.email/) project
 
-These tools are in contribution to [ZK Email](https://github.com/zkemail/zk-email-verify),
-and in particular this [issue](https://github.com/zkemail/zk-email-verify/issues/81).
-
-
-## Website
+# DKIM archive website
 
 The website lets the user search for a domain and returns archived DKIM selectors and keys for that domain. Visit the website at https://registry.prove.email/
 
@@ -14,7 +10,7 @@ When domains and selectors are added, the site fetches the DKIM key via DNS and 
 
 For each record, the site also generates an on-chain proof with [Witness](https://witness.co), which functions as a data availability timestamp.
 
-### Local development
+## Local development
 
 ```bash
 cd dkim-lookup-app
@@ -38,7 +34,7 @@ yarn dev
 ```
 
 <a name="ubuntu_postgresql"></a>
-#### Setting up a PostgreSQL database on Ubuntu
+### Setting up a PostgreSQL database on Ubuntu
 
 Install PostgreSQL server and client with `sudo apt install postgresql`
 
@@ -53,7 +49,7 @@ POSTGRES_URL_NON_POOLING="postgresql://postgres:YOURPASSWORD@localhost/dkim_look
 POSTGRES_PRISMA_URL="postgresql://postgres:YOURPASSWORD@localhost/dkim_lookup"
 ```
 
-### Database management
+## Database management
 
 Start the Prisma Studio database manager
 
@@ -67,7 +63,7 @@ Resetting the database
 yarn prisma migrate reset
 ```
 
-### Fetch DKIM keys from DNS and upload to database
+## Fetch DKIM keys from DNS and upload to database
 
 The `update_records` script reads a list of domains and selectors, fetches the corresponding DKIM records via DNS lookup, and publishes the results to a database.
 
@@ -79,7 +75,7 @@ A TSV file with domains and selectors can be created with the [mbox selector scr
 or with [Gmail Metadata Scraper](https://github.com/zkemail/selector-scraper)
 
 
-### Batch updates
+## Batch updates
 
 The API endpoint `/api/batch_update` is designed to be called at regular intervals, for example as a cron job.
 The function updates the *N* oldest database records via DNS lookups.
@@ -97,9 +93,8 @@ To manually call `batch_update` on a production server on example.com, run:
 curl https://example.com/api/batch_update -H "Accept: application/json" -H "Authorization: Bearer $CRON_SECRET"
 ```
 
-## Tools
 
-### Mbox selector scraper
+# Mbox selector scraper
 
 As a complement to [Gmail Metadata Scraper](https://github.com/zkemail/selector-scraper),
 the [mbox selector scraper](util/mbox_selector_scraper.py) allows for fetching domains and selectors from emails from any provider via the mbox format.
