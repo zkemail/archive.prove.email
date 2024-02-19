@@ -5,6 +5,7 @@ import React from "react";
 import { LogConsole } from "@/components/LogConsole";
 import axios from "axios";
 import { useSession } from "next-auth/react";
+import { InlineCode } from "@/components/InlineCode";
 
 export default function Page() {
 
@@ -82,8 +83,12 @@ export default function Page() {
 		<div>
 			<h3>Upload from TSV file</h3>
 			<p>
-				Add records to the database by providing a TSV file with domains and selectors.
-				This page will parse the file and add the records to the database via the <code>api/upsert_dkim_record</code> API.
+				Here you can contribute to the database by providing a TSV file with domains and selectors.
+			</p>
+			<p>
+				One way to create such a file is to first export all messages in your email account as an .mbox file, and then parsing the .mbox file
+				with the <InlineCode>mbox_selector_scraper.py</InlineCode> tool, which outputs domains-selector-pairs in TSV format.
+				The process is described in more detail in the <a href="https://github.com/foolo/dkim-lookup?tab=readme-ov-file#mbox_selector_scraper">README</a>.
 			</p>
 			<div>
 				<div>Select a file:</div>
