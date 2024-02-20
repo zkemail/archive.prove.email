@@ -21,6 +21,7 @@ model DkimRecord {
   domainSelectorPair   DomainSelectorPair @relation(fields: [domainSelectorPairId], references: [id])
   domainSelectorPairId Int
   firstSeenAt  DateTime
+  lastSeenAt  DateTime?
   provenanceVerified Boolean?
   value      String
 }

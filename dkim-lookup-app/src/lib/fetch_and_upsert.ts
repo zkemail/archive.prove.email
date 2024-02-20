@@ -93,6 +93,7 @@ async function createDkimRecord(dsp: DomainSelectorPair, dkimDsnRecord: DnsDkimF
 			domainSelectorPairId: dsp.id,
 			value: dkimDsnRecord.value,
 			firstSeenAt: dkimDsnRecord.timestamp,
+			lastSeenAt: dkimDsnRecord.timestamp,
 			provenanceVerified: false
 		},
 	});

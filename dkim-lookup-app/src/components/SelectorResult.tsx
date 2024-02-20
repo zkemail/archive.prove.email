@@ -55,6 +55,11 @@ export const SelectorResult: React.FC<SelectorResultProps> = ({ record }) => {
 				{record.firstSeenAt.toLocaleString()}&nbsp;
 				{record.provenanceVerified && <ProvenanceIcon record={record} />}
 			</Row>
+			{record.lastSeenAt &&
+				<Row label='Last seen at:'>
+					{record.lastSeenAt.toLocaleString()}&nbsp;
+				</Row>
+			}
 			<Row label='Value:'>
 				<pre style={{
 					overflowWrap: 'break-word',
