@@ -1,16 +1,29 @@
 "use client";
 
-import axios from "axios";
 import React from "react";
+import { useSession, signIn, signOut } from "next-auth/react"
 import { LogConsole } from "@/components/LogConsole";
 import { DomainSelectorPair, axiosErrorMessage } from "@/lib/utils";
-import { useSession } from "next-auth/react";
+import axios from "axios";
 
 export default function Page() {
+
+	const { data: session, status } = useSession()
 
 	const { update } = useSession();
 	const [log, setLog] = React.useState<string[]>([]);
 	const [started, setStarted] = React.useState<boolean>(false);
+
+	if (status == "unauthenticated") {
+		return <div>
+			<p>You need to be signed in to use this page.</p>
+			<button onClick={() => signIn()}>Sign in</button>
+		</div>
+	}
+	if (status === "loading" && !session) {
+		return <p>loading...</p>
+	}
+
 
 	function logmsg(message: string) {
 		console.log(message);
@@ -71,16 +84,25 @@ export default function Page() {
 
 	return (
 		<div>
-			<h3>Upload from Gmail</h3>
+			<h1>Upload from Gmail</h1>
+			<div>
+				{session?.user?.email && <div>Signed in as {session?.user?.email}</div>}
+				{session && <button onClick={() => signOut()}>Sign out</button>}
+			</div>
 			<p>
-				Fetch the domain and selector from the DKIM-Signature header field in email messages in your Gmail account and add them to the database.
+				On this page, you can contribute to the project by uploading domains and selectors from your Gmail account.
 			</p>
-			<p>
-				<button disabled={!startEnabled} onClick={startUpload}>
-					{started ? "Running..." : "Start"}
-				</button>
-			</p>
-			<LogConsole log={log} setLog={setLog} />
+			<div>
+				<p>
+					Domains and selectors will be extracted from the DKIM-Signature header field in each email message in your Gmail account.
+				</p>
+				<p>
+					<button disabled={!startEnabled} onClick={startUpload}>
+						{started ? "Running..." : "Start"}
+					</button>
+				</p>
+				<LogConsole log={log} setLog={setLog} />
+			</div >
 		</div >
 	)
 }

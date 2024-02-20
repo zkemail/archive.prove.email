@@ -14,9 +14,14 @@ export default function Page() {
 			<p>
 				You can contribute to the project by uploading domains and selectors from your own Gmail account or from a TSV file.
 			</p>
-			<p>
-				To start contributing, visit the <strong><a href="upload">Upload</a></strong> page.
-			</p>
+			<ul>
+				<li>
+					To upload directly from your Gmail account, visit the <strong><a href="upload_gmail">Upload from Gmail</a></strong> page.
+				</li>
+				<li>
+					To upload a file from an exported archive from any provider (including Gmail), visit the <strong><a href="upload_tsv">Upload from TSV file</a></strong> page.
+				</li>
+			</ul>
 			<h3>
 				How it works:
 			</h3>

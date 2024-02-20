@@ -4,7 +4,7 @@ This repository is part of the [Proof of Email](https://prove.email/) project
 
 The website lets the user search for a domain and returns archived DKIM selectors and keys for that domain. Visit the website at https://registry.prove.email/
 
-Under `/upload`, users can contribute with new domains and selectors, which are extracted from the `DKIM-Signature` header field in each email message in the user's Gmail account.
+Under `/contribute`, users can contribute with new domains and selectors, which are extracted from the `DKIM-Signature` header field in each email message in the user's Gmail account.
 
 When domains and selectors are added, the site fetches the DKIM key via DNS and stores it in the database.
 
@@ -104,13 +104,13 @@ The [mbox selector scraper](util/mbox_selector_scraper.py) tool allows for fetch
 
 By using mbox as an intermediate format, it is possible to extract domains and selectors from email messages in any mail account.
 
-### Exporting files
+### 1. Export email messages
 
-#### From Gmail
+#### a. From Gmail
 
 Go to https://takeout.google.com/settings/takeout and click **Deselect all**, then scroll down and select **Mail**, click **Next step**, and follow the instructions to download an archive that contains an .mbox file with all your email messages.
 
-#### From other email providers
+#### b. From other email providers
 
 The easiest option is if your email provider's web client lets you export emails as an .mbox file.
 You can then use that feature and continue with [parsing the mbox file](#mbox_extract).
@@ -118,7 +118,7 @@ You can then use that feature and continue with [parsing the mbox file](#mbox_ex
 If no such feature is available, an alternative is to connect your email account to a client such as Mozilla Thunderbird, Gnome Evolution or Microsoft Outlook, and use the export feature from within the email client.
 
 <a name="mbox_extract"></a>
-### Extracting domains and selectors from an .mbox file
+### 2. Extract domains and selectors
 
 When you have an .mbox file, use `mbox_selector_scraper.py` to extract the domains and selectors
 
@@ -128,18 +128,20 @@ Example:
 util/mbox_selector_scraper.py my_mail.mbox > domains_and_selectors.tsv
 ```
 
-The output file, `domains_and_selectors.tsv`, should look something like this:
+The output file, (`domains_and_selectors.tsv` in this example), is a text file where each line contains a domain and a selector, separated by a tab character.
+It should look something like this:
 
 ```
-avanza.se	s1
-bandlab.com	s1
-dmd.idg.se	dmddkim
-e.coop.se	email
-email.kiva.org	smtpapi
-google.com	20230601
-inet.se	selector2
-yahoo.com.au	s1024
+bandlab.com s1
+dmd.idg.se  dmddkim
+email.kiva.org  smtpapi
+google.com  20230601
+inet.se selector2
+yahoo.com.au    s1024
+domain_x	selector_x
+domain_y	selector_y
+domain_z	selector_z
 ...
 ```
 
-You can now use the .tsv file on the [Upload](https://registry.prove.email/upload) page.
+You can now use the .tsv file on the [Upload from TSV file](https://registry.prove.email/upload_tsv) page.

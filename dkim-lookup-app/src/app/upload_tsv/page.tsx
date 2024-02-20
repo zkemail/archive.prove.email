@@ -9,10 +9,14 @@ import { InlineCode } from "@/components/InlineCode";
 
 export default function Page() {
 
-	const { update } = useSession();
+	const { data: session, status, update } = useSession()
 	const [log, setLog] = React.useState<string[]>([]);
 	const [selectedFile, setSelectedFile] = React.useState<File | undefined>();
 	const [started, setStarted] = React.useState<boolean>(false);
+
+	if (status === "loading" && !session) {
+		return <p>loading...</p>
+	}
 
 	function fileSelectCallback(event: React.ChangeEvent<HTMLInputElement>) {
 		const file = event.target.files?.[0];
@@ -81,7 +85,7 @@ export default function Page() {
 
 	return (
 		<div>
-			<h3>Upload from TSV file</h3>
+			<h1>Upload from TSV file</h1>
 			<p>
 				Here you can contribute to the database by providing a TSV file with domains and selectors.
 			</p>
