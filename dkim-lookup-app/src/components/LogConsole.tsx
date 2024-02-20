@@ -1,8 +1,13 @@
 import {useEffect, useRef } from 'react';
 
+export type LogRecord = {
+	message: string;
+	date: Date;
+};
+
 interface LogConsoleProps {
-	log: string[];
-	setLog: (log: string[]) => void;
+	log: LogRecord[];
+	setLog: (log: LogRecord[]) => void;
 }
 
 export const LogConsole: React.FC<LogConsoleProps> = ({ log, setLog }) => {
@@ -26,7 +31,12 @@ export const LogConsole: React.FC<LogConsoleProps> = ({ log, setLog }) => {
 			}}
 				ref={scrollDiv} >
 				{log.map((line, index) =>
-					<div style={{ margin: 0, fontFamily: 'monospace' }} key={index}>{line}</div>
+					<div style={{ margin: 0, fontFamily: 'monospace' }} key={index}>
+						<span title={line.date.toISOString()}>
+							{line.date.toLocaleTimeString()}
+						</span>
+						{' - ' + line.message}
+					</div>
 				)}
 			</div>
 		</div>

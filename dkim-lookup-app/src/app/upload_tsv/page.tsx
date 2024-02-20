@@ -2,7 +2,7 @@
 
 import { axiosErrorMessage, load_domains_and_selectors_from_tsv } from "@/lib/utils";
 import React from "react";
-import { LogConsole } from "@/components/LogConsole";
+import { LogConsole, LogRecord } from "@/components/LogConsole";
 import axios from "axios";
 import { useSession } from "next-auth/react";
 import { InlineCode } from "@/components/InlineCode";
@@ -10,7 +10,7 @@ import { InlineCode } from "@/components/InlineCode";
 export default function Page() {
 
 	const { data: session, status, update } = useSession()
-	const [log, setLog] = React.useState<string[]>([]);
+	const [log, setLog] = React.useState<LogRecord[]>([]);
 	const [selectedFile, setSelectedFile] = React.useState<File | undefined>();
 	const [started, setStarted] = React.useState<boolean>(false);
 
@@ -25,7 +25,7 @@ export default function Page() {
 
 	function logmsg(message: string) {
 		console.log(message);
-		setLog(log => [...log, message]);
+		setLog(log => [...log, { message, date: new Date() }]);
 	}
 
 	function readFile(file: File) {

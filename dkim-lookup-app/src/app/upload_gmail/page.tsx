@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useSession, signIn, signOut } from "next-auth/react"
-import { LogConsole } from "@/components/LogConsole";
+import { LogConsole, LogRecord } from "@/components/LogConsole";
 import { DomainSelectorPair, axiosErrorMessage } from "@/lib/utils";
 import axios from "axios";
 
@@ -11,7 +11,7 @@ export default function Page() {
 	const { data: session, status } = useSession()
 
 	const { update } = useSession();
-	const [log, setLog] = React.useState<string[]>([]);
+	const [log, setLog] = React.useState<LogRecord[]>([]);
 	const [started, setStarted] = React.useState<boolean>(false);
 
 	if (status == "unauthenticated") {
@@ -27,7 +27,7 @@ export default function Page() {
 
 	function logmsg(message: string) {
 		console.log(message);
-		setLog(log => [...log, message]);
+		setLog(log => [...log, { message, date: new Date() }]);
 	}
 
 	async function uploadFromGmail() {
