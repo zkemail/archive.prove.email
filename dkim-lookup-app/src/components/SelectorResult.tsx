@@ -51,8 +51,8 @@ export const SelectorResult: React.FC<SelectorResultProps> = ({ record }) => {
 		<div style={cardStyle}>
 			<Row label='Domain:'>{record.domainSelectorPair.domain}</Row>
 			<Row label='Selector:'>{record.domainSelectorPair.selector}</Row>
-			<Row label='Fetched date:'>
-				{record.fetchedAt.toLocaleString()}&nbsp;
+			<Row label='First seen at:'>
+				{record.firstSeenAt.toLocaleString()}&nbsp;
 				{record.provenanceVerified && <ProvenanceIcon record={record} />}
 			</Row>
 			<Row label='Value:'>
