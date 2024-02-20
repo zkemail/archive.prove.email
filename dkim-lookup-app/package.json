@@ -12,6 +12,9 @@
 		"check-types": "tsc --noEmit",
 		"lint": "next lint"
 	},
+	"prisma": {
+		"seed": "tsx prisma/seed.ts"
+	},
 	"dependencies": {
 		"@prisma/client": "^5.6.0",
 		"@witnessco/client": "^0.1.11",
