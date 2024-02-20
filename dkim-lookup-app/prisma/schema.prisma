@@ -20,7 +20,8 @@ model DkimRecord {
   id         Int      @id @default(autoincrement())
   domainSelectorPair   DomainSelectorPair @relation(fields: [domainSelectorPairId], references: [id])
   domainSelectorPairId Int
-  fetchedAt  DateTime @default(now())
+  firstSeenAt  DateTime
+  lastSeenAt  DateTime?
   provenanceVerified Boolean?
   value      String
 }
