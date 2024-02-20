@@ -16,6 +16,9 @@
 		"seed": "tsx prisma/seed.ts"
 	},
 	"dependencies": {
+		"@emotion/react": "^11.11.3",
+		"@emotion/styled": "^11.11.0",
+		"@mui/material": "^5.15.10",
 		"@prisma/client": "^5.10.0",
 		"@witnessco/client": "^0.1.11",
 		"axios": "^1.6.5",

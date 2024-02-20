@@ -1,5 +1,5 @@
+import { SearchInput } from '@/components/SearchInput';
 import { SelectorResult } from '@/components/SelectorResult';
-import { searchButtonStyle, searchInputBoxStyle } from '@/components/styles';
 import { RecordWithSelector, findRecords } from '@/lib/db';
 import { parseDkimRecord } from '@/lib/utils';
 
@@ -31,33 +31,6 @@ const DomainSearchResults: React.FC<DomainSearchResultProps> = ({ records, domai
 	);
 };
 
-interface SearchFormProps {
-	domainQuery: string | undefined;
-}
-
-const SearchForm: React.FC<SearchFormProps> = ({ domainQuery }) => {
-	return (
-		<div>
-			<form action="/" method="get">
-				<label htmlFor="domain" style={{ paddingRight: '0.5rem' }}>
-					Domain name:
-				</label>
-				<input
-					style={searchInputBoxStyle}
-					type="text"
-					id="domain"
-					name="domain"
-					placeholder="example.com"
-					defaultValue={domainQuery}
-				/>
-				<button style={searchButtonStyle} type="submit">
-					Search
-				</button>
-			</form>
-		</div>
-	);
-};
-
 export default async function Home({ searchParams }: {
 	searchParams: { [key: string]: string | string[] | undefined }
 }) {
@@ -70,7 +43,7 @@ export default async function Home({ searchParams }: {
 			<h2 style={{ padding: '2rem' }}>
 				<a href='/' className='defaultcolor'>DKIM Registry</a>
 			</h2>
-			<SearchForm domainQuery={domainQuery} />
+			<SearchInput domainQuery={domainQuery} />
 			<DomainSearchResults records={records} domainQuery={domainQuery} />
 
 			<div style={{ textAlign: 'center', marginTop: '5rem', fontSize: '0.8rem' }}>
