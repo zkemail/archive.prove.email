@@ -1,4 +1,5 @@
 import { PrismaClient, Prisma, DkimRecord, DomainSelectorPair } from '@prisma/client'
+import { DnsDkimFetchResult } from './utils';
 
 const createPrismaClient = () => {
 	let prismaUrl = new URL(process.env.POSTGRES_PRISMA_URL as string);
@@ -47,4 +48,41 @@ export async function findRecords(domainQuery: string): Promise<RecordWithSelect
 			domainSelectorPair: true
 		}
 	});
+}
+
+export function dspToString(dsp: DomainSelectorPair): string {
+	return `#${dsp.id}, ${dsp.domain}, ${dsp.selector}`;
+}
+
+export function recordToString(record: DkimRecord): string {
+	let value = record.value;
+	const maxLen = 50;
+	let valueTruncated = (value.length > maxLen) ? value.slice(0, maxLen - 1) + '…' : value;
+	return `#${record.id}, "${valueTruncated}"`;
+}
+
+export async function updateDspTimestamp(dsp: DomainSelectorPair, timestamp: Date) {
+	let updatedSelector = await prisma.domainSelectorPair.update({
+		where: {
+			id: dsp.id
+		},
+		data: {
+			lastRecordUpdate: timestamp
+		}
+	})
+	console.log(`updated dsp timestamp ${dspToString(updatedSelector)}`);
+}
+
+export async function createDkimRecord(dsp: DomainSelectorPair, dkimDsnRecord: DnsDkimFetchResult) {
+	let dkimRecord = await prisma.dkimRecord.create({
+		data: {
+			domainSelectorPairId: dsp.id,
+			value: dkimDsnRecord.value,
+			firstSeenAt: dkimDsnRecord.timestamp,
+			lastSeenAt: dkimDsnRecord.timestamp,
+			provenanceVerified: false
+		},
+	});
+	console.log(`created dkim record ${recordToString(dkimRecord)} for domain/selector pair ${dspToString(dsp)}`);
+	return dkimRecord;
 }

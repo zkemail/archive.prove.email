@@ -1,5 +1,7 @@
-import { prisma } from '@/lib/db';
-import { fetchAndStoreDkimDnsRecord } from '@/lib/fetch_and_upsert';
+import { createDkimRecord, dspToString, prisma, recordToString, updateDspTimestamp } from '@/lib/db';
+import { fetchDkimDnsRecord } from '@/lib/fetchDkimDnsRecord';
+import { generateWitness } from '@/lib/generateWitness';
+import { DomainSelectorPair } from '@prisma/client';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
@@ -16,6 +18,38 @@ function getNumRecords() {
 	} else {
 		console.log('process.env.BATCH_UPDATE_NUM_RECORDS not set, using 0');
 		return 0;
+	}
+}
+
+/**
+ * @returns true iff a record was added
+ */
+async function fetchAndStoreDkimDnsRecord(dsp: DomainSelectorPair) {
+	console.log(`fetching ${dsp.selector}._domainkey.${dsp.domain} from dns`);
+	let dkimDnsRecord = await fetchDkimDnsRecord(dsp.domain, dsp.selector);
+	if (!dkimDnsRecord) {
+		console.log(`no record found for ${dsp.selector}, ${dsp.domain}`);
+		return false;
+	}
+	let dkimRecord = await prisma.dkimRecord.findFirst({
+		where: {
+			domainSelectorPair: dsp,
+			value: dkimDnsRecord.value
+		},
+	});
+
+	if (dkimRecord) {
+		console.log(`record already exists: ${recordToString(dkimRecord)} for domain/selector pair ${dspToString(dsp)}`);
+	}
+	else {
+		dkimRecord = await createDkimRecord(dsp, dkimDnsRecord);
+	}
+
+	console.log(`updating dsp timestamp for ${dsp.selector}, ${dsp.domain} to ${dkimDnsRecord.timestamp}`);
+	updateDspTimestamp(dsp, dkimDnsRecord.timestamp);
+
+	if (!dkimRecord.provenanceVerified) {
+		generateWitness(dsp, dkimRecord);
 	}
 }
 

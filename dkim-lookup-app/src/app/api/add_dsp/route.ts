@@ -1,8 +1,8 @@
-import { addDomainSelectorPair } from '@/lib/fetch_and_upsert';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/app/auth";
+import { addDomainSelectorPair } from '@/lib/addDomainSelectorPair';
 
 export async function GET(request: NextRequest) {
 	const session = await getServerSession(authOptions);

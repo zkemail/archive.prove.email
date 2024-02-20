@@ -1,3 +1,15 @@
+export type DomainSelectorPair = {
+	domain: string,
+	selector: string
+};
+
+export interface DnsDkimFetchResult {
+	domain: string;
+	selector: string;
+	value: string;
+	timestamp: Date;
+}
+
 export function parseDkimRecord(dkimValue: string): Record<string, string | null> {
 	const result: Record<string, string | null> = {};
 	const parts = dkimValue.split(';');
@@ -8,9 +20,6 @@ export function parseDkimRecord(dkimValue: string): Record<string, string | null
 	return result;
 }
 
-
-export type DomainSelectorPair = {domain: string, selector: string};
-
 export function load_domains_and_selectors_from_tsv(fileContent: string): DomainSelectorPair[] {
 	let result = [];
 	const lines = fileContent.split('\n').map(line => line.trim()).filter(line => line);
@@ -20,7 +29,7 @@ export function load_domains_and_selectors_from_tsv(fileContent: string): Domain
 			console.error(`error: line ${i}, selector or domain is empty`);
 			continue;
 		}
-		result.push({domain, selector});
+		result.push({ domain, selector });
 	}
 	return result;
 }

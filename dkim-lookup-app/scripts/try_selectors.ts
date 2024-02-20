@@ -1,5 +1,5 @@
+import { addDomainSelectorPair } from '@/lib/addDomainSelectorPair';
 import { readFileSync } from 'node:fs';
-import { addDomainSelectorPair } from '@/lib/fetch_and_upsert';
 
 // loads a list of selectors and a list of domains (the list of selectors can be generated with statistics.py)
 // tries every selector with every domain and adds the domain/selector pair to the database if it doesn't already exist
