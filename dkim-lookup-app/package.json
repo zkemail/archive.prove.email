@@ -16,23 +16,23 @@
 		"seed": "tsx prisma/seed.ts"
 	},
 	"dependencies": {
-		"@prisma/client": "^5.6.0",
+		"@prisma/client": "^5.10.0",
 		"@witnessco/client": "^0.1.11",
 		"axios": "^1.6.5",
 		"googleapis": "^131.0.0",
-		"next": "14.0.3",
+		"next": "14.1.0",
 		"next-auth": "^4.24.5",
 		"react": "^18",
 		"react-dom": "^18",
-		"viem": "^2.4.0"
+		"viem": "^2.7.11"
 	},
 	"devDependencies": {
 		"@types/node": "^20",
-		"@types/react": "^18",
+		"@types/react": "^18.2.57",
 		"@types/react-dom": "^18",
 		"autoprefixer": "^10.0.1",
 		"postcss": "^8",
-		"prisma": "^5.6.0",
+		"prisma": "^5.10.0",
 		"tsx": "^4.6.1",
 		"typescript": "^5"
 	}
