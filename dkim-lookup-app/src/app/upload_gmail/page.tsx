@@ -19,6 +19,11 @@ export default function Page() {
 	if (status == "unauthenticated") {
 		return <div>
 			<p>You need to be signed in to use this page.</p>
+			<p>
+				For the authentication with Google, OAuth 2.0 is used.
+				The OAuth tokens (access and refresh token) are stored in a JSON Web Token in the web browser.
+				The server does not store any tokens.
+			</p>
 			<button onClick={() => signIn()}>Sign in</button>
 		</div>
 	}
