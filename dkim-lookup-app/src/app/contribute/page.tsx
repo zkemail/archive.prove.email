@@ -58,7 +58,7 @@ export default function Page() {
 			</h3>
 			<p>
 				DKIM Registry's use and transfer of information received from Google APIs to any other app will adhere to{' '}
-				<a href="https://developers.google.com/terms/api-services-user-data-policy#additional_requirements_for_specific_api_scopes">
+				<a href="https://developers.google.com/terms/api-services-user-data-policy#additional_requirements_for_specific_api_scopes" target="_blank">
 					Google API Services User Data Policy
 				</a>
 				, including the Limited Use requirements.
