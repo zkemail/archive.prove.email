@@ -40,8 +40,10 @@ export default function RootLayout({
 						</a>
 						<DevModeNotice />
 					</header>
-					<main style={{ margin: '0.5rem' }}>
-						{children}
+					<main style={{ margin: '0.5rem', alignItems: 'center', display: 'flex', flexDirection: 'column' }}>
+						<div style={{ maxWidth: '50rem' }}>
+							{children}
+						</div>
 					</main>
 				</body>
 			</NextAuthProvider>
