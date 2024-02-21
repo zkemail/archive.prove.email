@@ -13,17 +13,22 @@ export default function Page() {
 			</p>
 			<p>
 				You can contribute to the project by uploading domains and selectors from your own Gmail account or from a TSV file.
+				The data will be used to build the archive of current and historical DKIM records.
 			</p>
 			<ul>
 				<li>
 					To upload directly from your Gmail account, visit the <strong><a href="upload_gmail">Upload from Gmail</a></strong> page.
 				</li>
 				<li>
-					To upload a file from an exported archive from any provider (including Gmail), visit the <strong><a href="upload_tsv">Upload from TSV file</a></strong> page.
+					To upload from a file created from an exported archive from any email provider (including Gmail),
+					visit the <strong><a href="upload_tsv">Upload from TSV file</a></strong> page.
 				</li>
 			</ul>
-			<h3>
+			<h2>
 				How it works:
+			</h2>
+			<h3>
+				Upload from Gmail
 			</h3>
 			<p>
 				When you sign in with your Gmail account and press Start, the site will
@@ -47,9 +52,16 @@ export default function Page() {
 				In the example above, the domain is <InlineCode>example.net</InlineCode> and the selector is <InlineCode>brisbane</InlineCode>.
 				These are the values that will be extracted and uploaded to the registry.
 			</p>
+
+			<h3>
+				Upload from TSV file
+			</h3>
 			<p>
-				The data will be used to build a publicly accessible archive of current and historical DKIM records.
+				When you upload from a TSV file, the domain and selector pairs are taken directly from the file and uploaded to the registry.
 			</p>
+			<h2>
+				Privacy and security
+			</h2>
 			<p>
 				Read the <a href="privacy-policy">Privacy policy</a>
 			</p>
