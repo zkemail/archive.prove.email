@@ -6,6 +6,7 @@ import { LogConsole, LogRecord } from "@/components/LogConsole";
 import axios from "axios";
 import { useSession } from "next-auth/react";
 import { InlineCode } from "@/components/InlineCode";
+import { AddDspResponse } from "../api/add_dsp/route";
 
 export default function Page() {
 
@@ -50,12 +51,12 @@ export default function Page() {
 
 		let domainSelectorPairs = load_domains_and_selectors_from_tsv(fileContent);
 
-		const upsertApiUrl = 'api/add_dsp';
-		logmsg(`starting upload to ${upsertApiUrl}`);
+		const addDspApiUrl = 'api/add_dsp';
+		logmsg(`starting upload to ${addDspApiUrl}`);
 		for (const dsp of domainSelectorPairs) {
 			logmsg(`uploading ${JSON.stringify(dsp)}`);
 			try {
-				let upsertResponse = await axios.get(upsertApiUrl, { params: dsp });
+				let upsertResponse = await axios.get<AddDspResponse>(addDspApiUrl, { params: dsp });
 				await update();
 				console.log('upsert response', upsertResponse);
 			}

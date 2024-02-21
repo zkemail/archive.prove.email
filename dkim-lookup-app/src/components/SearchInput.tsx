@@ -15,7 +15,7 @@ export const SearchInput: React.FC<SearchFormProps> = ({ domainQuery }) => {
 	const [searchResults, setSearchResults] = useState<AutocompleteResults>([]);
 
 	function inputChanged(_event: React.SyntheticEvent, value: string) {
-		axios.get('/api/autocomplete', { params: { query: value } })
+		axios.get<AutocompleteResults>('/api/autocomplete', { params: { query: value } })
 			.then(response => {
 				setSearchResults(response.data);
 			}).catch(error => {

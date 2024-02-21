@@ -2,6 +2,11 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { addDomainSelectorPair } from '@/lib/addDomainSelectorPair';
 
+export type AddDspResponse = {
+	message: string;
+	error?: string;
+};
+
 export async function GET(request: NextRequest) {
 	try {
 		console.log(`request url: ${request.nextUrl}`);
@@ -15,15 +20,11 @@ export async function GET(request: NextRequest) {
 		}
 		await addDomainSelectorPair(domain, selector);
 
-		return NextResponse.json(
-			{ message: `updated ${domain}, ${selector}` },
-			{ status: 200 }
-		);
-	} catch (error) {
+		let response: AddDspResponse = { message: `added ${domain}, ${selector}` };
+		return NextResponse.json(response, { status: 200 });
+	}
+	catch (error) {
 		console.log(`error updating: ${error}`, error);
-		return NextResponse.json(
-			{ error: `${error}` },
-			{ status: 500 }
-		);
+		return NextResponse.json(`${error}`, { status: 500 });
 	}
 }

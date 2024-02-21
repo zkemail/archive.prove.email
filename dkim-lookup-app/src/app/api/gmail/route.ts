@@ -32,6 +32,11 @@ async function handleMessage(messageId: string, gmail: gmail_v1.Gmail, resultArr
 }
 
 
+export type GmailResponse = {
+	domainSelectorPairs: DomainSelectorPair[],
+	nextPageToken: string | null
+}
+
 async function handleRequest(request: NextRequest) {
 	const session = await getServerSession(authOptions);
 	if (!session || !session.user?.email) {
@@ -70,8 +75,9 @@ async function handleRequest(request: NextRequest) {
 			console.log(`error handling message ${message.id}`, e);
 		}
 	}
-	let nextPageToken = listResults.data.nextPageToken;
-	return NextResponse.json({ domainSelectorPairs, nextPageToken }, { status: 200 });
+	let nextPageToken = listResults.data.nextPageToken || null;
+	let response: GmailResponse = { domainSelectorPairs, nextPageToken };
+	return NextResponse.json(response, { status: 200 });
 }
 
 export async function GET(request: NextRequest) {
