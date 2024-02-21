@@ -1,15 +1,8 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { getServerSession } from "next-auth/next"
-import { authOptions } from "@/app/auth";
 import { addDomainSelectorPair } from '@/lib/addDomainSelectorPair';
 
 export async function GET(request: NextRequest) {
-	const session = await getServerSession(authOptions);
-
-	if (!session || !session.user?.email) {
-		return new Response('Unauthorized. Sign in via api/auth/signin', { status: 401 });
-	}
 	try {
 		console.log(`request url: ${request.nextUrl}`);
 		let domain = request.nextUrl.searchParams.get('domain');
