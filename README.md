@@ -93,6 +93,16 @@ To manually call `batch_update` on a production server on example.com, run:
 curl https://example.com/api/batch_update -H "Accept: application/json" -H "Authorization: Bearer $CRON_SECRET"
 ```
 
+## Domain search API
+
+A public API endpoint for fetching keys for a certain domain is available at `https://registry.prove.email/api/domains/{domain_name}`. The response will contain a list of all known selectors and DKIM keys for `domain_name` and its subdomains.
+
+An example call from the command line:
+
+```bash
+curl "https://registry.prove.email/api/domains/ethereum.org" | python -m json.tool
+```
+
 
 <a name="mbox_selector_scraper"></a>
 
