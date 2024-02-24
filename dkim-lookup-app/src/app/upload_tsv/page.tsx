@@ -61,6 +61,7 @@ export default function Page() {
 				console.log('upsert response', upsertResponse);
 			}
 			catch (error: any) {
+				console.error(`error calling ${addDspApiUrl}:`, error);
 				throw axiosErrorMessage(error);
 			}
 		}

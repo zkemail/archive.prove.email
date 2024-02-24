@@ -38,8 +38,30 @@ export function getCanonicalRecordString(dsp: DomainSelectorPair, dkimRecordValu
 	return `${dsp.selector}._domainkey.${dsp.domain} TXT "${dkimRecordValue}"`;
 }
 
+
+function dataToMessage(data: any): string {
+	if (!data) {
+		return '';
+	}
+	if (data?.message) {
+		return `${data.message}`;
+	}
+	if (data instanceof Object) {
+		return JSON.stringify(data);
+	}
+	return `${data}`;
+}
+
 export function axiosErrorMessage(error: any): string {
-	const data = error?.response?.data;
-	const dataStr = data ? (data instanceof Object ? JSON.stringify(data) : data) : '';
-	throw `${error}` + dataStr ? ` - ${dataStr}` : '';
+	if (error.response) {
+		const data = error?.response?.data;
+		const message = dataToMessage(data);
+		return `${error} - ${message}`;
+	}
+	else if (error.request) {
+		return `${error.request}`;
+	}
+	else {
+		return `${error.message}`;
+	}
 }

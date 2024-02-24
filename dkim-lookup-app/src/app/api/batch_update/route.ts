@@ -77,16 +77,12 @@ export async function GET(request: NextRequest) {
 			}
 			catch (error) {
 				console.log(`error updating ${dsp.domain}, ${dsp.selector}: ${error}`);
+				throw error;
 			}
 		}
-		return NextResponse.json(
-			{ updatedRecords: dsps },
-			{ status: 200 }
-		);
-	} catch (error) {
-		return NextResponse.json(
-			{ error: error },
-			{ status: 500 }
-		);
+		return NextResponse.json({ updatedRecords: dsps }, { status: 200 });
+	}
+	catch (error) {
+		return NextResponse.json({ message: error }, { status: 500 });
 	}
 }

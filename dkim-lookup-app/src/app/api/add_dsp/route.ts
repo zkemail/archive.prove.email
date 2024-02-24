@@ -12,11 +12,11 @@ export async function GET(request: NextRequest) {
 		console.log(`request url: ${request.nextUrl}`);
 		let domain = request.nextUrl.searchParams.get('domain');
 		if (!domain) {
-			throw 'missing domain parameter in query';
+			return NextResponse.json({ message: `missing domain parameter in query` }, { status: 400 });
 		}
 		let selector = request.nextUrl.searchParams.get('selector');
 		if (!selector) {
-			throw 'missing selector parameter in query';
+			return NextResponse.json({ message: `missing selector parameter in query` }, { status: 400 });
 		}
 		await addDomainSelectorPair(domain, selector);
 
@@ -25,6 +25,6 @@ export async function GET(request: NextRequest) {
 	}
 	catch (error) {
 		console.log(`error updating: ${error}`, error);
-		return NextResponse.json(`${error}`, { status: 500 });
+		return NextResponse.json({ message: `${error}` }, { status: 500 });
 	}
 }

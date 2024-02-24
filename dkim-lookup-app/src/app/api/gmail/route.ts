@@ -86,6 +86,6 @@ export async function GET(request: NextRequest) {
 	}
 	catch (e) {
 		console.log('handleRequest error ', e);
-		return NextResponse.json(`${e}`, { status: 500 });
+		return NextResponse.json({ message: `${e}` }, { status: 500 });
 	}
 }
