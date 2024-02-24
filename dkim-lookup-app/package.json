@@ -6,6 +6,7 @@
 		"dev": "next dev",
 		"build": "prisma generate && prisma migrate deploy && next build",
 		"start": "next start",
+		"preinstall": "npx only-allow pnpm",
 		"postinstall": "prisma generate",
 		"update_records": "tsx scripts/update_records.ts",
 		"try_selectors": "tsx scripts/try_selectors.ts",

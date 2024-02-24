@@ -19,10 +19,10 @@ class PrismaUpdater extends Updater {
 
 function print_usage() {
 	console.log('usage:');
-	console.log('  yarn update_records records_file');
+	console.log('  pnpm update_records records_file');
 	console.log('    records_file: A .tsv file with domain and selector columns');
 	console.log('example:');
-	console.log('  yarn update_records records.tsv');
+	console.log('  pnpm update_records records.tsv');
 }
 
 async function main() {

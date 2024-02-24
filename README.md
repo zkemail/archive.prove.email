@@ -14,7 +14,7 @@ For each record, the site also generates an on-chain proof with [Witness](https:
 
 ```bash
 cd dkim-lookup-app
-yarn install
+pnpm install
 ```
 
 Access to a [PostgreSQL](https://www.postgresql.org/) database is needed for development. See [below](#ubuntu_postgresql) for an example setup of PostgreSQL on Ubuntu.
@@ -24,13 +24,13 @@ Copy `.env.example` to `.env` and configure the variables
 Initialize the database from `schema.prisma`
 
 ```bash
-yarn prisma migrate deploy
+pnpm prisma migrate deploy
 ```
 
 Start the development server
 
 ```bash
-yarn dev
+pnpm dev
 ```
 
 <a name="ubuntu_postgresql"></a>
@@ -54,13 +54,13 @@ POSTGRES_PRISMA_URL="postgresql://postgres:YOURPASSWORD@localhost/dkim_lookup"
 Start the Prisma Studio database manager
 
 ```bash
-yarn prisma db studio
+pnpm prisma db studio
 ```
 
 Resetting the database
 
 ```bash
-yarn prisma migrate reset
+pnpm prisma migrate reset
 ```
 
 ## Fetch DKIM keys from DNS and upload to database
@@ -68,7 +68,7 @@ yarn prisma migrate reset
 The `update_records` script reads a list of domains and selectors, fetches the corresponding DKIM records via DNS lookup, and publishes the results to a database.
 
 ```bash
-yarn update_records domains_and_selectors.tsv
+pnpm update_records domains_and_selectors.tsv
 ```
 
 A TSV file with domains and selectors can be created with the [mbox selector scraper](../util/mbox_selector_scraper.py)

@@ -12,7 +12,7 @@ function load_list(filename: string): string[] {
 async function main() {
 	const inputFiles = process.argv.slice(2);
 	if (inputFiles.length != 2) {
-		console.log('usage: yarn try_selectors DOMAINS_LIST SELECTORS_LIST');
+		console.log('usage: pnpm try_selectors DOMAINS_LIST SELECTORS_LIST');
 		process.exit(1);
 	}
 	let [domainsFilename, selectorsFilename] = inputFiles;
