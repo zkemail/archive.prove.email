@@ -3,6 +3,7 @@ import { FC, ReactNode } from 'react';
 import { cardStyle } from './styles';
 import { getCanonicalRecordString } from '@/lib/utils';
 import { WitnessClient } from '@witnessco/client';
+import { Timestamp } from './Timestamp';
 
 interface RowProps {
 	label: string;
@@ -52,12 +53,12 @@ export const SelectorResult: React.FC<SelectorResultProps> = ({ record }) => {
 			<Row label='Domain:'>{record.domainSelectorPair.domain}</Row>
 			<Row label='Selector:'>{record.domainSelectorPair.selector}</Row>
 			<Row label='First seen at:'>
-				{record.firstSeenAt.toLocaleString()}&nbsp;
+				<Timestamp date={record.firstSeenAt} />&nbsp;
 				{record.provenanceVerified && <ProvenanceIcon record={record} />}
 			</Row>
 			{record.lastSeenAt &&
 				<Row label='Last seen at:'>
-					{record.lastSeenAt.toLocaleString()}&nbsp;
+					<Timestamp date={record.lastSeenAt} />
 				</Row>
 			}
 			<Row label='Value:'>
