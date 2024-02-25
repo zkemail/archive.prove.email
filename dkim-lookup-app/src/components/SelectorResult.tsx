@@ -12,9 +12,9 @@ interface RowProps {
 
 const Row: FC<RowProps> = ({ label: title, children }) => {
 	return (
-		<div style={{ display: 'flex', flexWrap: 'wrap' }}>
-			<div style={{ width: '25%', paddingBottom: '0.5rem' }}>{title}</div>
-			<div style={{ width: '75%' }} >{children}</div>
+		<div style={{ display: 'flex', flexWrap: 'wrap', paddingBottom: '0.5rem' }}>
+			<div style={{ width: '140px' }}>{title}</div>
+			<div>{children}</div>
 		</div>
 	);
 };
@@ -67,6 +67,7 @@ export const SelectorResult: React.FC<SelectorResultProps> = ({ record }) => {
 					whiteSpace: 'pre-wrap',
 					maxWidth: '32rem',
 					margin: '0',
+					wordBreak: 'break-all',
 				}}>
 					{record.value}
 				</pre>

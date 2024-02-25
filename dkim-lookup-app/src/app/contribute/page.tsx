@@ -36,7 +36,7 @@ export default function Page() {
 				A signature can look something like this:
 			</p>
 			<div style={cardStyle}>
-				<code>
+				<code style={{ wordBreak: 'break-all' }}>
 					DKIM-Signature: v=1; a=rsa-sha256; d=example.net; s=brisbane;
 					c=relaxed/simple; q=dns/txt; i=foo@eng.example.net;
 					t=1117574938; x=1118006938; l=200;
