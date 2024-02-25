@@ -29,7 +29,7 @@ async function fetchAndStoreDkimDnsRecord(dsp: DomainSelectorPair) {
 	let dkimDnsRecord = await fetchDkimDnsRecord(dsp.domain, dsp.selector);
 	if (!dkimDnsRecord) {
 		console.log(`no record found for ${dsp.selector}, ${dsp.domain}`);
-		return false;
+		return;
 	}
 	let dkimRecord = await prisma.dkimRecord.findFirst({
 		where: {
@@ -49,35 +49,32 @@ async function fetchAndStoreDkimDnsRecord(dsp: DomainSelectorPair) {
 		dkimRecord = await createDkimRecord(dsp, dkimDnsRecord);
 	}
 
-	console.log(`updating dsp timestamp for ${dsp.selector}, ${dsp.domain} to ${dkimDnsRecord.timestamp}`);
-	updateDspTimestamp(dsp, dkimDnsRecord.timestamp);
-
 	if (!dkimRecord.provenanceVerified) {
 		generateWitness(dsp, dkimRecord);
 	}
 }
 
 export async function GET(request: NextRequest) {
-
 	const authHeader = request.headers.get('authorization');
 	if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
 		return new Response('Unauthorized', { status: 401 });
 	}
 
 	let numRecords = getNumRecords();
-
-	console.log(`updating ${numRecords} records`);
-
 	try {
+		const oneDayAgo = new Date(Date.now() - 1000 * 60 * 60 * 24);
 		const dsps = await prisma.domainSelectorPair.findMany(
 			{
+				where: { lastRecordUpdate: { lte: oneDayAgo } },
 				orderBy: { lastRecordUpdate: 'asc' },
 				take: numRecords,
 			}
 		);
+		console.log(`found ${dsps.length} records to update, max limit: ${numRecords}`);
 		for (const dsp of dsps) {
 			try {
 				await fetchAndStoreDkimDnsRecord(dsp);
+				updateDspTimestamp(dsp, new Date());
 			}
 			catch (error) {
 				console.log(`error updating ${dsp.domain}, ${dsp.selector}: ${error}`);
