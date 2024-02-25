@@ -39,7 +39,11 @@ async function fetchAndStoreDkimDnsRecord(dsp: DomainSelectorPair) {
 	});
 
 	if (dkimRecord) {
-		console.log(`record already exists: ${recordToString(dkimRecord)} for domain/selector pair ${dspToString(dsp)}`);
+		console.log(`record already exists: ${recordToString(dkimRecord)} for domain/selector pair ${dspToString(dsp)}, updating lastSeenAt to ${dkimDnsRecord.timestamp}`);
+		await prisma.dkimRecord.update({
+			where: { id: dkimRecord.id },
+			data: { lastSeenAt: dkimDnsRecord.timestamp }
+		});
 	}
 	else {
 		dkimRecord = await createDkimRecord(dsp, dkimDnsRecord);
