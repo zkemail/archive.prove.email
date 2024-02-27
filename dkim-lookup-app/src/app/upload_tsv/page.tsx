@@ -53,8 +53,9 @@ export default function Page() {
 
 		const addDspApiUrl = 'api/add_dsp';
 		logmsg(`starting upload to ${addDspApiUrl}`);
-		for (const dsp of domainSelectorPairs) {
-			logmsg(`uploading ${JSON.stringify(dsp)}`);
+		for (let i = 0; i < domainSelectorPairs.length; i++) {
+			let dsp = domainSelectorPairs[i];
+			logmsg(`uploading (${i}/${domainSelectorPairs.length}) ${JSON.stringify(dsp)}`);
 			try {
 				let upsertResponse = await axios.get<AddDspResponse>(addDspApiUrl, { params: dsp });
 				await update();
