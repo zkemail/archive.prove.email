@@ -17,12 +17,6 @@ dependencies:
   '@prisma/client':
     specifier: ^5.10.0
     version: 5.10.0(prisma@5.10.0)
-  '@upstash/ratelimit':
-    specifier: ^1.0.1
-    version: 1.0.1
-  '@upstash/redis':
-    specifier: ^1.28.4
-    version: 1.28.4
   '@witnessco/client':
     specifier: ^0.1.11
     version: 0.1.13(viem@2.7.11)
@@ -863,25 +857,6 @@ packages:
   /@types/scheduler@0.16.8:
     resolution: {integrity: sha512-WZLiwShhwLRmeV6zH+GkbOFT6Z6VklCItrDioxUnv+u4Ll+8vKeFySoFyK/0ctcRpOmwAicELfmys1sDc/Rw+A==}
 
-  /@upstash/core-analytics@0.0.7:
-    resolution: {integrity: sha512-lC2j5efqb1haX/fpTGaPUx1rue1WUkOZBVHDzCB7eMIVsRdFFp4xiHtyH/G9omiR1zj39fU5SCTWFiKJH3KOpw==}
-    engines: {node: '>=16.0.0'}
-    dependencies:
-      '@upstash/redis': 1.28.4
-    dev: false
-
-  /@upstash/ratelimit@1.0.1:
-    resolution: {integrity: sha512-G9LZ7idhlkuYknbUngCB3qzd7QnkK1xDkFG5jRtEJZuOUS5UKJ0UTKbhalCtp39eX2wu2Ubv8W7HCeaJQOWM0A==}
-    dependencies:
-      '@upstash/core-analytics': 0.0.7
-    dev: false
-
-  /@upstash/redis@1.28.4:
-    resolution: {integrity: sha512-UalkSAny/dz1m8giEhD3Y5ru1o+CPHI32wFyS3MyzDzj2TRvEN+lTw+mPwi20ojk0H2gs8TBW3qsrvwuLLy+pA==}
-    dependencies:
-      crypto-js: 4.2.0
-    dev: false
-
   /@whatwg-node/cookie-store@0.2.2:
     resolution: {integrity: sha512-poI6G6rYGsXNA+JTZLU+IUUXb+Xsau8M3GrcbF3VJdbvW6QGpbuvC+gvN4rD9zJAnqM0jpDKDhIWf2DmEAmWFQ==}
     engines: {node: '>=16.0.0'}
@@ -1102,10 +1077,6 @@ packages:
       parse-json: 5.2.0
       path-type: 4.0.0
       yaml: 1.10.2
-    dev: false
-
-  /crypto-js@4.2.0:
-    resolution: {integrity: sha512-KALDyEYgpY+Rlob/iriUtjV6d5Eq+Y191A5g4UqLAi8CyGP9N1+FdVbkc1SxKc2r4YAYqG8JzO2KGL+AizD70Q==}
     dev: false
 
   /csstype@3.1.3:

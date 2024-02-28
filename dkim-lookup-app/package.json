@@ -21,8 +21,6 @@
 		"@emotion/styled": "^11.11.0",
 		"@mui/material": "^5.15.10",
 		"@prisma/client": "^5.10.0",
-		"@upstash/ratelimit": "^1.0.1",
-		"@upstash/redis": "^1.28.4",
 		"@witnessco/client": "^0.1.11",
 		"axios": "^1.6.5",
 		"googleapis": "^133.0.0",
