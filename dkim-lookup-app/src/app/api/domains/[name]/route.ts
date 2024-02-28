@@ -1,5 +1,7 @@
 import { findRecords } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
+import { headers } from "next/headers";
+import { rateLimiter } from "@/app/ratelimiter";
 
 export type DomainSearchResults = {
 	domain: string;
@@ -10,6 +12,18 @@ export type DomainSearchResults = {
 };
 
 export async function GET(_request: NextRequest, { params }: { params: { name: string } }) {
+
+	const xForwardedFor = headers().get("x-forwarded-for");
+	if (xForwardedFor) {
+		const clientIp = xForwardedFor.split(',')[0];
+		try {
+			await rateLimiter.consume(clientIp, 10);
+		}
+		catch (error: any) {
+			return NextResponse.json({ message: 'Rate limit exceeded' }, { status: 429 });
+		}
+	}
+
 	try {
 		const domainName = params.name;
 		if (!domainName) {

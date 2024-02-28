@@ -32,6 +32,9 @@ dependencies:
   next-auth:
     specifier: ^4.24.5
     version: 4.24.6(next@14.1.0)(react-dom@18.2.0)(react@18.2.0)
+  rate-limiter-flexible:
+    specifier: ^5.0.0
+    version: 5.0.0
   react:
     specifier: ^18
     version: 18.2.0
@@ -1730,6 +1733,10 @@ packages:
     engines: {node: '>=0.6'}
     dependencies:
       side-channel: 1.0.5
+    dev: false
+
+  /rate-limiter-flexible@5.0.0:
+    resolution: {integrity: sha512-ivCyLBwPtR5IRrz+aZnztVwX16ZK3iAjdlW21I/vjHq56at5Zb8eIefDzODg8R7hwPOHpBtb6Pj9Zdmn0nRb8g==}
     dev: false
 
   /react-dom@18.2.0(react@18.2.0):
