@@ -1,30 +1,33 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { addDomainSelectorPair } from '@/lib/addDomainSelectorPair';
+import { z } from 'zod';
 
 export type AddDspResponse = {
-	message: string;
-	error?: string;
+	message: object;
 };
 
-export async function GET(request: NextRequest) {
-	try {
-		console.log(`request url: ${request.nextUrl}`);
-		let domain = request.nextUrl.searchParams.get('domain');
-		if (!domain) {
-			return NextResponse.json({ message: `missing domain parameter in query` }, { status: 400 });
-		}
-		let selector = request.nextUrl.searchParams.get('selector');
-		if (!selector) {
-			return NextResponse.json({ message: `missing selector parameter in query` }, { status: 400 });
-		}
-		await addDomainSelectorPair(domain, selector);
+const AddDspRequestSchema = z.object({
+	domain: z.string(),
+	selector: z.string(),
+});
 
-		let response: AddDspResponse = { message: `added ${domain}, ${selector}` };
-		return NextResponse.json(response, { status: 200 });
+export type AddDspRequest = z.infer<typeof AddDspRequestSchema>;
+
+export async function POST(request: NextRequest) {
+	try {
+		const body = await request.json();
+		const dsp = AddDspRequestSchema.parse(body);
+		let added = await addDomainSelectorPair(dsp.domain, dsp.selector);
+		return NextResponse.json(
+			{ message: { ...dsp, added } } as AddDspResponse,
+			{ status: 200 }
+		);
 	}
 	catch (error) {
-		console.log(`error updating: ${error}`, error);
+		if (error instanceof z.ZodError) {
+			return NextResponse.json({ message: error.errors }, { status: 400 });
+		}
 		return NextResponse.json({ message: `${error}` }, { status: 500 });
 	}
 }

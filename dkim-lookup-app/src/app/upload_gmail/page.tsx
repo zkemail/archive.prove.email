@@ -6,7 +6,7 @@ import { LogConsole, LogRecord } from "@/components/LogConsole";
 import { DomainSelectorPair, axiosErrorMessage } from "@/lib/utils";
 import axios from "axios";
 import { GmailResponse } from "../api/gmail/route";
-import { AddDspResponse } from "../api/add_dsp/route";
+import { AddDspRequest, AddDspResponse } from "../api/add_dsp/route";
 
 export default function Page() {
 
@@ -55,7 +55,7 @@ export default function Page() {
 					const pairString = JSON.stringify(pair);
 					if (!uploadedPairs.has(pairString)) {
 						logmsg('new pair found, uploading: ' + JSON.stringify(pair));
-						let upsertResponse = await axios.get<AddDspResponse>(addDspApiUrl, { params: pair });
+						let upsertResponse = await axios.post<AddDspResponse>(addDspApiUrl, pair as AddDspRequest);
 						await update();
 						console.log('upsert response', upsertResponse);
 						uploadedPairs.add(pairString);
