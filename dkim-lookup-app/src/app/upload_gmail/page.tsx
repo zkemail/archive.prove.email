@@ -6,7 +6,7 @@ import { LogConsole, LogRecord } from "@/components/LogConsole";
 import { DomainSelectorPair, axiosErrorMessage } from "@/lib/utils";
 import axios from "axios";
 import { GmailResponse } from "../api/gmail/route";
-import { AddDspRequest, AddDspResponse } from "../api/add_dsp/route";
+import { AddDspRequest, AddDspResponse } from "../api/dsp/route";
 
 export default function Page() {
 
@@ -40,7 +40,7 @@ export default function Page() {
 	async function uploadFromGmail() {
 		let uploadedPairs: Set<string> = new Set();
 		const gmailApiUrl = 'api/gmail';
-		const addDspApiUrl = 'api/add_dsp';
+		const addDspApiUrl = 'api/dsp';
 		let nextPageToken = "";
 		logmsg(`starting upload to ${gmailApiUrl}`);
 		while (true) {
