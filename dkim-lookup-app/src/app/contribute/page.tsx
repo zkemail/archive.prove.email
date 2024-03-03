@@ -15,21 +15,14 @@ export default function Page() {
 				You can contribute to the project by uploading domains and selectors from your own Gmail account or from a TSV file.
 				The data will be used to build the archive of current and historical DKIM records.
 			</p>
-			<ul>
-				<li>
-					To upload directly from your Gmail account, visit the <strong><a href="upload_gmail">Upload from Gmail</a></strong> page.
-				</li>
-				<li>
-					To upload from a file created from an exported archive from any email provider (including Gmail),
-					visit the <strong><a href="upload_tsv">Upload from TSV file</a></strong> page.
-				</li>
-			</ul>
-			<h2>
-				How it works:
-			</h2>
-			<h3>
-				Upload from Gmail
-			</h3>
+
+			<h2>Ways to contribute to the registry:</h2>
+
+			<h3>Upload from Gmail</h3>
+			<p>
+				To upload from a file created from an exported archive from any email provider (including Gmail),
+				visit the <strong><a href="upload_tsv">Upload from TSV file</a></strong> page.
+			</p>
 			<p>
 				When you sign in with your Gmail account and press Start, the site will
 				extract the <InlineCode>DKIM-Signature</InlineCode> field from each email message in your Gmail account.
@@ -53,21 +46,14 @@ export default function Page() {
 				These are the values that will be extracted and uploaded to the registry.
 			</p>
 
-			<h3>
-				Upload from TSV file
-			</h3>
-			<p>
-				When you upload from a TSV file, the domain and selector pairs are taken directly from the file and uploaded to the registry.
-			</p>
-			<h2>
-				Privacy and security
-			</h2>
-			<p>
-				Read the <a href="privacy-policy">Privacy policy</a>
-			</p>
-			<h3>
-				Disclosure regarding Limited Use:
-			</h3>
+			<h3>Upload from TSV file</h3>
+			<p>To upload directly from your Gmail account, visit the <strong><a href="upload_gmail">Upload from Gmail</a></strong> page.</p>
+			<p>When you upload from a TSV file, the domain and selector pairs are taken directly from the file and uploaded to the registry.</p>
+
+			<h2>Privacy and security</h2>
+			<p>Read the <a href="privacy-policy">Privacy policy</a></p>
+
+			<h3>Disclosure regarding Limited Use:</h3>
 			<p>
 				DKIM Registry's use and transfer of information received from Google APIs to any other app will adhere to{' '}
 				<a href="https://developers.google.com/terms/api-services-user-data-policy#additional_requirements_for_specific_api_scopes" target="_blank">
