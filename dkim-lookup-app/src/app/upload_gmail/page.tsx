@@ -21,6 +21,7 @@ export default function Page() {
 	const [uploadedPairs, setUploadedPairs] = React.useState<Set<string>>(new Set());
 	const [nextPageToken, setNextPageToken] = React.useState<string>('');
 	const [processedMessages, setProcessedMessages] = React.useState<number>(0);
+	const [totalMessages, setTotalMessages] = React.useState<number | null>(null);
 
 	useEffect(() => {
 		if (started) {
@@ -53,6 +54,9 @@ export default function Page() {
 		try {
 			let response = await axios.get<GmailResponse>(gmailApiUrl, { params: { pageToken: nextPageToken } });
 			await update();
+			if (response.data.messagesTotal) {
+				setTotalMessages(response.data.messagesTotal);
+			}
 			let pairs = response.data.domainSelectorPairs;
 			logmsg(`received: ${pairs.length} domain/selector pairs`);
 			for (const pair of pairs) {
@@ -66,11 +70,15 @@ export default function Page() {
 				}
 				setUploadedPairs(uploadedPairs => new Set(uploadedPairs).add(pairString));
 			}
-			if (!response.data.nextPageToken) {
-				logmsg('no more pages, upload complete');
+			if (response.data.nextPageToken) {
+				setNextPageToken(response.data.nextPageToken);
+				setProcessedMessages(processedMessages => processedMessages + response.data.messagesProcessed);
 			}
-			setNextPageToken(response.data.nextPageToken || '');
-			setProcessedMessages(processedMessages => processedMessages + response.data.messagesProcessed);
+			else {
+				setStarted(false);
+				setNextPageToken('');
+				logmsg('upload complete');
+			}
 		}
 		catch (error: any) {
 			logmsg(axiosErrorMessage(error));
@@ -113,7 +121,7 @@ export default function Page() {
 					</button>
 				</p>
 				<p>
-					Processed messages: {processedMessages}
+					Processed messages: {processedMessages} {totalMessages ? `of ${totalMessages}` : ''	}
 				</p>
 				<LogConsole log={log} setLog={setLog} />
 			</div >
