@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useSession, signIn, signOut } from "next-auth/react"
 import { LogConsole, LogRecord } from "@/components/LogConsole";
 import { DomainSelectorPair, axiosErrorMessage } from "@/lib/utils";
@@ -15,6 +15,21 @@ export default function Page() {
 	const { update } = useSession();
 	const [log, setLog] = React.useState<LogRecord[]>([]);
 	const [started, setStarted] = React.useState<boolean>(false);
+	const [uploadedPairs, setUploadedPairs] = React.useState<Set<string>>(new Set());
+	const [nextPageToken, setNextPageToken] = React.useState<string>('');
+	const [progressCounter, setProgressCounter] = React.useState<number>(0);
+
+
+	useEffect(() => {
+		logmsg(`useEffect progressCounter ${progressCounter}`);
+		if (started) {
+			uploadFromGmail();
+		}
+		else {
+			logmsg('useEffect upload not started');
+		}
+	}, [progressCounter]);
+
 
 	if (status == "unauthenticated") {
 		return <div>
@@ -32,57 +47,63 @@ export default function Page() {
 	}
 
 
+
 	function logmsg(message: string) {
 		console.log(message);
 		setLog(log => [...log, { message, date: new Date() }]);
 	}
 
-	async function uploadFromGmail() {
-		let uploadedPairs: Set<string> = new Set();
+	async function uploadFromGmail(): Promise<number> {
 		const gmailApiUrl = 'api/gmail';
 		const addDspApiUrl = 'api/dsp';
-		let nextPageToken = "";
 		logmsg(`starting upload to ${gmailApiUrl}`);
-		while (true) {
+		logmsg(`UFG progressCounter: ${progressCounter}`);
+		if (true) {
 			logmsg('fetching email batch...');
+
 			try {
+				console.log('uploadFromGmail nextPageToken was ', nextPageToken);
 				let response = await axios.get<GmailResponse>(gmailApiUrl, { params: { pageToken: nextPageToken } });
 				await update();
-				nextPageToken = response.data.nextPageToken || '';
+				console.log(`setting next page token: ${response.data.nextPageToken}`);
+				setNextPageToken(response.data.nextPageToken || '');
 				let pairs = response.data.domainSelectorPairs;
 				logmsg(`received: ${pairs.length} domain/selector pairs`);
+				logmsg(`uploadFromGmail new page token: ${nextPageToken}`);
 				for (const pair of pairs) {
 					const pairString = JSON.stringify(pair);
 					if (!uploadedPairs.has(pairString)) {
 						logmsg('new pair found, uploading: ' + JSON.stringify(pair));
 						let upsertResponse = await axios.post<AddDspResponse>(addDspApiUrl, pair as AddDspRequest);
 						await update();
-						console.log('upsert response', upsertResponse);
-						uploadedPairs.add(pairString);
+						//console.log('upsert response', upsertResponse);
+						//uploadedPairs.add(pairString);
+						setUploadedPairs(uploadedPairs => new Set(uploadedPairs).add(pairString));
 					}
 				}
-				if (!nextPageToken) {
-					break;
+				setProgressCounter(progressCounter + 1);
+				if (!response.data.nextPageToken) {
+					logmsg('no more pages, upload complete');
 				}
 			}
 			catch (error: any) {
 				throw axiosErrorMessage(error);
 			}
 		}
+		return uploadedPairs.size;
 	}
 
 	async function startUpload() {
 		if (!started) {
 			setStarted(true);
 			try {
-				await uploadFromGmail();
-				logmsg("upload complete");
+				uploadFromGmail();
 			}
 			catch (error) {
 				logmsg(`upload failed: ${error}`);
 			}
 			finally {
-				setStarted(false);
+				//setStarted(false);
 			}
 		}
 	}
