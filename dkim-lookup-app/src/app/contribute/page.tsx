@@ -19,10 +19,7 @@ export default function Page() {
 			<h2>Ways to contribute to the registry:</h2>
 
 			<h3>Upload from Gmail</h3>
-			<p>
-				To upload from a file created from an exported archive from any email provider (including Gmail),
-				visit the <strong><a href="upload_tsv">Upload from TSV file</a></strong> page.
-			</p>
+			<p>To upload directly from your Gmail account, visit the <strong><a href="upload_gmail">Upload from Gmail</a></strong> page.</p>
 			<p>
 				When you sign in with your Gmail account and press Start, the site will
 				extract the <InlineCode>DKIM-Signature</InlineCode> field from each email message in your Gmail account.
@@ -47,7 +44,10 @@ export default function Page() {
 			</p>
 
 			<h3>Upload from TSV file</h3>
-			<p>To upload directly from your Gmail account, visit the <strong><a href="upload_gmail">Upload from Gmail</a></strong> page.</p>
+			<p>
+				To upload from a file created from an exported archive from any email provider (including Gmail),
+				visit the <strong><a href="upload_tsv">Upload from TSV file</a></strong> page.
+			</p>
 			<p>When you upload from a TSV file, the domain and selector pairs are taken directly from the file and uploaded to the registry.</p>
 
 
