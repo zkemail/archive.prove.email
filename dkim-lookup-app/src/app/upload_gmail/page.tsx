@@ -22,7 +22,6 @@ export default function Page() {
 	const [nextPageToken, setNextPageToken] = React.useState<string>('');
 
 	useEffect(() => {
-		logmsg(`nextPageToken ${nextPageToken}`);
 		if (started) {
 			uploadFromGmail();
 		}
@@ -49,33 +48,31 @@ export default function Page() {
 	}
 
 	async function uploadFromGmail() {
-		if (true) {
-			logmsg('fetching email batch...');
-			try {
-				let response = await axios.get<GmailResponse>(gmailApiUrl, { params: { pageToken: nextPageToken } });
-				await update();
-				let pairs = response.data.domainSelectorPairs;
-				logmsg(`received: ${pairs.length} domain/selector pairs`);
-				for (const pair of pairs) {
-					const pairString = JSON.stringify(pair);
-					if (!uploadedPairs.has(pairString)) {
-						logmsg('new pair found, uploading: ' + JSON.stringify(pair));
-						let upsertResponse = await axios.post<AddDspResponse>(addDspApiUrl, pair as AddDspRequest);
-						await update();
-						console.log('upsert response', upsertResponse);
-						uploadedPairs.add(pairString);
-					}
-					setUploadedPairs(uploadedPairs => new Set(uploadedPairs).add(pairString));
+		logmsg('fetching email batch...');
+		try {
+			let response = await axios.get<GmailResponse>(gmailApiUrl, { params: { pageToken: nextPageToken } });
+			await update();
+			let pairs = response.data.domainSelectorPairs;
+			logmsg(`received: ${pairs.length} domain/selector pairs`);
+			for (const pair of pairs) {
+				const pairString = JSON.stringify(pair);
+				if (!uploadedPairs.has(pairString)) {
+					logmsg('new pair found, uploading: ' + JSON.stringify(pair));
+					let upsertResponse = await axios.post<AddDspResponse>(addDspApiUrl, pair as AddDspRequest);
+					await update();
+					console.log('upsert response', upsertResponse);
+					uploadedPairs.add(pairString);
 				}
-				if (!response.data.nextPageToken) {
-					logmsg('no more pages, upload complete');
-				}
-				setNextPageToken(response.data.nextPageToken || '');
+				setUploadedPairs(uploadedPairs => new Set(uploadedPairs).add(pairString));
 			}
-			catch (error: any) {
-				logmsg(axiosErrorMessage(error));
-				setStarted(false);
+			if (!response.data.nextPageToken) {
+				logmsg('no more pages, upload complete');
 			}
+			setNextPageToken(response.data.nextPageToken || '');
+		}
+		catch (error: any) {
+			logmsg(axiosErrorMessage(error));
+			setStarted(false);
 		}
 	}
 
@@ -101,10 +98,16 @@ export default function Page() {
 					Domains and selectors will be extracted from the DKIM-Signature header field in each email message in your Gmail account.
 				</p>
 				<p>
-					<button disabled={!startEnabled} onClick={startUpload}>
-						{started ? "Running..." : "Start"}
+					<button disabled={!startEnabled} onClick={() => {
+						startUpload()
+						logmsg('upload started');
+					}}>
+						Start
 					</button>
-					<button disabled={startEnabled} onClick={() => setStarted(false)}>
+					<button disabled={startEnabled} onClick={() => {
+						setStarted(false)
+						logmsg('upload stopped');
+					}}>
 						Stop
 					</button>
 				</p>
