@@ -11,7 +11,7 @@ export type DomainSearchResults = {
 	value: string;
 };
 
-export async function GET(_request: NextRequest, { params }: { params: { name: string } }) {
+export async function GET(request: NextRequest) {
 	const forwardedFor = headers().get("x-forwarded-for");
 	if (forwardedFor) {
 		const clientIp = forwardedFor.split(',')[0];
@@ -24,10 +24,10 @@ export async function GET(_request: NextRequest, { params }: { params: { name: s
 	}
 
 	try {
-		const domainName = params.name;
+		const domainName = request.nextUrl.searchParams.get('domain');
 		if (!domainName) {
 			return NextResponse.json([]);
-		};
+		}
 		let records = await findRecords(domainName);
 		let result: DomainSearchResults[] = records.map((record) => ({
 			domain: record.domainSelectorPair.domain,
