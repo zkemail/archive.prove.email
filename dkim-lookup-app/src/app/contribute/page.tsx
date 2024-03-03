@@ -50,6 +50,13 @@ export default function Page() {
 			<p>To upload directly from your Gmail account, visit the <strong><a href="upload_gmail">Upload from Gmail</a></strong> page.</p>
 			<p>When you upload from a TSV file, the domain and selector pairs are taken directly from the file and uploaded to the registry.</p>
 
+
+			<h3>Use the API</h3>
+			<p>
+				You can contribute to the registry by using the API.
+				You find the API specification and can try out the endpoints in the <strong><a href="api-explorer">API Explorer</a></strong>.
+			</p>
+
 			<h2>Privacy and security</h2>
 			<p>Read the <a href="privacy-policy">Privacy policy</a></p>
 

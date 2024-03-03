@@ -1,0 +1,155 @@
+openapi: 3.0.3
+info:
+  title: DKIM Registry API
+  description: |-
+    This is the API specification for the DKIM Registry API, which follows the OpenAPI 3.0.3 specification.
+  version: "0.1"
+servers:
+  - url: https://registry.prove.email/api
+  - url: /api
+    description: Development
+paths:
+  /key:
+    get:
+      tags:
+        - dkim-key
+      summary: List DKIM keys
+      description: Returns a list of DKIM keys for a given domain or domain suffix
+      operationId: listKeys
+      parameters:
+        - name: domain
+          in: query
+          description: Match the domain name and any subdomains.
+          required: true
+          schema:
+            type: string
+          example: 'example.com'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DkimKey'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /dsp:
+    post:
+      tags:
+        - domain-selector-pair
+      summary: Add a domain/selector pair
+      description: Add a domain/selector pair
+      operationId: addDsp
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DomainSelectorPair'
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/DomainSelectorPair'
+                  - type: object
+                    required:
+                      - added
+                    properties:
+                      added:
+                        type: boolean
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /domains/{name}:
+    get:
+      tags:
+        - dkim-key
+      summary: List DKIM keys
+      description: Returns a list of DKIM keys for a given domain or domain suffix
+      operationId: listDomains
+      deprecated: true
+      parameters:
+        - name: name
+          in: path
+          description: Match the domain name and any subdomains.
+          required: true
+          schema:
+            type: string
+          example: 'example.com'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DkimKey'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  schemas:
+    DkimKey:
+      required:
+        - value
+        - domain
+        - selector
+      type: object
+      properties:
+        value:
+          type: string
+          example: k=rsa; t=s; p=MIGfMA0GCSqGSIb3D...
+        domain:
+          type: string
+          example: example.com
+        selector:
+          type: string
+          example: dkimkey
+        firstSeenAt:
+          type: string
+          format: date-time
+          example: 2021-01-01T00:00:00Z
+        lastSeenAt:
+          type: string
+          format: date-time
+          example: 2021-01-01T00:00:00Z
+    DomainSelectorPair:
+      required:
+        - domain
+        - selector
+      type: object
+      properties:
+        domain:
+          type: string
+          example: example.com
+        selector:
+          type: string
+          example: s1
+    Error:
+      type: object
+      required:
+        - status
+        - message
+      properties:
+        status:
+          type: integer
+        message:
+          type: string
