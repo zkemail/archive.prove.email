@@ -58,9 +58,6 @@ export function axiosErrorMessage(error: any): string {
 		const message = dataToMessage(data);
 		return `${error} - ${message}`;
 	}
-	else if (error.request) {
-		return `${error.request}`;
-	}
 	else {
 		return `${error.message}`;
 	}

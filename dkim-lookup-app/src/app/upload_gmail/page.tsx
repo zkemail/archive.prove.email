@@ -17,14 +17,16 @@ export default function Page() {
 
 	const { update } = useSession();
 	const [log, setLog] = React.useState<LogRecord[]>([]);
-	const [started, setStarted] = React.useState<boolean>(false);
 	const [uploadedPairs, setUploadedPairs] = React.useState<Set<string>>(new Set());
 	const [nextPageToken, setNextPageToken] = React.useState<string>('');
 	const [processedMessages, setProcessedMessages] = React.useState<number>(0);
 	const [totalMessages, setTotalMessages] = React.useState<number | null>(null);
 
+	type ProgressState = 'Not started' | 'In progress' | 'Paused' | 'Interrupted' | 'Completed';
+	const [progressState, setProgressState] = React.useState<ProgressState>('Not started');
+
 	useEffect(() => {
-		if (started) {
+		if (progressState === 'In progress') {
 			uploadFromGmail();
 		}
 	}, [nextPageToken]);
@@ -51,7 +53,7 @@ export default function Page() {
 
 	async function uploadFromGmail() {
 		try {
-			let response = await axios.get<GmailResponse>(gmailApiUrl, { params: { pageToken: nextPageToken } });
+			let response = await axios.get<GmailResponse>(gmailApiUrl, { params: { pageToken: nextPageToken }, timeout: 10000});
 			await update();
 			if (response.data.messagesTotal) {
 				setTotalMessages(response.data.messagesTotal);
@@ -73,18 +75,23 @@ export default function Page() {
 				setProcessedMessages(processedMessages => processedMessages + response.data.messagesProcessed);
 			}
 			else {
-				setStarted(false);
+				setProgressState('Completed');
 				setNextPageToken('');
 				logmsg('upload complete');
 			}
 		}
 		catch (error: any) {
-			logmsg(axiosErrorMessage(error));
-			setStarted(false);
+			console.error('uploadFromGmail error', error);
+			logmsg('err:' + axiosErrorMessage(error));
+			setProgressState('Interrupted');
 		}
 	}
 
-	const startEnabled = !started;
+	let showStartButton = progressState === 'Not started';
+	let showResumeButton = progressState === 'Paused' || progressState === 'Interrupted';
+	let showPauseButton = progressState === 'In progress';
+
+
 
 	return (
 		<div>
@@ -101,19 +108,21 @@ export default function Page() {
 					Domains and selectors will be extracted from the DKIM-Signature header field in each email message in your Gmail account.
 				</p>
 				<p>
-					<button disabled={!startEnabled} onClick={() => {
+					<span>Progress: {progressState}</span>
+					{showStartButton && <button onClick={() => {
 						logmsg('upload started');
-						setStarted(true);
+						setProgressState('In progress');
 						uploadFromGmail();
-					}}>
-						Start
-					</button>
-					<button disabled={startEnabled} onClick={() => {
-						setStarted(false)
+					}}>Start</button>}
+					{showResumeButton && <button onClick={() => {
+						logmsg('upload resumed');
+						setProgressState('In progress');
+						uploadFromGmail();
+					}}>Resume</button>}
+					{showPauseButton && <button onClick={() => {
+						setProgressState('Paused');
 						logmsg('upload paused');
-					}}>
-						Pause
-					</button>
+					}}>Pause</button>}
 				</p>
 				<p>
 					Processed messages: {processedMessages} {totalMessages ? `of ${totalMessages}` : ''	}
