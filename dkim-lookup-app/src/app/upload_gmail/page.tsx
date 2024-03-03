@@ -46,14 +46,14 @@ export default function Page() {
 		return <p>loading...</p>
 	}
 
-
-
 	function logmsg(message: string) {
 		console.log(message);
 		setLog(log => [...log, { message, date: new Date() }]);
 	}
 
-	async function uploadFromGmail(): Promise<number> {
+	async function uploadFromGmail() {
+		logmsg('uploaded pairs count: ' + uploadedPairs.size);
+		logmsg('uploaded pairs: ' + JSON.stringify(Array.from(uploadedPairs)));
 		const gmailApiUrl = 'api/gmail';
 		const addDspApiUrl = 'api/dsp';
 		logmsg(`starting upload to ${gmailApiUrl}`);
@@ -78,8 +78,9 @@ export default function Page() {
 						await update();
 						//console.log('upsert response', upsertResponse);
 						//uploadedPairs.add(pairString);
-						setUploadedPairs(uploadedPairs => new Set(uploadedPairs).add(pairString));
+						uploadedPairs.add(pairString);
 					}
+					setUploadedPairs(uploadedPairs => new Set(uploadedPairs).add(pairString));
 				}
 				setProgressCounter(progressCounter + 1);
 				if (!response.data.nextPageToken) {
@@ -87,25 +88,15 @@ export default function Page() {
 				}
 			}
 			catch (error: any) {
-				throw axiosErrorMessage(error);
+				logmsg(axiosErrorMessage(error));
+				setStarted(false);
 			}
 		}
-		return uploadedPairs.size;
 	}
 
 	async function startUpload() {
-		if (!started) {
-			setStarted(true);
-			try {
-				uploadFromGmail();
-			}
-			catch (error) {
-				logmsg(`upload failed: ${error}`);
-			}
-			finally {
-				//setStarted(false);
-			}
-		}
+		setStarted(true);
+		uploadFromGmail();
 	}
 
 	const startEnabled = !started;
@@ -128,6 +119,8 @@ export default function Page() {
 					<button disabled={!startEnabled} onClick={startUpload}>
 						{started ? "Running..." : "Start"}
 					</button>
+					<button disabled={startEnabled} onClick={() => setStarted(false)}>Stop</button>
+
 				</p>
 				<LogConsole log={log} setLog={setLog} />
 			</div >
