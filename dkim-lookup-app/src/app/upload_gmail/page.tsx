@@ -50,7 +50,6 @@ export default function Page() {
 	}
 
 	async function uploadFromGmail() {
-		logmsg('fetching email batch...');
 		try {
 			let response = await axios.get<GmailResponse>(gmailApiUrl, { params: { pageToken: nextPageToken } });
 			await update();
@@ -58,7 +57,6 @@ export default function Page() {
 				setTotalMessages(response.data.messagesTotal);
 			}
 			let pairs = response.data.domainSelectorPairs;
-			logmsg(`received: ${pairs.length} domain/selector pairs`);
 			for (const pair of pairs) {
 				const pairString = JSON.stringify(pair);
 				if (!uploadedPairs.has(pairString)) {
@@ -86,11 +84,6 @@ export default function Page() {
 		}
 	}
 
-	async function startUpload() {
-		setStarted(true);
-		uploadFromGmail();
-	}
-
 	const startEnabled = !started;
 
 	return (
@@ -109,13 +102,15 @@ export default function Page() {
 				</p>
 				<p>
 					<button disabled={!startEnabled} onClick={() => {
-						startUpload()
+						logmsg('upload started');
+						setStarted(true);
+						uploadFromGmail();
 					}}>
 						Start
 					</button>
 					<button disabled={startEnabled} onClick={() => {
 						setStarted(false)
-						logmsg('pausing upload...');
+						logmsg('upload paused');
 					}}>
 						Pause
 					</button>
