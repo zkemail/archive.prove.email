@@ -20,6 +20,7 @@ export default function Page() {
 	const [started, setStarted] = React.useState<boolean>(false);
 	const [uploadedPairs, setUploadedPairs] = React.useState<Set<string>>(new Set());
 	const [nextPageToken, setNextPageToken] = React.useState<string>('');
+	const [processedMessages, setProcessedMessages] = React.useState<number>(0);
 
 	useEffect(() => {
 		if (started) {
@@ -69,6 +70,7 @@ export default function Page() {
 				logmsg('no more pages, upload complete');
 			}
 			setNextPageToken(response.data.nextPageToken || '');
+			setProcessedMessages(processedMessages => processedMessages + response.data.messagesProcessed);
 		}
 		catch (error: any) {
 			logmsg(axiosErrorMessage(error));
@@ -100,16 +102,18 @@ export default function Page() {
 				<p>
 					<button disabled={!startEnabled} onClick={() => {
 						startUpload()
-						logmsg('upload started');
 					}}>
 						Start
 					</button>
 					<button disabled={startEnabled} onClick={() => {
 						setStarted(false)
-						logmsg('upload stopped');
+						logmsg('pausing upload...');
 					}}>
-						Stop
+						Pause
 					</button>
+				</p>
+				<p>
+					Processed messages: {processedMessages}
 				</p>
 				<LogConsole log={log} setLog={setLog} />
 			</div >

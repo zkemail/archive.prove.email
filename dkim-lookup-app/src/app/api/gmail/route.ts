@@ -33,6 +33,7 @@ async function handleMessage(messageId: string, gmail: gmail_v1.Gmail, resultArr
 
 
 export type GmailResponse = {
+	messagesProcessed: number,
 	domainSelectorPairs: DomainSelectorPair[],
 	nextPageToken: string | null
 }
@@ -76,7 +77,7 @@ async function handleRequest(request: NextRequest) {
 		}
 	}
 	let nextPageToken = listResults.data.nextPageToken || null;
-	let response: GmailResponse = { domainSelectorPairs, nextPageToken };
+	let response: GmailResponse = { domainSelectorPairs, nextPageToken, messagesProcessed: messages.length };
 	return NextResponse.json(response, { status: 200 });
 }
 
