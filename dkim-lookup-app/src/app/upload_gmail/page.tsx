@@ -61,9 +61,9 @@ export default function Page() {
 				const pairString = JSON.stringify(pair);
 				if (!uploadedPairs.has(pairString)) {
 					logmsg('new pair found, uploading: ' + JSON.stringify(pair));
-					let upsertResponse = await axios.post<AddDspResponse>(addDspApiUrl, pair as AddDspRequest);
+					let response = await axios.post<AddDspResponse>(addDspApiUrl, pair as AddDspRequest);
 					await update();
-					console.log('upsert response', upsertResponse);
+					console.log(`${addDspApiUrl} response`, response);
 					uploadedPairs.add(pairString);
 				}
 				setUploadedPairs(uploadedPairs => new Set(uploadedPairs).add(pairString));
