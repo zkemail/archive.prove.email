@@ -5,6 +5,7 @@ import { z } from 'zod';
 
 export type AddDspResponse = {
 	message: object;
+	added?: boolean;
 };
 
 const AddDspRequestSchema = z.object({
@@ -20,7 +21,7 @@ export async function POST(request: NextRequest) {
 		const dsp = AddDspRequestSchema.parse(body);
 		let added = await addDomainSelectorPair(dsp.domain, dsp.selector);
 		return NextResponse.json(
-			{ message: { ...dsp, added } } as AddDspResponse,
+			{ message: dsp, added } as AddDspResponse,
 			{ status: 200 }
 		);
 	}

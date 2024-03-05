@@ -18,6 +18,7 @@ export default function Page() {
 	const { update } = useSession();
 	const [log, setLog] = React.useState<LogRecord[]>([]);
 	const [uploadedPairs, setUploadedPairs] = React.useState<Set<string>>(new Set());
+	const [addedPairs, setAddedPairs] = React.useState<number>(0);
 	const [nextPageToken, setNextPageToken] = React.useState<string>('');
 	const [processedMessages, setProcessedMessages] = React.useState<number>(0);
 	const [totalMessages, setTotalMessages] = React.useState<number | null>(null);
@@ -71,6 +72,9 @@ export default function Page() {
 					let response = await axios.post<AddDspResponse>(addDspApiUrl, pair as AddDspRequest);
 					await update();
 					console.log(`${addDspApiUrl} response`, response);
+					if (response.data.added) {
+						setAddedPairs(addedPairs => addedPairs + 1);
+					}
 					uploadedPairs.add(pairString);
 				}
 				setUploadedPairs(uploadedPairs => new Set(uploadedPairs).add(pairString));
@@ -94,8 +98,6 @@ export default function Page() {
 	let showStartButton = progressState === 'Not started';
 	let showResumeButton = progressState === 'Paused' || progressState === 'Interrupted';
 	let showPauseButton = progressState === 'Running...';
-
-
 
 	return (
 		<div>
@@ -133,6 +135,9 @@ export default function Page() {
 					</div>
 					<div>
 						Uploaded domain/selector pairs: {uploadedPairs.size}
+					</div>
+					<div>
+						Added domain/selector pairs: {addedPairs}
 					</div>
 				</div>
 				<LogConsole log={log} setLog={setLog} />
