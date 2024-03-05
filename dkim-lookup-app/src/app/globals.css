@@ -28,7 +28,7 @@ textarea::placeholder {
 }
 
 .animate-spin {
-  animation: spin 1s linear infinite;
+  animation: spin 1.75s linear infinite;
 }
 
 @keyframes spin {

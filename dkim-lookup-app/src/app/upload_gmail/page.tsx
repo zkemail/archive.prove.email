@@ -22,11 +22,14 @@ export default function Page() {
 	const [processedMessages, setProcessedMessages] = React.useState<number>(0);
 	const [totalMessages, setTotalMessages] = React.useState<number | null>(null);
 
-	type ProgressState = 'Not started' | 'In progress' | 'Paused' | 'Interrupted' | 'Completed';
+	type ProgressState = 'Not started' | 'Running...' | 'Paused' | 'Interrupted' | 'Completed';
 	const [progressState, setProgressState] = React.useState<ProgressState>('Not started');
 
 	useEffect(() => {
-		if (progressState === 'In progress') {
+		if (progressState === 'Paused') {
+			logmsg(progressState);
+		}
+		if (progressState === 'Running...') {
 			uploadFromGmail();
 		}
 	}, [nextPageToken]);
@@ -52,8 +55,10 @@ export default function Page() {
 	}
 
 	async function uploadFromGmail() {
+		setProgressState('Running...');
 		try {
-			let response = await axios.get<GmailResponse>(gmailApiUrl, { params: { pageToken: nextPageToken }, timeout: 10000});
+			logmsg('fetching page ' + (nextPageToken || ''));
+			let response = await axios.get<GmailResponse>(gmailApiUrl, { params: { pageToken: nextPageToken }, timeout: 20000 });
 			await update();
 			if (response.data.messagesTotal) {
 				setTotalMessages(response.data.messagesTotal);
@@ -89,7 +94,7 @@ export default function Page() {
 
 	let showStartButton = progressState === 'Not started';
 	let showResumeButton = progressState === 'Paused' || progressState === 'Interrupted';
-	let showPauseButton = progressState === 'In progress';
+	let showPauseButton = progressState === 'Running...';
 
 
 
@@ -107,25 +112,32 @@ export default function Page() {
 				<p>
 					Domains and selectors will be extracted from the DKIM-Signature header field in each email message in your Gmail account.
 				</p>
-				<p>
-					<span>Progress: {progressState}</span>
+				<div>
+					Progress: {progressState}
+					{progressState === 'Running...' &&
+						<img src="/spinner.png"
+							className="animate-spin"
+							alt="running"
+							style={{ width: '0.8rem', marginLeft: '0.3rem' }}
+						/>
+					}
+
+				</div>
+				<div>
 					{showStartButton && <button onClick={() => {
-						logmsg('upload started');
-						setProgressState('In progress');
 						uploadFromGmail();
 					}}>Start</button>}
 					{showResumeButton && <button onClick={() => {
-						logmsg('upload resumed');
-						setProgressState('In progress');
 						uploadFromGmail();
 					}}>Resume</button>}
 					{showPauseButton && <button onClick={() => {
+						logmsg('pausing upload...');
 						setProgressState('Paused');
-						logmsg('upload paused');
 					}}>Pause</button>}
-				</p>
+
+				</div>
 				<p>
-					Processed messages: {processedMessages} {totalMessages ? `of ${totalMessages}` : ''	}
+					Processed messages: {processedMessages} {totalMessages ? `of ${totalMessages}` : ''}
 				</p>
 				<LogConsole log={log} setLog={setLog} />
 			</div >
