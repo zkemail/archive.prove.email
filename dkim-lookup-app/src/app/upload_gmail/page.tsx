@@ -57,7 +57,7 @@ export default function Page() {
 	async function uploadFromGmail() {
 		setProgressState('Running...');
 		try {
-			logmsg('fetching page ' + (nextPageToken || ''));
+			logmsg(`fetching page ${nextPageToken}`);
 			let response = await axios.get<GmailResponse>(gmailApiUrl, { params: { pageToken: nextPageToken }, timeout: 20000 });
 			await update();
 			if (response.data.messagesTotal) {
@@ -86,8 +86,7 @@ export default function Page() {
 			}
 		}
 		catch (error: any) {
-			console.error('uploadFromGmail error', error);
-			logmsg('err:' + axiosErrorMessage(error));
+			logmsg(`error: ${axiosErrorMessage(error)}`);
 			setProgressState('Interrupted');
 		}
 	}
