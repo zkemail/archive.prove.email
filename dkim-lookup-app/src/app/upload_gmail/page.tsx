@@ -1,20 +1,38 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useSession, signIn, signOut } from "next-auth/react"
 import { LogConsole, LogRecord } from "@/components/LogConsole";
-import { DomainSelectorPair, axiosErrorMessage } from "@/lib/utils";
+import { axiosErrorMessage } from "@/lib/utils";
 import axios from "axios";
 import { GmailResponse } from "../api/gmail/route";
 import { AddDspRequest, AddDspResponse } from "../api/dsp/route";
 
 export default function Page() {
 
+	const gmailApiUrl = 'api/gmail';
+	const addDspApiUrl = 'api/dsp';
+
 	const { data: session, status } = useSession()
 
 	const { update } = useSession();
 	const [log, setLog] = React.useState<LogRecord[]>([]);
-	const [started, setStarted] = React.useState<boolean>(false);
+	const [uploadedPairs, setUploadedPairs] = React.useState<Set<string>>(new Set());
+	const [nextPageToken, setNextPageToken] = React.useState<string>('');
+	const [processedMessages, setProcessedMessages] = React.useState<number>(0);
+	const [totalMessages, setTotalMessages] = React.useState<number | null>(null);
+
+	type ProgressState = 'Not started' | 'Running...' | 'Paused' | 'Interrupted' | 'Completed';
+	const [progressState, setProgressState] = React.useState<ProgressState>('Not started');
+
+	useEffect(() => {
+		if (progressState === 'Paused') {
+			logmsg(progressState);
+		}
+		if (progressState === 'Running...') {
+			uploadFromGmail();
+		}
+	}, [nextPageToken]);
 
 	if (status == "unauthenticated") {
 		return <div>
@@ -31,63 +49,53 @@ export default function Page() {
 		return <p>loading...</p>
 	}
 
-
 	function logmsg(message: string) {
 		console.log(message);
 		setLog(log => [...log, { message, date: new Date() }]);
 	}
 
 	async function uploadFromGmail() {
-		let uploadedPairs: Set<string> = new Set();
-		const gmailApiUrl = 'api/gmail';
-		const addDspApiUrl = 'api/dsp';
-		let nextPageToken = "";
-		logmsg(`starting upload to ${gmailApiUrl}`);
-		while (true) {
-			logmsg('fetching email batch...');
-			try {
-				let response = await axios.get<GmailResponse>(gmailApiUrl, { params: { pageToken: nextPageToken } });
-				await update();
-				nextPageToken = response.data.nextPageToken || '';
-				let pairs = response.data.domainSelectorPairs;
-				logmsg(`received: ${pairs.length} domain/selector pairs`);
-				for (const pair of pairs) {
-					const pairString = JSON.stringify(pair);
-					if (!uploadedPairs.has(pairString)) {
-						logmsg('new pair found, uploading: ' + JSON.stringify(pair));
-						let upsertResponse = await axios.post<AddDspResponse>(addDspApiUrl, pair as AddDspRequest);
-						await update();
-						console.log('upsert response', upsertResponse);
-						uploadedPairs.add(pairString);
-					}
-				}
-				if (!nextPageToken) {
-					break;
-				}
+		setProgressState('Running...');
+		try {
+			logmsg(`fetching page ${nextPageToken}`);
+			let response = await axios.get<GmailResponse>(gmailApiUrl, { params: { pageToken: nextPageToken }, timeout: 20000 });
+			await update();
+			if (response.data.messagesTotal) {
+				setTotalMessages(response.data.messagesTotal);
 			}
-			catch (error: any) {
-				throw axiosErrorMessage(error);
+			let pairs = response.data.domainSelectorPairs;
+			for (const pair of pairs) {
+				const pairString = JSON.stringify(pair);
+				if (!uploadedPairs.has(pairString)) {
+					logmsg('new pair found, uploading: ' + JSON.stringify(pair));
+					let response = await axios.post<AddDspResponse>(addDspApiUrl, pair as AddDspRequest);
+					await update();
+					console.log(`${addDspApiUrl} response`, response);
+					uploadedPairs.add(pairString);
+				}
+				setUploadedPairs(uploadedPairs => new Set(uploadedPairs).add(pairString));
 			}
+			if (response.data.nextPageToken) {
+				setNextPageToken(response.data.nextPageToken);
+				setProcessedMessages(processedMessages => processedMessages + response.data.messagesProcessed);
+			}
+			else {
+				setProgressState('Completed');
+				setNextPageToken('');
+				logmsg('upload complete');
+			}
+		}
+		catch (error: any) {
+			logmsg(`error: ${axiosErrorMessage(error)}`);
+			setProgressState('Interrupted');
 		}
 	}
 
-	async function startUpload() {
-		if (!started) {
-			setStarted(true);
-			try {
-				await uploadFromGmail();
-				logmsg("upload complete");
-			}
-			catch (error) {
-				logmsg(`upload failed: ${error}`);
-			}
-			finally {
-				setStarted(false);
-			}
-		}
-	}
+	let showStartButton = progressState === 'Not started';
+	let showResumeButton = progressState === 'Paused' || progressState === 'Interrupted';
+	let showPauseButton = progressState === 'Running...';
 
-	const startEnabled = !started;
+
 
 	return (
 		<div>
@@ -103,10 +111,25 @@ export default function Page() {
 				<p>
 					Domains and selectors will be extracted from the DKIM-Signature header field in each email message in your Gmail account.
 				</p>
+				<div>
+					Progress: {progressState}
+
+				</div>
+				<div>
+					{showStartButton && <button onClick={() => {
+						uploadFromGmail();
+					}}>Start</button>}
+					{showResumeButton && <button onClick={() => {
+						uploadFromGmail();
+					}}>Resume</button>}
+					{showPauseButton && <button onClick={() => {
+						logmsg('pausing upload...');
+						setProgressState('Paused');
+					}}>Pause</button>}
+
+				</div>
 				<p>
-					<button disabled={!startEnabled} onClick={startUpload}>
-						{started ? "Running..." : "Start"}
-					</button>
+					Processed messages: {processedMessages} {totalMessages ? `of ${totalMessages}` : ''}
 				</p>
 				<LogConsole log={log} setLog={setLog} />
 			</div >

@@ -7,7 +7,6 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 async function handleMessage(messageId: string, gmail: gmail_v1.Gmail, resultArray: DomainSelectorPair[]) {
-	console.log('handle message', messageId);
 	const messageRes = await gmail.users.messages.get({ userId: 'me', id: messageId, format: 'metadata' })
 	let headers = messageRes.data.payload?.headers
 	if (!headers) {
@@ -31,8 +30,9 @@ async function handleMessage(messageId: string, gmail: gmail_v1.Gmail, resultArr
 	return resultArray;
 }
 
-
 export type GmailResponse = {
+	messagesProcessed: number,
+	messagesTotal?: number,
 	domainSelectorPairs: DomainSelectorPair[],
 	nextPageToken: string | null
 }
@@ -43,9 +43,7 @@ async function handleRequest(request: NextRequest) {
 		return new Response('Unauthorized. Sign in via api/auth/signin', { status: 401 });
 	}
 
-	const token = await getToken({
-		req: request
-	})
+	const token = await getToken({ req: request })
 	const oauth2Client = new google.auth.OAuth2(process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET, process.env.GOOGLE_REDIRECT_URI);
 	const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
@@ -57,12 +55,16 @@ async function handleRequest(request: NextRequest) {
 	oauth2Client.setCredentials({ access_token })
 
 	let pageToken = request.nextUrl.searchParams.get('pageToken');
+	let isFirstPage = !pageToken;
+	let messagesTotal = isFirstPage ? (await gmail.users.getProfile({ userId: 'me' })).data.messagesTotal : null;
 	let pageTokenParam = pageToken ? { pageToken } : {};
+	let messageTotalParam = messagesTotal ? { messagesTotal } : {};
 
 	let listResults = await gmail.users.messages.list({ userId: 'me', maxResults: 10, ...pageTokenParam })
 
 	let messages = listResults?.data?.messages || [];
 	let domainSelectorPairs: DomainSelectorPair[] = [];
+	console.log(`handling ${messages.length} messages`);
 	for (let message of messages) {
 		if (!message.id) {
 			console.log(`no messageId for message`, message);
@@ -76,7 +78,8 @@ async function handleRequest(request: NextRequest) {
 		}
 	}
 	let nextPageToken = listResults.data.nextPageToken || null;
-	let response: GmailResponse = { domainSelectorPairs, nextPageToken };
+	let messagesProcessed = messages.length;
+	let response: GmailResponse = { domainSelectorPairs, nextPageToken, messagesProcessed, ...messageTotalParam };
 	return NextResponse.json(response, { status: 200 });
 }
 
