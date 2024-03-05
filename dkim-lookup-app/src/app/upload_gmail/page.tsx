@@ -114,13 +114,6 @@ export default function Page() {
 				</p>
 				<div>
 					Progress: {progressState}
-					{progressState === 'Running...' &&
-						<img src="/spinner.png"
-							className="animate-spin"
-							alt="running"
-							style={{ width: '0.8rem', marginLeft: '0.3rem' }}
-						/>
-					}
 
 				</div>
 				<div>
