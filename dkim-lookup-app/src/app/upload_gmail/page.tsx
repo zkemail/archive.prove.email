@@ -113,7 +113,6 @@ export default function Page() {
 				</p>
 				<div>
 					Progress: {progressState}
-
 				</div>
 				<div>
 					{showStartButton && <button onClick={() => {
@@ -128,9 +127,14 @@ export default function Page() {
 					}}>Pause</button>}
 
 				</div>
-				<p>
-					Processed messages: {processedMessages} {totalMessages ? `of ${totalMessages}` : ''}
-				</p>
+				<div style={{ marginTop: '1rem', marginBottom: '1rem' }}>
+					<div>
+						Processed email messages: {processedMessages} {totalMessages ? `of ${totalMessages}` : ''}
+					</div>
+					<div>
+						Uploaded domain/selector pairs: {uploadedPairs.size}
+					</div>
+				</div>
 				<LogConsole log={log} setLog={setLog} />
 			</div >
 		</div >
