@@ -14,6 +14,7 @@ export default function Page() {
 	const [log, setLog] = React.useState<LogRecord[]>([]);
 	const [selectedFile, setSelectedFile] = React.useState<File | undefined>();
 	const [started, setStarted] = React.useState<boolean>(false);
+	const [addedPairs, setAddedPairs] = React.useState<number>(0);
 
 	if (status === "loading" && !session) {
 		return <p>loading...</p>
@@ -57,9 +58,12 @@ export default function Page() {
 			let dsp = domainSelectorPairs[i];
 			logmsg(`uploading (${i}/${domainSelectorPairs.length}) ${JSON.stringify(dsp)}`);
 			try {
-				let upsertResponse = await axios.post<AddDspResponse>(addDspApiUrl, dsp as AddDspRequest);
+				let response = await axios.post<AddDspResponse>(addDspApiUrl, dsp as AddDspRequest);
 				await update();
-				console.log('upsert response', upsertResponse);
+				console.log('upsert response', response);
+				if (response.data.added) {
+					setAddedPairs(addedPairs => addedPairs + 1);
+				}
 			}
 			catch (error: any) {
 				console.error(`error calling ${addDspApiUrl}:`, error);
@@ -105,6 +109,9 @@ export default function Page() {
 				<button disabled={!startEnabled} onClick={startUpload}>
 					{started ? "Running..." : "Start"}
 				</button>
+			</p>
+			<p>
+				Added domain/selector pairs: {addedPairs}
 			</p>
 			<LogConsole log={log} setLog={setLog} />
 		</div >
