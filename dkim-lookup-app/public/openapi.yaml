@@ -56,14 +56,16 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/DomainSelectorPair'
-                  - type: object
-                    required:
-                      - added
-                    properties:
-                      added:
-                        type: boolean
+                type: object
+                required:
+                  - added
+                  - message
+                properties:
+                  added:
+                    type: boolean
+                  message:
+                    $ref: '#/components/schemas/DomainSelectorPair'
+
         '400':
           description: Invalid input
           content:
@@ -108,11 +110,11 @@ paths:
 components:
   schemas:
     DkimKey:
+      type: object
       required:
         - value
         - domain
         - selector
-      type: object
       properties:
         value:
           type: string
@@ -132,10 +134,10 @@ components:
           format: date-time
           example: 2021-01-01T00:00:00Z
     DomainSelectorPair:
+      type: object
       required:
         - domain
         - selector
-      type: object
       properties:
         domain:
           type: string
