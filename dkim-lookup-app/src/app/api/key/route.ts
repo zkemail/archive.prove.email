@@ -19,14 +19,14 @@ export async function GET(request: NextRequest) {
 			await rateLimiter.consume(clientIp, 10);
 		}
 		catch (error: any) {
-			return NextResponse.json({ message: 'Rate limit exceeded' }, { status: 429 });
+			return NextResponse.json('Rate limit exceeded', { status: 429 });
 		}
 	}
 
 	try {
 		const domainName = request.nextUrl.searchParams.get('domain');
 		if (!domainName) {
-			return NextResponse.json([]);
+			return NextResponse.json('missing domain parameter', { status: 400 });
 		}
 		let records = await findRecords(domainName);
 		let result: DomainSearchResults[] = records.map((record) => ({
@@ -39,6 +39,6 @@ export async function GET(request: NextRequest) {
 		return NextResponse.json(result, { status: 200 });
 	}
 	catch (error: any) {
-		return NextResponse.json({ message: error.message }, { status: 500 });
+		return NextResponse.json(error.toString(), { status: 500 });
 	}
 }

@@ -18,8 +18,7 @@ export async function GET(request: NextRequest) {
 		let uniqueMatches: AutocompleteResults = Array.from(new Set(domains.map(d => d.domain)));
 		return NextResponse.json(uniqueMatches);
 	}
-	catch (error) {
-		console.error(`error updating: ${error}`, error);
-		return NextResponse.json({ message: `${error}` }, { status: 500 });
+	catch (error: any) {
+		return NextResponse.json(error.toString(), { status: 500 });
 	}
 }

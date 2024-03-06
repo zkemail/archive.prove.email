@@ -25,10 +25,10 @@ export async function POST(request: NextRequest) {
 			{ status: 200 }
 		);
 	}
-	catch (error) {
+	catch (error: any) {
 		if (error instanceof z.ZodError) {
-			return NextResponse.json({ message: error.errors }, { status: 400 });
+			return NextResponse.json(error.errors, { status: 400 });
 		}
-		return NextResponse.json({ message: `${error}` }, { status: 500 });
+		return NextResponse.json(error.toString(), { status: 500 });
 	}
 }

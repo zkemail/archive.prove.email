@@ -19,7 +19,7 @@ export async function GET(_request: NextRequest, { params }: { params: { name: s
 			await rateLimiter.consume(clientIp, 10);
 		}
 		catch (error: any) {
-			return NextResponse.json({ message: 'Rate limit exceeded' }, { status: 429 });
+			return NextResponse.json('Rate limit exceeded', { status: 429 });
 		}
 	}
 
@@ -39,6 +39,6 @@ export async function GET(_request: NextRequest, { params }: { params: { name: s
 		return NextResponse.json(result, { status: 200 });
 	}
 	catch (error: any) {
-		return NextResponse.json({ message: error.message }, { status: 500 });
+		return NextResponse.json(error.toString(), { status: 500 });
 	}
 }

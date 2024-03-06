@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
 		}
 		return NextResponse.json({ updatedRecords: dsps }, { status: 200 });
 	}
-	catch (error) {
-		return NextResponse.json({ message: error }, { status: 500 });
+	catch (error: any) {
+		return NextResponse.json(error.toString(), { status: 500 });
 	}
 }

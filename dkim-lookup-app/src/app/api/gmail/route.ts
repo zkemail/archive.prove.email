@@ -87,8 +87,8 @@ export async function GET(request: NextRequest) {
 	try {
 		return await handleRequest(request);
 	}
-	catch (e) {
-		console.log('handleRequest error ', e);
-		return NextResponse.json({ message: `${e}` }, { status: 500 });
+	catch (error: any) {
+		console.log('handleRequest error ', error);
+		return NextResponse.json(error.toString(), { status: 500 });
 	}
 }

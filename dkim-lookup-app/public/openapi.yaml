@@ -25,18 +25,18 @@ paths:
             type: string
           example: 'example.com'
       responses:
+        '400':
+          description: Missing parameter
+        '429':
+          description: Rate limit exceeded
+        '500':
+          description: Unexpected error
         '200':
-          description: successful operation
+          description: Successful operation
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/DkimKey'
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
   /dsp:
     post:
       tags:
@@ -52,7 +52,7 @@ paths:
               $ref: '#/components/schemas/DomainSelectorPair'
       responses:
         '201':
-          description: successful operation
+          description: Successful operation
           content:
             application/json:
               schema:
@@ -68,16 +68,8 @@ paths:
 
         '400':
           description: Invalid input
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+        '500':
+          description: Unexpected error
   /domains/{name}:
     get:
       tags:
@@ -96,17 +88,15 @@ paths:
           example: 'example.com'
       responses:
         '200':
-          description: successful operation
+          description: Successful operation
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/DkimKey'
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+        '429':
+          description: Rate limit exceeded
+        '500':
+          description: Unexpected error
 components:
   schemas:
     DkimKey:
@@ -145,13 +135,3 @@ components:
         selector:
           type: string
           example: s1
-    Error:
-      type: object
-      required:
-        - status
-        - message
-      properties:
-        status:
-          type: integer
-        message:
-          type: string
