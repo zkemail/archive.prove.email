@@ -4,6 +4,9 @@ info:
   description: |-
     This is the API specification for the DKIM Registry API, which follows the OpenAPI 3.0.3 specification.
   version: "0.1"
+  license:
+    name: MIT
+    url: https://opensource.org/license/MIT
 servers:
   - url: https://registry.prove.email/api
   - url: /api
