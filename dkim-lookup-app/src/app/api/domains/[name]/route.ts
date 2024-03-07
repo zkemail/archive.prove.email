@@ -2,6 +2,7 @@ import { findRecords } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { RateLimiterMemory } from "rate-limiter-flexible";
+import { checkRateLimiter } from "@/lib/utils";
 
 export type DomainSearchResults = {
 	domain: string;
@@ -11,18 +12,14 @@ export type DomainSearchResults = {
 	value: string;
 };
 
-const rateLimiter = new RateLimiterMemory({ points: 50, duration: 10 });
+const rateLimiter = new RateLimiterMemory({ points: 5, duration: 10 });
 
 export async function GET(_request: NextRequest, { params }: { params: { name: string } }) {
-	const forwardedFor = headers().get("x-forwarded-for");
-	if (forwardedFor) {
-		const clientIp = forwardedFor.split(',')[0];
-		try {
-			await rateLimiter.consume(clientIp, 10);
-		}
-		catch (error: any) {
-			return NextResponse.json('Rate limit exceeded', { status: 429 });
-		}
+	try {
+		await checkRateLimiter(rateLimiter, headers(), 1);
+	}
+	catch (error: any) {
+		return NextResponse.json('Rate limit exceeded', { status: 429 });
 	}
 
 	try {

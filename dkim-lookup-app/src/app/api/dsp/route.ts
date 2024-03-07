@@ -4,6 +4,7 @@ import { addDomainSelectorPair } from '@/lib/addDomainSelectorPair';
 import { z } from 'zod';
 import { headers } from "next/headers";
 import { RateLimiterMemory } from 'rate-limiter-flexible';
+import { checkRateLimiter } from '@/lib/utils';
 
 export type AddDspResponse = {
 	message: object;
@@ -20,16 +21,11 @@ export type AddDspRequest = z.infer<typeof AddDspRequestSchema>;
 const rateLimiter = new RateLimiterMemory({ points: 1200, duration: 360 });
 
 export async function POST(request: NextRequest) {
-
-	const forwardedFor = headers().get("x-forwarded-for");
-	if (forwardedFor) {
-		const clientIp = forwardedFor.split(',')[0];
-		try {
-			await rateLimiter.consume(clientIp, 1);
-		}
-		catch (error: any) {
-			return NextResponse.json('Rate limit exceeded', { status: 429 });
-		}
+	try {
+		await checkRateLimiter(rateLimiter, headers(), 1);
+	}
+	catch (error: any) {
+		return NextResponse.json('Rate limit exceeded', { status: 429 });
 	}
 
 	try {

@@ -1,3 +1,6 @@
+import { ReadonlyHeaders } from "next/dist/server/web/spec-extension/adapters/headers";
+import { RateLimiterMemory } from "rate-limiter-flexible";
+
 export type DomainSelectorPair = {
 	domain: string,
 	selector: string
@@ -60,5 +63,13 @@ export function axiosErrorMessage(error: any): string {
 	}
 	else {
 		return `${error.message}`;
+	}
+}
+
+export async function checkRateLimiter(rateLimiter: RateLimiterMemory, headers: ReadonlyHeaders, consumePoints: number) {
+	const forwardedFor = headers.get("x-forwarded-for");
+	if (forwardedFor) {
+		const clientIp = forwardedFor.split(',')[0];
+		await rateLimiter.consume(clientIp, consumePoints);
 	}
 }
