@@ -3,7 +3,7 @@ info:
   title: DKIM Registry API
   description: |-
     This is the API specification for the DKIM Registry API, which follows the OpenAPI 3.0.3 specification.
-  version: "0.1"
+  version: '0.1'
   license:
     name: MIT
     url: https://opensource.org/license/MIT

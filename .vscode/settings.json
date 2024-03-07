@@ -2,5 +2,6 @@
 	"python.analysis.typeCheckingMode": "strict",
 	"yapf.args": [
 		"--style=.style.yapf"
-	]
+	],
+	"yaml.format.singleQuote": true
 }
