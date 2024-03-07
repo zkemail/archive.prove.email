@@ -1,4 +1,4 @@
-openapi: 3.0.3
+openapi: 3.1.0
 info:
   title: DKIM Registry API
   description: |-
@@ -111,21 +111,26 @@ components:
       properties:
         value:
           type: string
-          example: k=rsa; t=s; p=MIGfMA0GCSqGSIb3D...
+          examples:
+            - k=rsa; t=s; p=MIGfMA0GCSqGSIb3D...
         domain:
           type: string
-          example: example.com
+          examples:
+            - example.com
         selector:
           type: string
-          example: dkimkey
+          examples:
+            - dkimkey
         firstSeenAt:
           type: string
           format: date-time
-          example: 2021-01-01T00:00:00Z
+          examples:
+            - 2021-01-01T00:00:00Z
         lastSeenAt:
           type: string
           format: date-time
-          example: 2021-01-01T00:00:00Z
+          examples:
+            - 2021-01-01T00:00:00Z
     DomainSelectorPair:
       type: object
       required:
@@ -134,7 +139,9 @@ components:
       properties:
         domain:
           type: string
-          example: example.com
+          examples:
+            - example.com
         selector:
           type: string
-          example: s1
+          examples:
+            - s1
