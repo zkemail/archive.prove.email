@@ -52,6 +52,7 @@ paths:
         The server will try to fetch the DKIM key for the given domain and selector.
         If the key is found, the domain/selector pair will be added to the registry along with the key.
         The response indicates whether the domain/selector pair and the key were added to the registry, via the `added` field.
+        The endpoint is rate limited to 1200 requests per 10 minutes.
       operationId: addDsp
       requestBody:
         required: true
@@ -85,7 +86,9 @@ paths:
       tags:
         - dkim-key
       summary: List DKIM keys
-      description: Returns a list of DKIM keys for a given domain or domain suffix
+      description: >
+        Returns a list of DKIM keys for a given domain or domain suffix.
+        The endpoint is rate limited to 5 requests per 10 seconds.
       operationId: listDomains
       deprecated: true
       parameters:

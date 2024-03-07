@@ -1,7 +1,7 @@
 import { findRecords } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
-import { rateLimiter } from "@/app/ratelimiter";
+import { RateLimiterMemory } from "rate-limiter-flexible";
 
 export type DomainSearchResults = {
 	domain: string;
@@ -10,6 +10,8 @@ export type DomainSearchResults = {
 	lastSeenAt: Date | null;
 	value: string;
 };
+
+const rateLimiter = new RateLimiterMemory({ points: 50, duration: 10 });
 
 export async function GET(request: NextRequest) {
 	const forwardedFor = headers().get("x-forwarded-for");
