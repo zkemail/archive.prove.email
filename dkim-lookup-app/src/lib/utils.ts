@@ -1,7 +1,7 @@
 import { ReadonlyHeaders } from "next/dist/server/web/spec-extension/adapters/headers";
 import { RateLimiterMemory } from "rate-limiter-flexible";
 
-export type DomainSelectorPair = {
+export type DomainAndSelector = {
 	domain: string,
 	selector: string
 };
@@ -23,7 +23,7 @@ export function parseDkimRecord(dkimValue: string): Record<string, string | null
 	return result;
 }
 
-export function load_domains_and_selectors_from_tsv(fileContent: string): DomainSelectorPair[] {
+export function load_domains_and_selectors_from_tsv(fileContent: string): DomainAndSelector[] {
 	let result = [];
 	const lines = fileContent.split('\n').map(line => line.trim()).filter(line => line);
 	for (let i = 0; i < lines.length; i++) {
@@ -37,7 +37,7 @@ export function load_domains_and_selectors_from_tsv(fileContent: string): Domain
 	return result;
 }
 
-export function getCanonicalRecordString(dsp: DomainSelectorPair, dkimRecordValue: string): string {
+export function getCanonicalRecordString(dsp: DomainAndSelector, dkimRecordValue: string): string {
 	return `${dsp.selector}._domainkey.${dsp.domain} TXT "${dkimRecordValue}"`;
 }
 

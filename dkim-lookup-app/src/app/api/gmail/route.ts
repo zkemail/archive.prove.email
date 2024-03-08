@@ -1,12 +1,12 @@
 import { authOptions } from '@/app/auth';
-import { DomainSelectorPair, parseDkimRecord } from '@/lib/utils';
+import { DomainAndSelector, parseDkimRecord } from '@/lib/utils';
 import { gmail_v1, google } from 'googleapis';
 import { getToken } from 'next-auth/jwt';
 import { getServerSession } from 'next-auth/next';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-async function handleMessage(messageId: string, gmail: gmail_v1.Gmail, resultArray: DomainSelectorPair[]) {
+async function handleMessage(messageId: string, gmail: gmail_v1.Gmail, resultArray: DomainAndSelector[]) {
 	const messageRes = await gmail.users.messages.get({ userId: 'me', id: messageId, format: 'metadata' })
 	let headers = messageRes.data.payload?.headers
 	if (!headers) {
@@ -33,7 +33,7 @@ async function handleMessage(messageId: string, gmail: gmail_v1.Gmail, resultArr
 export type GmailResponse = {
 	messagesProcessed: number,
 	messagesTotal?: number,
-	domainSelectorPairs: DomainSelectorPair[],
+	domainSelectorPairs: DomainAndSelector[],
 	nextPageToken: string | null
 }
 
@@ -63,7 +63,7 @@ async function handleRequest(request: NextRequest) {
 	let listResults = await gmail.users.messages.list({ userId: 'me', maxResults: 10, ...pageTokenParam })
 
 	let messages = listResults?.data?.messages || [];
-	let domainSelectorPairs: DomainSelectorPair[] = [];
+	let domainSelectorPairs: DomainAndSelector[] = [];
 	console.log(`handling ${messages.length} messages`);
 	for (let message of messages) {
 		if (!message.id) {
