@@ -1,8 +1,18 @@
 import { createDkimRecord, dspToString, prisma, updateDspTimestamp } from './db';
-import { Prisma } from '@prisma/client';
+import { DomainSelectorPair, Prisma } from '@prisma/client';
 import { fetchDkimDnsRecord } from './fetchDkimDnsRecord';
 import { generateWitness } from './generateWitness';
+import { fetchAndStoreDkimDnsRecord } from './utils_server';
 
+async function refreshKey(dsp: DomainSelectorPair) {
+	let now = new Date();
+	let oneHourAgo = new Date(now.getTime() - 1000 * 60 * 60);
+	if (!dsp.lastRecordUpdate || dsp.lastRecordUpdate < oneHourAgo) {
+		console.log(`refresh key for ${dspToString(dsp)}`);
+		await fetchAndStoreDkimDnsRecord(dsp);
+		updateDspTimestamp(dsp, new Date());
+	}
+}
 
 /**
  * @returns true iff a record was added
@@ -24,6 +34,7 @@ export async function addDomainSelectorPair(domain: string, selector: string): P
 	});
 	if (dsp) {
 		console.log(`found domain/selector pair ${dspToString(dsp)}`);
+		refreshKey(dsp);
 		return false;
 	}
 	let dkimDnsRecord = await fetchDkimDnsRecord(domain, selector);
@@ -43,4 +54,3 @@ export async function addDomainSelectorPair(domain: string, selector: string): P
 	generateWitness(dsp, dkimRecord);
 	return true;
 }
-
