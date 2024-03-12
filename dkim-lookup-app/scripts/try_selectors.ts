@@ -1,4 +1,4 @@
-import { addDomainSelectorPair } from '@/lib/addDomainSelectorPair';
+import { addDomainSelectorPair } from '@/lib/utils_server';
 import { readFileSync } from 'node:fs';
 
 // loads a list of selectors and a list of domains (the list of selectors can be generated with statistics.py)

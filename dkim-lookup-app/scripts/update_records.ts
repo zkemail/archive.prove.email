@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { load_domains_and_selectors_from_tsv } from '@/lib/utils';
-import { addDomainSelectorPair } from '@/lib/addDomainSelectorPair';
+import { addDomainSelectorPair } from '@/lib/utils_server';
 
 abstract class Updater {
 	abstract update(domain: string, selector: string): Promise<void>;
