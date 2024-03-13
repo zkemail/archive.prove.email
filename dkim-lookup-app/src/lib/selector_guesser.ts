@@ -72,10 +72,13 @@ export function findAlternatives(domain: string, selector: string, newDate: Date
 
 export async function guessSelectors(domain: string, selector: string, newDate: Date) {
 	const alternatives = findAlternatives(domain, selector, newDate);
+	let addedAlternatives = [];
 	for (const altDsp of alternatives) {
 		console.log(`trying guessed alternative ${JSON.stringify(altDsp)}`);
 		if (await addDomainSelectorPair(altDsp.domain, altDsp.selector)) {
 			console.log(`added guessed alternative ${JSON.stringify(altDsp)}`);
+			addedAlternatives.push(altDsp);
 		}
 	}
+	return addedAlternatives;
 }

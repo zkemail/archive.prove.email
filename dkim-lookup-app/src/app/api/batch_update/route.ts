@@ -21,19 +21,20 @@ export async function GET(request: NextRequest) {
 			}
 		);
 		console.log(`found ${dsps.length} records to update, max limit: ${numRecords}`);
+		let addedAlternatives = [];
 		for (const dsp of dsps) {
 			try {
 				await fetchAndStoreDkimDnsRecord(dsp);
 				let now = new Date();
 				updateDspTimestamp(dsp, now);
-				await guessSelectors(dsp.domain, dsp.selector, now);
+				addedAlternatives.push(... await guessSelectors(dsp.domain, dsp.selector, now));
 			}
 			catch (error) {
 				console.log(`error updating ${dsp.domain}, ${dsp.selector}: ${error}`);
 				throw error;
 			}
 		}
-		return NextResponse.json({ updatedRecords: dsps }, { status: 200 });
+		return NextResponse.json({ updatedRecords: dsps, addedAlternatives }, { status: 200 });
 	}
 	catch (error: any) {
 		return NextResponse.json(error.toString(), { status: 500 });
