@@ -1,4 +1,5 @@
 import { prisma, updateDspTimestamp } from '@/lib/db';
+import { guessSelectors } from '@/lib/selector_guesser';
 import { fetchAndStoreDkimDnsRecord } from '@/lib/utils_server';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
@@ -23,7 +24,9 @@ export async function GET(request: NextRequest) {
 		for (const dsp of dsps) {
 			try {
 				await fetchAndStoreDkimDnsRecord(dsp);
-				updateDspTimestamp(dsp, new Date());
+				let now = new Date();
+				updateDspTimestamp(dsp, now);
+				await guessSelectors(dsp.domain, dsp.selector, now);
 			}
 			catch (error) {
 				console.log(`error updating ${dsp.domain}, ${dsp.selector}: ${error}`);

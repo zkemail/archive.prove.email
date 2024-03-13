@@ -91,7 +91,6 @@ export async function fetchAndStoreDkimDnsRecord(dsp: DomainSelectorPair) {
 	console.log(`fetching ${dsp.selector}._domainkey.${dsp.domain} from dns`);
 	let dkimDnsRecord = await fetchDkimDnsRecord(dsp.domain, dsp.selector);
 	if (!dkimDnsRecord) {
-		console.log(`no record found for ${dsp.selector}, ${dsp.domain}`);
 		return;
 	}
 	let dkimRecord = await prisma.dkimRecord.findFirst({

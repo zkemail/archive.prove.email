@@ -49,6 +49,14 @@ POSTGRES_URL_NON_POOLING="postgresql://postgres:YOURPASSWORD@localhost/dkim_look
 POSTGRES_PRISMA_URL="postgresql://postgres:YOURPASSWORD@localhost/dkim_lookup"
 ```
 
+## Unit tests
+
+Run the unit tests
+
+```bash
+pnpm vitest --run
+```
+
 ## Database management
 
 Start the Prisma Studio database manager
