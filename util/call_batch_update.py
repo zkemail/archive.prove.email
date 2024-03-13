@@ -12,12 +12,15 @@
 # Set the environment variable CRON_SECRET in the environment or in a .env file.
 # Run "crontab -e" and add the following line:
 #
-#     */10 * * * * /path/to/call_batch_update.py /path/to/your_env_file.env | logger --tag DKIMREG
+#     */10 * * * * /path/to/call_batch_update.py --env-file /path/to/env_file.env --batch-size 20 | logger --tag DKIMREG
 
+import argparse
 import os
 import sys
 import subprocess
 import dotenv
+from urllib.parse import urlencode
+from urllib.parse import urljoin
 
 
 def run_command(command: list[str]):
@@ -25,9 +28,14 @@ def run_command(command: list[str]):
 
 
 if __name__ == "__main__":
+	parser = argparse.ArgumentParser()
+	parser.add_argument("--env-file", type=str, help="the environment file that contains the CRON_SECRET variable")
+	parser.add_argument("--batch-size", type=int, default=10, help="the number of records to update on the server")
+	parser.add_argument("--domain", type=str, default="https://registry.prove.email")
+	args = parser.parse_args()
 
-	if len(sys.argv) >= 2:
-		env_file = sys.argv[1]
+	if args.env_file:
+		env_file = args.env_file
 		if dotenv.load_dotenv(env_file) == True:
 			print("loaded environment file: ", env_file)
 
@@ -36,6 +44,8 @@ if __name__ == "__main__":
 		print("error: environment variable CRON_SECRET not found")
 		sys.exit(1)
 
-	cmd = ['curl', 'https://registry.prove.email/api/batch_update', '-H', 'Accept: application/json', '-H', 'Authorization: Bearer ' + cron_secret]
+	url = urljoin(args.domain, '/api/batch_update?' + urlencode({'batch_size': args.batch_size}))
+	print(f'calling {url}')
+	cmd = ['curl', url, '-H', 'Accept: application/json', '-H', 'Authorization: Bearer ' + cron_secret]
 	res = run_command(cmd)
-	print(res)
+	print(res.decode('utf-8'))
