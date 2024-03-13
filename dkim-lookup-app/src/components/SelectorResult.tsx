@@ -29,7 +29,7 @@ interface ProvenanceIconProps {
 const ProvenanceIcon: FC<ProvenanceIconProps> = ({ record }) => {
 	const canonicalRecordString = getCanonicalRecordString(record.domainSelectorPair, record.value);
 	const leafHash = witness.hash(canonicalRecordString);
-	const witnessUrl = `https://api.witness.co/getTimestampByLeafHash?chainId=84532&leafHash=${leafHash}`;
+	const witnessUrl = `https://scan.witness.co/leaf/${leafHash}`;
 	return (
 		<a href={witnessUrl} target="_blank" rel="noreferrer">
 			<img
