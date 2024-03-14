@@ -81,35 +81,6 @@ paths:
           description: Invalid input
         '500':
           description: Unexpected error
-  /domains/{name}:
-    get:
-      tags:
-        - dkim-key
-      summary: List DKIM keys
-      description: >
-        Returns a list of DKIM keys for a given domain and its subdomains.
-        The endpoint is rate limited to 5 requests per 10 seconds.
-      operationId: listDomains
-      deprecated: true
-      parameters:
-        - name: name
-          in: path
-          description: Match the domain name and any subdomains.
-          required: true
-          schema:
-            type: string
-          example: 'example.com'
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DkimKey'
-        '429':
-          description: Rate limit exceeded
-        '500':
-          description: Unexpected error
 components:
   schemas:
     DkimKey:
