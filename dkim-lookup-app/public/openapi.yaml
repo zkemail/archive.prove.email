@@ -18,7 +18,7 @@ paths:
         - dkim-key
       summary: List DKIM keys
       description: >
-        Returns a list of DKIM keys for a given domain or domain suffix.
+        Returns a list of DKIM keys for a given domain and its subdomains.
         The endpoint is rate limited to 5 requests per 10 seconds.
       operationId: listKeys
       parameters:
@@ -87,7 +87,7 @@ paths:
         - dkim-key
       summary: List DKIM keys
       description: >
-        Returns a list of DKIM keys for a given domain or domain suffix.
+        Returns a list of DKIM keys for a given domain and its subdomains.
         The endpoint is rate limited to 5 requests per 10 seconds.
       operationId: listDomains
       deprecated: true
