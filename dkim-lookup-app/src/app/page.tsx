@@ -31,11 +31,13 @@ const DomainSearchResults: React.FC<DomainSearchResultProps> = ({ records, domai
 	);
 };
 
+const domainQueryRegex = /[a-zA-Z0-9](?:[a-zA-Z0-9-\.]*[a-zA-Z0-9])?(?:\.[a-zA-Z]{2,})+/g;
+
 export default async function Home({ searchParams }: {
 	searchParams: { [key: string]: string | string[] | undefined }
 }) {
 	const domainQuery = searchParams?.domain?.toString();
-	let records = domainQuery ? (await findRecords(domainQuery)) : []
+	let records = (domainQuery && domainQueryRegex.test(domainQuery)) ? (await findRecords(domainQuery)) : []
 	records = records.filter((record) => dkimValueHasPrivateKey(record.value));
 
 	return (

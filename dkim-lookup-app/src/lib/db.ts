@@ -21,14 +21,9 @@ if (process.env.NODE_ENV !== 'production') {
 	globalThis.prismaClient = prisma;
 }
 
-const domainQueryRegex = /[a-zA-Z0-9](?:[a-zA-Z0-9-\.]*[a-zA-Z0-9])?(?:\.[a-zA-Z]{2,})+/g;
-
 export type RecordWithSelector = (DkimRecord & { domainSelectorPair: DomainSelectorPair });
 
 export async function findRecords(domainQuery: string): Promise<RecordWithSelector[]> {
-	if (!domainQueryRegex.test(domainQuery)) {
-		return [];
-	}
 	return await prisma.dkimRecord.findMany({
 		where: {
 			domainSelectorPair: {
