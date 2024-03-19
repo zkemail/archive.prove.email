@@ -8,6 +8,7 @@ import mailbox
 
 from common import decode_dkim_header_field
 
+
 def add_to_dict(dct: dict[str, list[str]], domain: str, selector: str):
 	if (not selector) or (not domain):
 		return
@@ -19,13 +20,14 @@ def add_to_dict(dct: dict[str, list[str]], domain: str, selector: str):
 
 def get_domain_selectors(outputDict: dict[str, list[str]], mboxFile: str):
 	for message in mailbox.mbox(mboxFile):
-		dkimSignature = message['DKIM-Signature']
-		if not dkimSignature:
+		dkimSignatures = message.get_all('DKIM-Signature')
+		if not dkimSignatures:
 			continue
-		dkimRecord = decode_dkim_header_field(dkimSignature)
-		domain = dkimRecord['d']
-		selector = dkimRecord['s']
-		add_to_dict(outputDict, domain, selector)
+		for dkimSignature in dkimSignatures:
+			dkimRecord = decode_dkim_header_field(dkimSignature)
+			domain = dkimRecord['d']
+			selector = dkimRecord['s']
+			add_to_dict(outputDict, domain, selector)
 
 
 def main():

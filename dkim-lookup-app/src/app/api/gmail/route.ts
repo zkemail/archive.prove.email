@@ -12,21 +12,26 @@ async function handleMessage(messageId: string, gmail: gmail_v1.Gmail, resultArr
 	if (!headers) {
 		throw 'missing headers';
 	}
-	let dkimSig = headers.find((header: any) => header.name === 'DKIM-Signature');
-	if (!dkimSig?.value) {
-		throw 'missing DKIM-Signature header';
+	let dkimSigs = headers.filter((header: any) => header.name === 'DKIM-Signature');
+	for (let dkimSig of dkimSigs) {
+		if (!dkimSig.value) {
+			console.log('missing DKIM-Signature value', dkimSig);
+			continue;
+		}
+		let tags = parseDkimRecord(dkimSig.value);
+		let domain = tags.d
+		if (!domain) {
+			console.log('missing d tag', tags);
+			continue;
+		}
+		let selector = tags.s
+		if (!selector) {
+			console.log('missing s tag', tags);
+			continue;
+		}
+		let domainSelectorPair = { domain, selector };
+		resultArray.push(domainSelectorPair);
 	}
-	let tags = parseDkimRecord(dkimSig.value);
-	let domain = tags.d
-	if (!domain) {
-		throw 'missing d tag';
-	}
-	let selector = tags.s
-	if (!selector) {
-		throw 'missing s tag';
-	}
-	let domainSelectorPair = { domain, selector };
-	resultArray.push(domainSelectorPair);
 	return resultArray;
 }
 
