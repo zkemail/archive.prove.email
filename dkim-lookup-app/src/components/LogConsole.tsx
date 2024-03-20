@@ -1,3 +1,4 @@
+import moment from 'moment';
 import {useEffect, useRef } from 'react';
 
 export type LogRecord = {
@@ -32,8 +33,8 @@ export const LogConsole: React.FC<LogConsoleProps> = ({ log, setLog }) => {
 				ref={scrollDiv} >
 				{log.map((line, index) =>
 					<div style={{ margin: 0, fontFamily: 'monospace' }} key={index}>
-						<span title={line.date.toISOString()}>
-							{line.date.toLocaleTimeString()}
+						<span>
+							{moment(line.date).format('YYYY-MM-DD HH:mm:ssZ')}
 						</span>
 						{' - ' + line.message}
 					</div>
