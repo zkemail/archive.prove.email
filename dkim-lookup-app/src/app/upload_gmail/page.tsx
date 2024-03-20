@@ -3,7 +3,7 @@
 import React, { useEffect } from "react";
 import { useSession, signIn, signOut } from "next-auth/react"
 import { LogConsole, LogRecord } from "@/components/LogConsole";
-import { axiosErrorMessage } from "@/lib/utils";
+import { axiosErrorMessage, truncate } from "@/lib/utils";
 import axios from "axios";
 import { GmailResponse } from "../api/gmail/route";
 import { AddDspRequest, AddDspResponse } from "../api/dsp/route";
@@ -90,7 +90,9 @@ export default function Page() {
 			}
 		}
 		catch (error: any) {
-			logmsg(`error: ${axiosErrorMessage(error)}`);
+			const message = axiosErrorMessage(error);
+			console.log(message);
+			logmsg(`error: ${truncate(message, 150)}`);
 			setProgressState('Interrupted');
 		}
 	}

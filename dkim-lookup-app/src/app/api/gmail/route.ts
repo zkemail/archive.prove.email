@@ -54,7 +54,7 @@ async function handleRequest(request: NextRequest) {
 
 	const access_token = token?.access_token
 	if (!access_token || !(typeof access_token === 'string')) {
-		return NextResponse.json({ status: 401 });
+		return NextResponse.json('invalid access token', { status: 500 });
 	}
 
 	oauth2Client.setCredentials({ access_token })

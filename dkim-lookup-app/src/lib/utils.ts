@@ -78,3 +78,11 @@ export function isValidDate(year: number, month: number, day: number) {
 	const date = new Date(year, month - 1, day);
 	return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day;
 }
+
+export function truncate(s: string, maxLength: number) {
+	if (s.length > maxLength) {
+		return s.slice(0, Math.max(maxLength, 3) - 3) + "...";
+	} else {
+		return s;
+	}
+}
