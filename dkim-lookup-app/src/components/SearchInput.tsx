@@ -1,8 +1,6 @@
 "use client";
-
-import { AutocompleteResults } from "@/app/api/autocomplete/route";
+import { AutocompleteResults, autocomplete } from "@/app/actions";
 import { Autocomplete, TextField } from "@mui/material";
-import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -15,12 +13,7 @@ export const SearchInput: React.FC<SearchFormProps> = ({ domainQuery }) => {
 	const [searchResults, setSearchResults] = useState<AutocompleteResults>([]);
 
 	function inputChanged(_event: React.SyntheticEvent, value: string) {
-		axios.get<AutocompleteResults>('/api/autocomplete', { params: { query: value } })
-			.then(response => {
-				setSearchResults(response.data);
-			}).catch(error => {
-				console.log(error);
-			});
+		autocomplete(value).then(results => setSearchResults(results));
 	}
 
 	function onChange(_event: React.SyntheticEvent, value: string | null) {
