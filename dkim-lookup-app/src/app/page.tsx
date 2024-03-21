@@ -1,41 +1,17 @@
+import { DomainSearchResults } from '@/components/DomainSearchResults';
 import { SearchInput } from '@/components/SearchInput';
-import { SelectorResult } from '@/components/SelectorResult';
-import { RecordWithSelector, findRecords } from '@/lib/db';
+import { findKeysPaginated } from './actions';
 import { parseDkimRecord } from '@/lib/utils';
 
 function dkimValueHasPrivateKey(dkimValue: string): boolean {
 	return parseDkimRecord(dkimValue).p !== null;
 }
 
-interface DomainSearchResultProps {
-	records: RecordWithSelector[];
-	domainQuery: string | undefined;
-}
-
-const DomainSearchResults: React.FC<DomainSearchResultProps> = ({ records, domainQuery }) => {
-	if (!domainQuery) {
-		return <div>Enter a search term</div>
-	};
-	if (!records?.length) {
-		return <div>No records found for "{domainQuery}"</div>
-	}
-	return (
-		<div>
-			<p>Search results for <b>{domainQuery}</b></p>
-			<div>
-				{records.map((record) => (
-					<SelectorResult key={record.id} record={record} />
-				))}
-			</div>
-		</div>
-	);
-};
-
 export default async function Home({ searchParams }: {
 	searchParams: { [key: string]: string | string[] | undefined }
 }) {
 	const domainQuery = searchParams?.domain?.toString();
-	let records = domainQuery ? await findRecords(domainQuery) : []
+	let records = domainQuery ? await findKeysPaginated(domainQuery, null) : []
 	records = records.filter((record) => dkimValueHasPrivateKey(record.value));
 
 	return (
@@ -44,7 +20,7 @@ export default async function Home({ searchParams }: {
 				<a href='/' className='defaultcolor'>DKIM Registry</a>
 			</h2>
 			<SearchInput domainQuery={domainQuery} />
-			<DomainSearchResults records={records} domainQuery={domainQuery} />
+			<DomainSearchResults initialRecords={records} domainQuery={domainQuery} />
 
 			<div style={{ textAlign: 'center', marginTop: '5rem', fontSize: '0.8rem' }}>
 				<hr style={{ width: '50%', margin: '1rem auto', borderTop: '1px solid black' }} />
