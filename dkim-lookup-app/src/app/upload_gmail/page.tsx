@@ -73,6 +73,7 @@ export default function Page() {
 					await update();
 					console.log(`${addDspApiUrl} response`, response);
 					if (response.data.added) {
+						logmsg(`${pairString} was added to the registry`);
 						setAddedPairs(addedPairs => addedPairs + 1);
 					}
 					uploadedPairs.add(pairString);

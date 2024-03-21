@@ -56,12 +56,13 @@ export default function Page() {
 		logmsg(`starting upload to ${addDspApiUrl}`);
 		for (let i = 0; i < domainSelectorPairs.length; i++) {
 			let dsp = domainSelectorPairs[i];
-			logmsg(`uploading (${i}/${domainSelectorPairs.length}) ${JSON.stringify(dsp)}`);
+			logmsg(`uploading (${i + 1}/${domainSelectorPairs.length}) ${JSON.stringify(dsp)}`);
 			try {
 				let response = await axios.post<AddDspResponse>(addDspApiUrl, dsp as AddDspRequest);
 				await update();
 				console.log('upsert response', response);
 				if (response.data.added) {
+					logmsg(`${JSON.stringify(dsp)} was added to the registry`);
 					setAddedPairs(addedPairs => addedPairs + 1);
 				}
 			}
