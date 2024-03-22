@@ -2,7 +2,7 @@
 import { AutocompleteResults, autocomplete } from "@/app/actions";
 import { Autocomplete, TextField } from "@mui/material";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface SearchFormProps {
 	domainQuery: string | undefined;
@@ -11,8 +11,10 @@ interface SearchFormProps {
 export const SearchInput: React.FC<SearchFormProps> = ({ domainQuery }) => {
 	const router = useRouter();
 	const [searchResults, setSearchResults] = useState<AutocompleteResults>([]);
+	const [inputValue, setInputValue] = useState<string>(domainQuery || '');
 
 	function inputChanged(_event: React.SyntheticEvent, value: string) {
+		setInputValue(value);
 		autocomplete(value).then(results => setSearchResults(results));
 	}
 
@@ -21,6 +23,10 @@ export const SearchInput: React.FC<SearchFormProps> = ({ domainQuery }) => {
 			router.push(`/?domain=${value}`)
 		}
 	}
+
+	useEffect(() => {
+		setInputValue(domainQuery || '');
+	}, [domainQuery]);
 
 	return (
 		<div>
@@ -33,6 +39,7 @@ export const SearchInput: React.FC<SearchFormProps> = ({ domainQuery }) => {
 				sx={{ width: 300 }}
 				freeSolo
 				renderInput={(params) => <TextField {...params} label="Domain name" />}
+				inputValue={inputValue}
 			/>
 		</div>
 	);
