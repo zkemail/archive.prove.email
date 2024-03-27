@@ -13,9 +13,7 @@ export default function Page() {
 	const gmailApiUrl = 'api/gmail';
 	const addDspApiUrl = 'api/dsp';
 
-	const { data: session, status } = useSession()
-
-	const { update } = useSession();
+	const { data: session, status, update } = useSession()
 	const [log, setLog] = React.useState<LogRecord[]>([]);
 	const [uploadedPairs, setUploadedPairs] = React.useState<Set<string>>(new Set());
 	const [addedPairs, setAddedPairs] = React.useState<number>(0);
@@ -35,7 +33,11 @@ export default function Page() {
 		}
 	}, [nextPageToken]);
 
-	if (status == "unauthenticated") {
+	if (status === "loading" && !session) {
+		return <p>loading...</p>
+	}
+
+	if (status === "unauthenticated" || !session) {
 		return <div>
 			<p>You need to be signed in to use this page.</p>
 			<p>
@@ -46,8 +48,22 @@ export default function Page() {
 			<button onClick={() => signIn()}>Sign in</button>
 		</div>
 	}
-	if (status === "loading" && !session) {
-		return <p>loading...</p>
+
+	// check for strict equality to avoid showing a misleading message to the user when the value is unknown (undefined), but the user has in fact granted the scope access
+	if (session.has_metadata_scope === false) {
+		return <div>
+			<h3>
+				Insufficient permissions
+			</h3>
+			<p>
+				To use this feature, you need to grant permission for the site to access email message metadata.
+				To do this, <b><a href="#" onClick={() => signOut()}>sign out</a></b> and sign in again,
+				and during the sign-in process, give permission to access email message metadata.
+			</p>
+			<p>
+				<img src="/grant_metadata_scope.png" alt="instruction to grant metadata scope" />
+			</p>
+		</div>
 	}
 
 	function logmsg(message: string) {

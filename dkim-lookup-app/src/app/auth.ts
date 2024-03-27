@@ -1,4 +1,4 @@
-import { TokenSet } from "next-auth"
+import { Session, TokenSet } from "next-auth"
 import GoogleProvider from "next-auth/providers/google"
 
 // https://authjs.dev/guides/basics/refresh-token-rotation?frameworks=core
@@ -49,10 +49,10 @@ export const authOptions = {
 						throw tokens
 					}
 
-
 					token.access_token = tokens.access_token
 					token.expires_at = Math.floor(Date.now() / 1000 + (tokens.expires_in as any))
 					token.refresh_token = tokens.refresh_token ?? token.refresh_token
+					token.scope = tokens.scope
 					return token
 				}
 				catch (error) {
@@ -60,9 +60,18 @@ export const authOptions = {
 				}
 			}
 		},
-		async session({ session, token }: { session: any, token: any }) {
-			session.error = token.error
-			return session
+		async session({ session, token }: { session: any, token: any }): Promise<Session> {
+			let has_metadata_scope: boolean | undefined = undefined;
+			if (typeof token.scope == 'string') {
+				has_metadata_scope = token.scope.split(' ').includes('https://www.googleapis.com/auth/gmail.metadata')
+			}
+			let sessionResponse = {
+				error: token.error,
+				expires: session.expires,
+				user: session.user,
+				has_metadata_scope
+			}
+			return sessionResponse
 		},
 	}
 }
