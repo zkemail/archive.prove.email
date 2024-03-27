@@ -1,5 +1,5 @@
 {
-	"name": "dkim-lookup",
+	"name": "registry.prove.email",
 	"version": "0.1.0",
 	"license": "MIT",
 	"private": true,

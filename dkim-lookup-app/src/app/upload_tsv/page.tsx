@@ -100,7 +100,7 @@ export default function Page() {
 			<p>
 				One way to create such a file is to first export all messages in your email account as an .mbox file, and then parsing the .mbox file
 				with the <InlineCode>mbox_selector_scraper.py</InlineCode> tool, which outputs domains-selector-pairs in TSV format.
-				The process is described in more detail in the <a href="https://github.com/foolo/dkim-lookup?tab=readme-ov-file#mbox_selector_scraper">README</a>.
+				The process is described in more detail in the <a href="https://github.com/zkemail/registry.prove.email?tab=readme-ov-file#mbox_selector_scraper">README</a>.
 			</p>
 			<div>
 				<div>Select a file:</div>
