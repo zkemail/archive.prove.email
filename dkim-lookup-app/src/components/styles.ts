@@ -1,6 +1,6 @@
 import { CSSProperties } from "react";
 
-export const searchButtonStyle: CSSProperties = {
+export const actionButtonStyle: CSSProperties = {
 	font: 'inherit',
 	border: 'none',
 	color: 'white',
@@ -9,6 +9,7 @@ export const searchButtonStyle: CSSProperties = {
 	paddingRight: '0.75rem',
 	borderRadius: '0.375rem',
 	height: '2.25rem',
+	cursor: 'pointer',
 };
 
 export const searchInputBoxStyle: CSSProperties = {

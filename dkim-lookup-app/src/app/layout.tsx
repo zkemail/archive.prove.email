@@ -29,7 +29,7 @@ export default function RootLayout({
 	return (
 		<html lang="en">
 			<NextAuthProvider>
-				<body className={inter.className} style={{ margin: 0 }}>
+				<body className={inter.className} style={{ margin: 0, overflowY: 'scroll' }}>
 					<header style={{
 						background: '#fcfdfe',
 						padding: '0.5rem',

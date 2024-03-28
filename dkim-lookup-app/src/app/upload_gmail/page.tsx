@@ -7,6 +7,7 @@ import { axiosErrorMessage, truncate } from "@/lib/utils";
 import axios from "axios";
 import { GmailResponse } from "../api/gmail/route";
 import { AddDspRequest, AddDspResponse } from "../api/dsp/route";
+import { actionButtonStyle } from "@/components/styles";
 
 export default function Page() {
 
@@ -37,20 +38,24 @@ export default function Page() {
 		return <p>loading...</p>
 	}
 
-	if (status === "unauthenticated" || !session) {
+	function NotSignedIn(): React.ReactNode {
 		return <div>
-			<p>You need to be signed in to use this page.</p>
+			<h3>Sign in to continue</h3>
+			<p>
+				To use this feature, you need to sign in with your Google account.
+				When you click the "Sign in" button, you will be redirected to Google's sign-in flow.
+			</p>
 			<p>
 				For the authentication with Google, OAuth 2.0 is used.
 				The OAuth tokens (access and refresh token) are stored in a JSON Web Token in the web browser.
 				The server does not store any tokens.
 			</p>
-			<button onClick={() => signIn()}>Sign in</button>
+			<button style={actionButtonStyle} onClick={() => signIn()}>Sign in</button>
 		</div>
 	}
 
-	// check for strict equality to avoid showing a misleading message to the user when the value is unknown (undefined), but the user has in fact granted the scope access
-	if (session.has_metadata_scope === false) {
+
+	function InsufficientPermissions(): React.ReactNode {
 		return <div>
 			<h3>
 				Insufficient permissions
@@ -58,13 +63,68 @@ export default function Page() {
 			<p>
 				To use this feature, you need to grant permission for the site to access email message metadata.
 				To do this, <b><a href="#" onClick={() => signOut()}>sign out</a></b> and sign in again,
-				and during the sign-in process, give permission to access email message metadata.
+				and during the sign-in process, give permission to access email message metadata:
 			</p>
 			<p>
 				<img src="/grant_metadata_scope.png" alt="instruction to grant metadata scope" />
 			</p>
 		</div>
 	}
+
+	// check (status !== "unauthenticated" && session) instead of (status === "authenticated")
+	// because status can be "loading" even when the user is signed in, causing a flickery behavior
+	// as a side effect of the workaround with "await update();"
+	const signedIn = (status !== "unauthenticated") && session;
+
+	function ProgressArea(): React.ReactNode {
+		if (!signedIn) {
+			return <NotSignedIn />
+		}
+
+		// check for strict equality to avoid showing a misleading message to the user when the value is unknown (undefined), but the user has in fact granted the scope access
+		if (session.has_metadata_scope === false) {
+			return <InsufficientPermissions />
+		}
+
+		let showStartButton = progressState === 'Not started';
+		let showResumeButton = progressState === 'Paused' || progressState === 'Interrupted';
+		let showPauseButton = progressState === 'Running...';
+		let showProgress = progressState !== 'Not started';
+
+		return <>
+			<div style={{ fontWeight: 500 }}>
+				Progress: {progressState}
+			</div>
+			<div>
+				{showStartButton && <button style={actionButtonStyle} onClick={() => {
+					uploadFromGmail();
+				}}>Start</button>}
+				{showResumeButton && <button style={actionButtonStyle} onClick={() => {
+					uploadFromGmail();
+				}}>Resume</button>}
+				{showPauseButton && <button style={actionButtonStyle} onClick={() => {
+					logmsg('pausing upload...');
+					setProgressState('Paused');
+				}}>Pause</button>}
+
+			</div>
+			{showProgress && <>
+				<div style={{ marginTop: '1rem', marginBottom: '1rem' }}>
+					<div>
+						Processed email messages: {processedMessages} {totalMessages ? `of ${totalMessages}` : ''}
+					</div>
+					<div>
+						Uploaded domain/selector pairs: {uploadedPairs.size}
+					</div>
+					<div>
+						Added domain/selector pairs: {addedPairs}
+					</div>
+				</div>
+				<LogConsole log={log} setLog={setLog} />
+			</>}
+		</>
+	}
+
 
 	function logmsg(message: string) {
 		console.log(message);
@@ -114,17 +174,14 @@ export default function Page() {
 		}
 	}
 
-	let showStartButton = progressState === 'Not started';
-	let showResumeButton = progressState === 'Paused' || progressState === 'Interrupted';
-	let showPauseButton = progressState === 'Running...';
-
 	return (
 		<div>
 			<h1>Upload from Gmail</h1>
-			<div>
-				{session?.user?.email && <div>Signed in as {session?.user?.email}</div>}
-				{session && <button onClick={() => signOut()}>Sign out</button>}
-			</div>
+
+			{signedIn && <div>
+				{session.user?.email && <div>Signed in as {session?.user?.email}</div>}
+				<button onClick={() => signOut()}>Sign out</button>
+			</div>}
 			<p>
 				On this page, you can contribute to the project by uploading domains and selectors from your Gmail account.
 			</p>
@@ -132,34 +189,7 @@ export default function Page() {
 				<p>
 					Domains and selectors will be extracted from the DKIM-Signature header field in each email message in your Gmail account.
 				</p>
-				<div>
-					Progress: {progressState}
-				</div>
-				<div>
-					{showStartButton && <button onClick={() => {
-						uploadFromGmail();
-					}}>Start</button>}
-					{showResumeButton && <button onClick={() => {
-						uploadFromGmail();
-					}}>Resume</button>}
-					{showPauseButton && <button onClick={() => {
-						logmsg('pausing upload...');
-						setProgressState('Paused');
-					}}>Pause</button>}
-
-				</div>
-				<div style={{ marginTop: '1rem', marginBottom: '1rem' }}>
-					<div>
-						Processed email messages: {processedMessages} {totalMessages ? `of ${totalMessages}` : ''}
-					</div>
-					<div>
-						Uploaded domain/selector pairs: {uploadedPairs.size}
-					</div>
-					<div>
-						Added domain/selector pairs: {addedPairs}
-					</div>
-				</div>
-				<LogConsole log={log} setLog={setLog} />
+				<ProgressArea />
 			</div >
 		</div >
 	)
