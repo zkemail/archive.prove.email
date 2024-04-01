@@ -46,9 +46,12 @@ export default function Page() {
 				When you click the "Sign in" button, you will be redirected to Google's sign-in flow.
 			</p>
 			<p>
-				For the authentication with Google, OAuth 2.0 is used.
-				The OAuth tokens (access and refresh token) are stored in a JSON Web Token in the web browser.
-				The server does not store any tokens.
+				Note: Until Google has verified the app, you will see a warning that the app is not verified.
+				You can still proceed by clicking "Advanced" and then "Go to DKIM Lookup (unsafe)".
+			</p>
+			<p>
+				The email access tokens are only stored on the user's browser. The server does not store any tokens.
+				For more information, see the <a href="/privacy-policy">privacy policy</a>.
 			</p>
 			<button style={actionButtonStyle} onClick={() => signIn()}>Sign in</button>
 		</div>

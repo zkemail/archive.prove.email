@@ -15,6 +15,14 @@ export default function Page() {
 			<ul>
 				<li><strong>Domain and selector from the DKIM-Signature header field:</strong> For each email message in your email account, we store the domain (<code>d=</code>) and the selector part (<code>s=</code>) of the <code>DKIM-Signature</code> field. The data is used to build our archive of DKIM keys.</li>
 			</ul>
+			<p><strong>Authentication:</strong></p>
+			<ul>
+				<li>
+					For the authentication with Google, OAuth 2.0 is used.
+					The OAuth tokens (access and refresh token) are stored in a JSON Web Token in the web browser.
+					The server does not store any tokens.
+				</li>
+			</ul>
 			<p><strong>How we use your information:</strong></p>
 			<ul>
 				<li><strong>Displaying your email address:</strong> We use your email address for displaying it within the platform when you use the "Upload from Gmail" feature.</li>
