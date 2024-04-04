@@ -40,10 +40,12 @@ def parse_tags(txtData: str) -> dict[str, str]:
 	return dkimData
 
 
-def resolve_qname(qname: str):
+def resolve_qname(domain: str, selector: str):
 	import dns.exception
 	import dns.resolver
 	import dns.rdatatype
+
+	qname = f"{selector}._domainkey.{domain}"
 
 	try:
 		response = dns.resolver.resolve(qname, dns.rdatatype.TXT)
@@ -67,7 +69,7 @@ def resolve_qname(qname: str):
 		if len(tags['p']) < 10:
 			print(f'# short p= tag found for {qname}, {txtData}\n')
 			return
-		tsv_row = f'{qname} {txtData}\n'  # extra newline at the end as a workaround for that the stdout from modal.com somtimes has merged lines if there is just one newline
+		tsv_row = f'DNS_BATCH_RESULT,{domain},{selector},{txtData}\n'  # extra newline at the end as a workaround for that the stdout from modal.com somtimes has merged lines if there is just one newline
 		print(tsv_row)
 	except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer, dns.resolver.NoNameservers, dns.exception.Timeout) as _e:
 		#print(f'warning: dns resolver error: {e}')
@@ -76,7 +78,7 @@ def resolve_qname(qname: str):
 
 def process_domain(domain: str, selectors: list[str]):
 	for selector in selectors:
-		resolve_qname(f"{selector}._domainkey.{domain}")
+		resolve_qname(domain, selector)
 
 
 @stub.function(image=dns_image)  # type: ignore
