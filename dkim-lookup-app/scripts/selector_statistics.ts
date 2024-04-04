@@ -49,12 +49,17 @@ async function main() {
 	});
 
 	const selectorFrequenciesStream = fs.createWriteStream(path.join(outputDirectory, 'selector_frequencies.txt'));
+	const selectorFrequenciesGt1Stream = fs.createWriteStream(path.join(outputDirectory, 'selector_frequencies_gt1.txt'));
 
 	selectorFrequenciesStream.write('FREQUENCY\tSELECTOR\n');
 	for (let selector of sortedSelectors) {
 		selectorFrequenciesStream.write(`${selectorCounts[selector]}\t${selector}\n`);
+		if (selectorCounts[selector] > 1) {
+			selectorFrequenciesGt1Stream.write(`${selector}\n`);
+		}
 	}
 	selectorFrequenciesStream.end();
+	selectorFrequenciesGt1Stream.end();
 
 	// count the number of selectors that appear each number of times
 	let countCounts = Object.values(selectorCounts).reduce((acc, count) => {
