@@ -14,7 +14,6 @@
 # example of post-processing the result to count the number of each selector:
 # python dsp_onetime_batch.py --analyze-results output.txt
 
-
 import argparse
 import datetime
 import sys
@@ -25,12 +24,20 @@ stub = modal.Stub("dsp-onetime-batch")
 dns_image = (modal.Image.debian_slim(python_version="3.10").pip_install("dnspython"))
 
 
-def find_dkim_field(txtRecords: list[str]) -> str | None:
-	for record in txtRecords:
-		version = record.split(';', maxsplit=1)[0].strip()
-		if version == 'v=DKIM1':
-			return record
-	return None
+def parse_tags(txtData: str) -> dict[str, str]:
+	dkimData: dict[str, str] = {}
+	for tag in txtData.split(';'):
+		tag = tag.strip()
+		if not tag:
+			continue
+		try:
+			key, value = tag.split('=', maxsplit=1)
+			dkimData[key] = value
+		except ValueError:
+			#print(f'warning: invalid tag: {tag}, {txtData}')
+			continue
+		dkimData[key] = value
+	return dkimData
 
 
 def resolve_qname(qname: str):
@@ -43,18 +50,24 @@ def resolve_qname(qname: str):
 		if len(response) == 0:
 			#print(f'warning: no records found for {qname}')
 			return
-		txtRecords: list[str] = []
+		txtData = ""
 		for i in range(len(response)):
-			txtRecords.append(b''.join(response[i].strings).decode())  # type: ignore
-		dkimData = find_dkim_field(txtRecords)
-		if dkimData is None:
-			#print(f'no DKIM1 record found for {qname}')
+			txtData += b''.join(response[i].strings).decode()  # type: ignore
+			txtData += ";"
+		tags = parse_tags(txtData)
+		if 'p' not in tags:
+			#print(f'warning: no p= tag found for {qname}, {txtData}')
 			return
-		for tag in dkimData.split(';'):
-			if tag.strip() == "p=":
-				# empty p= tag
-				return
-		tsv_row = f'{qname} {dkimData}\n'  # extra newline at the end as a workaround for that the stdout from modal.com somtimes has merged lines if there is just one newline
+		if tags['p'] == "":
+			#print(f'warning: empty p= tag found for {qname}, {txtData}')
+			return
+		if tags['p'] in ["reject", "none"]:
+			#print(f'info: p=reject found for {qname}, {txtData}')
+			return
+		if len(tags['p']) < 10:
+			print(f'# short p= tag found for {qname}, {txtData}\n')
+			return
+		tsv_row = f'{qname} {txtData}\n'  # extra newline at the end as a workaround for that the stdout from modal.com somtimes has merged lines if there is just one newline
 		print(tsv_row)
 	except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer, dns.resolver.NoNameservers, dns.exception.Timeout) as _e:
 		#print(f'warning: dns resolver error: {e}')
@@ -105,7 +118,7 @@ def analyze_results(results_file: str):
 	selector_count: dict[str, int] = {}
 	for line in lines:
 		line = line.strip()
-		if not "DKIM1" in line:
+		if not "._domainkey." in line:
 			continue
 		qname, _ = line.split(" ", maxsplit=1)
 		selector = qname.split("._domainkey.", maxsplit=1)[0]
