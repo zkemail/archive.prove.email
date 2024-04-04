@@ -1,0 +1,8 @@
+mkdir -p dnsbatch/mm
+split --lines=10000 dnsbatch/majestic_million.txt dnsbatch/mm/mm --numeric-suffixes --suffix-length 2
+
+python3 -m venv .venv
+.venv/bin/pip install dnspython
+.venv/bin/pip install modal
+
+.venv/bin/modal run dsp_onetime_batch.py --domains-filename mmNN --selectors-filename dnsbatch/merged.txt > mmNN_result.txt
