@@ -17,7 +17,7 @@ def run():
 			print()
 			continue
 		print(
-		    f".venv/bin/modal run dsp_onetime_batch.py --domains-filename dnsbatch/mm/{input_file} --selectors-filename dnsbatch/merged.txt --no-sparse | grep '^DNS_BATCH_RESULT,' > {tmp_output_file}"
+		    f".venv/bin/modal run dnsbatch/dsp_onetime_batch.py --domains-filename dnsbatch/mm/{input_file} --selectors-filename dnsbatch/merged.txt --no-sparse | grep '^DNS_BATCH_RESULT,' > {tmp_output_file}"
 		)
 		print(f"mv {tmp_output_file} {output_file}")
 		print()
