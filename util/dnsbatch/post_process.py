@@ -14,7 +14,6 @@ def post_process(logfiles: list[TextIO], tsv_output: TextIO, print_selectors_per
 			if not line.startswith("DNS_BATCH_RESULT,"):
 				continue
 			_, domain, selector, _ = line.strip().split(",", maxsplit=3)
-			print(f"{domain}\t{selector}", file=tsv_output)
 
 			if selector in selector_count:
 				selector_count[selector] += 1
@@ -25,12 +24,25 @@ def post_process(logfiles: list[TextIO], tsv_output: TextIO, print_selectors_per
 				selectors_per_domain[domain].add(selector)
 			else:
 				selectors_per_domain[domain] = {selector}
+	filtered_domains: set[str] = set()
 
-	if print_selectors_per_domain:
-		# print the selectors per domain, sorted by number of selectors
-		selectors_per_domain = dict(sorted(selectors_per_domain.items(), key=lambda item: len(item[1]), reverse=True))
-		for domain, selectors in selectors_per_domain.items():
-			print(f"{domain} {selectors}")
+	selectors_per_domain = dict(sorted(selectors_per_domain.items(), key=lambda item: len(item[1]), reverse=True))
+	for domain, selectors in selectors_per_domain.items():
+		if print_selectors_per_domain:
+			print(f"{domain} {len(selectors)}")
+
+		# Some domains repond to every call to <selector>._domainkey.example.com,
+		# regardless of the selector value, which results in 1000s of results per domain.
+		# The current statistics show that the domains with the most "real" selectors
+		# have about 30 selectors, so we filter out domains with more than 100 selectors:
+		if len(selectors) > 100:
+			filtered_domains.add(domain)
+
+	selectors_per_domain = {k: v for k, v in selectors_per_domain.items() if k not in filtered_domains}
+
+	# calculate average number of selectors per domain
+	average_selectors_per_domain = sum(len(selectors) for selectors in selectors_per_domain.values()) / len(selectors_per_domain)
+	print(f"Average number of selectors per domain: {average_selectors_per_domain}")
 
 	if print_selector_count:
 		# print the selector count in descending order
@@ -38,6 +50,11 @@ def post_process(logfiles: list[TextIO], tsv_output: TextIO, print_selectors_per
 		for selector, count in selector_count.items():
 			print(f"{selector} {count}")
 			pass
+
+	if tsv_output:
+		for domain, selectors in sorted(selectors_per_domain.items()):
+			for selector in sorted(selectors):
+				print(f"{domain}\t{selector}", file=tsv_output)
 
 
 # local entrypoint
