@@ -1,3 +1,4 @@
+#!.venv/bin/python
 # this tool searches for DKIM DNS records for each combination of domains and selectors in the provided input files
 
 # prerequisites: install the Modal Python package, see https://modal.com/docs/guide
@@ -11,8 +12,6 @@
 # example local run:
 # python dsp_onetime_batch.py --domains-filename domains.txt --selectors-filename selectors.txt > output.txt
 #
-# example of post-processing the result to count the number of each selector:
-# python dsp_onetime_batch.py --analyze-results output.txt
 
 import argparse
 import datetime
@@ -111,38 +110,10 @@ def main(domains_filename: str, selectors_filename: str, sparse: bool):
 	run_batch_job(domains_filename, selectors_filename, sparse=sparse)
 
 
-def analyze_results(results_file: str):
-	with open(results_file) as f:
-		batch_run_result = f.read()
-	lines = batch_run_result.splitlines()
-
-	# count the number of each selector
-	selector_count: dict[str, int] = {}
-	for line in lines:
-		line = line.strip()
-		if not "._domainkey." in line:
-			continue
-		qname, _ = line.split(" ", maxsplit=1)
-		selector = qname.split("._domainkey.", maxsplit=1)[0]
-		if selector in selector_count:
-			selector_count[selector] += 1
-		else:
-			selector_count[selector] = 1
-
-	# print the selector count in descending order
-	selector_count = dict(sorted(selector_count.items(), key=lambda item: item[1], reverse=True))
-	for selector, count in selector_count.items():
-		print(f"{selector} {count}")
-
-
 # local entrypoint
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--domains-filename', type=str)
 	parser.add_argument('--selectors-filename', type=str)
-	parser.add_argument('--analyze-results', type=str, dest='results_file')
 	args = parser.parse_args()
-	if args.results_file:
-		analyze_results(args.results_file)
-	else:
-		run_batch_job(args.domains_filename, args.selectors_filename, local=True)
+	run_batch_job(args.domains_filename, args.selectors_filename, local=True)
