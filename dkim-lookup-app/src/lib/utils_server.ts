@@ -17,7 +17,7 @@ async function refreshKey(dsp: DomainSelectorPair) {
 /**
  * @returns true iff a record was added
  */
-export async function addDomainSelectorPair(domain: string, selector: string): Promise<boolean> {
+export async function addDomainSelectorPair(domain: string, selector: string, sourceIdentifier: string): Promise<boolean> {
 
 	// check if record exists
 	let dsp = await prisma.domainSelectorPair.findFirst({
@@ -43,7 +43,7 @@ export async function addDomainSelectorPair(domain: string, selector: string): P
 		return false;
 	}
 	dsp = await prisma.domainSelectorPair.create({
-		data: { domain, selector }
+		data: { domain, selector, sourceIdentifier }
 	})
 
 	let dkimRecord = await createDkimRecord(dsp, dkimDnsRecord);

@@ -23,7 +23,7 @@ async function main() {
 	for (const domain of domains) {
 		for (const selector of selectors) {
 			try {
-				if (await addDomainSelectorPair(domain, selector)) {
+				if (await addDomainSelectorPair(domain, selector, 'try_selectors')) {
 					newFoundRecords.push(`${selector}, ${domain}`);
 				}
 			}
