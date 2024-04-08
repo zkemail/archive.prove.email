@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
 	try {
 		const body = await request.json();
 		const dsp = AddDspRequestSchema.parse(body);
-		let added = await addDomainSelectorPair(dsp.domain, dsp.selector);
+		let added = await addDomainSelectorPair(dsp.domain, dsp.selector, 'api');
 		return NextResponse.json(
 			{ message: dsp, added } as AddDspResponse,
 			{ status: 200 }

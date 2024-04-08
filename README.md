@@ -126,9 +126,13 @@ By using mbox as an intermediate format, it is possible to extract domains and s
 
 #### a. From Gmail
 
-Go to https://takeout.google.com/settings/takeout and click **Deselect all**, then scroll down and select **Mail**, click **Next step**, and follow the instructions to download an archive that contains an .mbox file with all your email messages.
+Go to https://takeout.google.com/settings/takeout and click **Deselect all**, then scroll down and select **Mail**, click **Next step**, and leave the default settings for the export format. When you click **Create export**, you will then get an email in the next few days with a link to download a .mbox file with all your email messages. Download it within 7 days to avoid expiration.
 
-#### b. From other email providers
+#### b. From Outlook
+
+Go to https://outlook.live.com/mail/0/options/general/export/exportMailbox and click "Export Mailbox". It will say 'Status: Export in Progress", then you will get an email in the next few days with a download link to a .mbox file.
+
+#### c. From other email providers
 
 The easiest option is if your email provider's web client lets you export emails as an .mbox file.
 You can then use that feature and continue with [parsing the mbox file](#mbox_extract).

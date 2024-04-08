@@ -75,7 +75,7 @@ export async function guessSelectors(domain: string, selector: string, newDate: 
 	let addedAlternatives = [];
 	for (const altDsp of alternatives) {
 		console.log(`trying guessed alternative ${JSON.stringify(altDsp)}`);
-		if (await addDomainSelectorPair(altDsp.domain, altDsp.selector)) {
+		if (await addDomainSelectorPair(altDsp.domain, altDsp.selector, 'selector_guesser')) {
 			console.log(`added guessed alternative ${JSON.stringify(altDsp)}`);
 			addedAlternatives.push(altDsp);
 		}

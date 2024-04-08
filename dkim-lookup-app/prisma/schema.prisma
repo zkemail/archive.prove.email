@@ -14,6 +14,7 @@ model DomainSelectorPair {
   selector         String
   lastRecordUpdate DateTime?
   records          DkimRecord[]
+  sourceIdentifier String
 }
 
 model DkimRecord {
