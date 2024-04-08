@@ -16,6 +16,7 @@ async function main() {
 				data: {
 					domain: domain,
 					selector: selector,
+					sourceIdentifier: 'seed'
 				}
 			});
 			await prisma.dkimRecord.create({
