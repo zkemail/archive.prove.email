@@ -8,12 +8,14 @@ from typing import TextIO
 def post_process(logfiles: list[TextIO], tsv_output: TextIO, print_selectors_per_domain: bool, print_selector_count: bool):
 	selector_count: dict[str, int] = {}
 	selectors_per_domain: dict[str, set[str]] = {}
+	dsp_list: list[tuple[str, str]] = []
 	for f in logfiles:
 		for line in f:
 			line = line.strip()
 			if not line.startswith("DNS_BATCH_RESULT,"):
 				continue
 			_, domain, selector, _ = line.strip().split(",", maxsplit=3)
+			dsp_list.append((domain, selector))
 
 			if selector in selector_count:
 				selector_count[selector] += 1
@@ -40,6 +42,9 @@ def post_process(logfiles: list[TextIO], tsv_output: TextIO, print_selectors_per
 
 	selectors_per_domain = {k: v for k, v in selectors_per_domain.items() if k not in filtered_domains}
 
+	# remove filtered domains from dsp_list
+	dsp_list = [(domain, selector) for domain, selector in dsp_list if domain not in filtered_domains]
+
 	# calculate average number of selectors per domain
 	average_selectors_per_domain = sum(len(selectors) for selectors in selectors_per_domain.values()) / len(selectors_per_domain)
 	print(f"Average number of selectors per domain: {average_selectors_per_domain}")
@@ -52,9 +57,8 @@ def post_process(logfiles: list[TextIO], tsv_output: TextIO, print_selectors_per
 			pass
 
 	if tsv_output:
-		for domain, selectors in sorted(selectors_per_domain.items()):
-			for selector in sorted(selectors):
-				print(f"{domain}\t{selector}", file=tsv_output)
+		for domain, selector in dsp_list:
+			print(f"{domain}\t{selector}", file=tsv_output)
 
 
 # local entrypoint
