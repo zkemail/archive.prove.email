@@ -2,11 +2,8 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { addDomainSelectorPair } from '@/lib/utils_server';
 import { z } from 'zod';
-import { headers } from "next/headers";
-import { RateLimiterMemory } from 'rate-limiter-flexible';
-import { checkRateLimiter } from '@/lib/utils';
 
-export type AddDspResponse = {
+export type AddDspAdminResponse = {
 	message: object;
 	added?: boolean;
 };
@@ -14,26 +11,22 @@ export type AddDspResponse = {
 const AddDspRequestSchema = z.object({
 	domain: z.string(),
 	selector: z.string(),
+	sourceIdentifier: z.string(),
 });
 
-export type AddDspRequest = z.infer<typeof AddDspRequestSchema>;
-
-const rateLimiter = new RateLimiterMemory({ points: 1200, duration: 360 });
+export type AddDspAdminRequest = z.infer<typeof AddDspRequestSchema>;
 
 export async function POST(request: NextRequest) {
-	try {
-		await checkRateLimiter(rateLimiter, headers(), 1);
+	const authHeader = request.headers.get('authorization');
+	if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+		return new Response('Unauthorized', { status: 401 });
 	}
-	catch (error: any) {
-		return NextResponse.json('Rate limit exceeded', { status: 429 });
-	}
-
 	try {
 		const body = await request.json();
 		const dsp = AddDspRequestSchema.parse(body);
-		let added = await addDomainSelectorPair(dsp.domain, dsp.selector, 'api');
+		let added = await addDomainSelectorPair(dsp.domain, dsp.selector, dsp.sourceIdentifier);
 		return NextResponse.json(
-			{ message: dsp, added } as AddDspResponse,
+			{ message: dsp, added } as AddDspAdminResponse,
 			{ status: 200 }
 		);
 	}
