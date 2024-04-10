@@ -86,3 +86,31 @@ export function truncate(s: string, maxLength: number) {
 		return s;
 	}
 }
+
+export const SourceIdentifiers = ['top_1m_lookup', 'api', 'selector_guesser', 'seed', 'try_selectors', 'unknown'] as const;
+export type SourceIdentifier = typeof SourceIdentifiers[number];
+
+export function stringToSourceIdentifier(s: string): SourceIdentifier {
+	const sourceIdentifier = SourceIdentifiers.find(id => id === s);
+	if (sourceIdentifier) {
+		return sourceIdentifier;
+	}
+	return 'unknown';
+}
+
+export function sourceIdentifierToHumanReadable(sourceIdentifierStr: string) {
+	switch (stringToSourceIdentifier(sourceIdentifierStr)) {
+		case 'top_1m_lookup':
+			return 'Top 1M batch DNS lookup';
+		case 'api':
+			return 'Inbox upload';
+		case 'selector_guesser':
+			return 'Selector guesser';
+		case 'seed':
+			return 'Seed';
+		case 'try_selectors':
+			return 'Try selectors';
+		case 'unknown':
+			return 'Unknown';
+	}
+}

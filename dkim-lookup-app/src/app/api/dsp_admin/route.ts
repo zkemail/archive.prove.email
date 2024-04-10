@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { addDomainSelectorPair } from '@/lib/utils_server';
 import { z } from 'zod';
+import { SourceIdentifiers } from '@/lib/utils';
 
 export type AddDspAdminResponse = {
 	message: object;
@@ -11,7 +12,7 @@ export type AddDspAdminResponse = {
 const AddDspRequestSchema = z.object({
 	domain: z.string(),
 	selector: z.string(),
-	sourceIdentifier: z.string(),
+	sourceIdentifier: z.enum(SourceIdentifiers),
 });
 
 export type AddDspAdminRequest = z.infer<typeof AddDspRequestSchema>;
