@@ -42,16 +42,30 @@ export async function addDomainSelectorPair(domain: string, selector: string, so
 		console.log(`no dkim dns record found for ${selector}, ${domain}`);
 		return false;
 	}
-	dsp = await prisma.domainSelectorPair.create({
-		data: { domain, selector, sourceIdentifier }
+	let newDsp = await prisma.domainSelectorPair.create({
+		data: {
+			domain,
+			selector,
+			sourceIdentifier,
+			lastRecordUpdate: dkimDnsRecord.timestamp,
+			records: {
+				create: {
+					value: dkimDnsRecord.value,
+					firstSeenAt: dkimDnsRecord.timestamp,
+					lastSeenAt: dkimDnsRecord.timestamp,
+					provenanceVerified: false
+				}
+			}
+		},
+		include: {
+			records: true
+		}
 	})
 
-	let dkimRecord = await createDkimRecord(dsp, dkimDnsRecord);
+	newDsp.records.forEach(record => {
+		generateWitness(newDsp, record);
+	});
 
-	console.log(`updating dsp timestamp for ${dsp.selector}, ${dsp.domain} to ${dkimDnsRecord.timestamp}`);
-	updateDspTimestamp(dsp, dkimDnsRecord.timestamp);
-
-	generateWitness(dsp, dkimRecord);
 	return true;
 }
 
