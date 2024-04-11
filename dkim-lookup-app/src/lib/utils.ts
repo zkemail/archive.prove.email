@@ -87,7 +87,7 @@ export function truncate(s: string, maxLength: number) {
 	}
 }
 
-export const SourceIdentifiers = ['top_1m_lookup', 'api', 'selector_guesser', 'seed', 'try_selectors', 'unknown'] as const;
+export const SourceIdentifiers = ['top_1m_lookup', 'api', 'selector_guesser', 'seed', 'try_selectors', 'api_auto', 'unknown'] as const;
 export type SourceIdentifier = typeof SourceIdentifiers[number];
 
 export function stringToSourceIdentifier(s: string): SourceIdentifier {
@@ -103,6 +103,8 @@ export function sourceIdentifierToHumanReadable(sourceIdentifierStr: string) {
 		case 'top_1m_lookup':
 			return 'Scraped';
 		case 'api':
+			return 'Inbox upload';
+		case 'api_auto':
 			return 'Inbox upload';
 		case 'selector_guesser':
 			return 'Selector guesser';
