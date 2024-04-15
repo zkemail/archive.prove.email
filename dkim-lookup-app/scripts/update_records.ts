@@ -4,7 +4,8 @@ import axios from 'axios';
 
 function print_usage() {
 	console.log('usage:');
-	console.log('  pnpm update_records API_URL RECORDS_FILE SOURCE_IDENTIFIER START_LINE');
+	console.log('  pnpm update_records API_URL API_URL RECORDS_FILE SOURCE_IDENTIFIER START_LINE');
+	console.log('    API_URL: The URL of the API endpoint to call_IDENTIFIER START_LINE');
 	console.log('    API_URL: The URL of the API endpoint to call');
 	console.log('    RECORDS_FILE: A .tsv file with domain and selector columns');
 	console.log('    SOURCE_IDENTIFIER: A string to identify the source of the records');
@@ -44,14 +45,13 @@ async function main() {
 			continue;
 		}
 
-		const dsp = { domain, selector };
-		const request = { sourceIdentifier, ...dsp };
+		const request = { domain, selector, sourceIdentifier };
 		try {
 			let response = await axios.post<AddDspAdminResponse>(url, request as AddDspAdminRequest, config);
 			if (response.data.added) {
-				console.log(`${JSON.stringify(dsp)} was added to the registry`);
 				addedPairs++;
 			}
+			console.log(`response for ${JSON.stringify(request)}, added=${response.data.added}`);
 		}
 		catch (error: any) {
 			console.log(`error calling ${url}:`, error);
