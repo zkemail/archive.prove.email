@@ -12,7 +12,8 @@ export async function generateWitness(dsp: DomainSelectorPair, dkimRecord: DkimR
 	const proof = await witness.getProofForLeafHash(leafHash);
 	const verified = await witness.verifyProofChain(proof);
 	if (!verified) {
-		throw 'proof chain verification failed';
+		console.error('proof chain verification failed');
+		return;
 	}
 	console.log(`proof chain verified, setting provenanceVerified for ${recordToString(dkimRecord)}`);
 	await prisma.dkimRecord.update({
