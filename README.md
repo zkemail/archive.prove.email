@@ -2,7 +2,7 @@ This repository is part of the [Proof of Email](https://prove.email/) project
 
 # DKIM archive website
 
-The website lets the user search for a domain and returns archived DKIM selectors and keys for that domain. Visit the website at https://registry.prove.email/
+The website lets the user search for a domain and returns archived DKIM selectors and keys for that domain. Visit the website at https://archive.prove.email/
 
 Under `/contribute`, users can contribute with new domains and selectors, which are extracted from the `DKIM-Signature` header field in each email message in the user's Gmail account.
 
@@ -103,12 +103,12 @@ curl https://example.com/api/batch_update -H "Accept: application/json" -H "Auth
 
 ## Domain search API
 
-A public API endpoint for fetching keys for a certain domain is available at `https://registry.prove.email/api/domains/{domain_name}`. The response will contain a list of all known selectors and DKIM keys for `domain_name` and its subdomains.
+A public API endpoint for fetching keys for a certain domain is available at `https://archive.prove.email/api/domains/{domain_name}`. The response will contain a list of all known selectors and DKIM keys for `domain_name` and its subdomains.
 
 An example call from the command line:
 
 ```bash
-curl "https://registry.prove.email/api/domains/ethereum.org" | python -m json.tool
+curl "https://archive.prove.email/api/domains/ethereum.org" | python -m json.tool
 ```
 
 
@@ -166,4 +166,4 @@ domain_z	selector_z
 ...
 ```
 
-You can now use the .tsv file on the [Upload from TSV file](https://registry.prove.email/upload_tsv) page.
+You can now use the .tsv file on the [Upload from TSV file](https://archive.prove.email/upload_tsv) page.

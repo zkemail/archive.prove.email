@@ -17,7 +17,7 @@ export default async function Home({ searchParams }: {
 	return (
 		<div style={{ display: 'flex', minHeight: '100vh', flexDirection: 'column', alignItems: 'center' }}>
 			<h2 style={{ padding: '2rem' }}>
-				<a href='/' className='defaultcolor'>DKIM Registry</a>
+				<a href='/' className='defaultcolor'>DKIM Archive</a>
 			</h2>
 			<SearchInput domainQuery={domainQuery} />
 			<DomainSearchResults initialRecords={records} domainQuery={domainQuery} />
@@ -25,9 +25,9 @@ export default async function Home({ searchParams }: {
 			<div style={{ textAlign: 'center', marginTop: '5rem', fontSize: '0.8rem' }}>
 				<hr style={{ width: '50%', margin: '1rem auto', borderTop: '1px solid black' }} />
 				<div><a href="about">About</a> this site</div>
-				<div>Visit the project on <a href="https://github.com/zkemail/registry.prove.email">GitHub</a></div>
+				<div>Visit the project on <a href="https://github.com/zkemail/archive.prove.email">GitHub</a></div>
 				<div>Visit <a href="https://prove.email/">Proof of Email</a></div>
-				<div><a href="contribute">Contribute</a> to the registry</div>
+				<div><a href="contribute">Contribute</a> to the archive</div>
 				<div>Explore the <a href="api-explorer">API</a></div>
 				<div>Read the <a href="privacy-policy">Privacy policy</a></div>
 			</div>

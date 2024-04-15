@@ -19,6 +19,9 @@ async function refreshKey(dsp: DomainSelectorPair) {
  */
 export async function addDomainSelectorPair(domain: string, selector: string, sourceIdentifier: SourceIdentifier): Promise<boolean> {
 
+	domain = domain.toLowerCase();
+	selector = selector.toLowerCase();
+
 	// check if record exists
 	let dsp = await prisma.domainSelectorPair.findFirst({
 		where: {
