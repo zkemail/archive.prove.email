@@ -31,7 +31,7 @@ if __name__ == "__main__":
 	parser = argparse.ArgumentParser()
 	parser.add_argument("--env-file", type=str, help="the environment file that contains the CRON_SECRET variable")
 	parser.add_argument("--batch-size", type=int, default=10, help="the number of records to update on the server")
-	parser.add_argument("--domain", type=str, default="https://registry.prove.email")
+	parser.add_argument("--domain", type=str, default="https://archive.prove.email")
 	args = parser.parse_args()
 
 	if args.env_file:

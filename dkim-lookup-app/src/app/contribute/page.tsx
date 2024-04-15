@@ -9,14 +9,14 @@ export default function Page() {
 		<div>
 			<h1>Contribute</h1>
 			<p>
-				This page lets you contribute to the <a href="https://registry.prove.email/">DKIM Registry</a> site, part of the <a href="https://prove.email">Proof of Email</a> project.
+				This page lets you contribute to the <a href="https://archive.prove.email/">DKIM Archive</a> site, part of the <a href="https://prove.email">Proof of Email</a> project.
 			</p>
 			<p>
 				You can contribute to the project by uploading domains and selectors from your own Gmail account or from a TSV file.
 				The data will be used to build the archive of current and historical DKIM records.
 			</p>
 
-			<h2>Ways to contribute to the registry:</h2>
+			<h2>Ways to contribute to the archive:</h2>
 
 			<h3>Upload from Gmail</h3>
 			<p>To upload directly from your Gmail account, visit the <strong><a href="upload_gmail">Upload from Gmail</a></strong> page.</p>
@@ -40,7 +40,7 @@ export default function Page() {
 			</div>
 			<p>
 				In the example above, the domain is <InlineCode>example.net</InlineCode> and the selector is <InlineCode>brisbane</InlineCode>.
-				These are the values that will be extracted and uploaded to the registry.
+				These are the values that will be extracted and uploaded to the archive.
 			</p>
 
 			<h3>Upload from TSV file</h3>
@@ -48,12 +48,12 @@ export default function Page() {
 				To upload from a file created from an exported archive from any email provider (including Gmail),
 				visit the <strong><a href="upload_tsv">Upload from TSV file</a></strong> page.
 			</p>
-			<p>When you upload from a TSV file, the domain and selector pairs are taken directly from the file and uploaded to the registry.</p>
+			<p>When you upload from a TSV file, the domain and selector pairs are taken directly from the file and uploaded to the archive.</p>
 
 
 			<h3>Use the API</h3>
 			<p>
-				You can contribute to the registry by using the API.
+				You can contribute to the archive by using the API.
 				You find the API specification and can try out the endpoints in the <strong><a href="api-explorer">API Explorer</a></strong>.
 			</p>
 
@@ -62,7 +62,7 @@ export default function Page() {
 
 			<h3>Disclosure regarding Limited Use:</h3>
 			<p>
-				DKIM Registry's use and transfer of information received from Google APIs to any other app will adhere to{' '}
+				DKIM Archive's use and transfer of information received from Google APIs to any other app will adhere to{' '}
 				<a href="https://developers.google.com/terms/api-services-user-data-policy#additional_requirements_for_specific_api_scopes" target="_blank">
 					Google API Services User Data Policy
 				</a>

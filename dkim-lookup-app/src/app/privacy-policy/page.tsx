@@ -5,7 +5,7 @@ export default function Page() {
 			<h1>Privacy Policy</h1>
 
 			<h2>Privacy policy for Proof of Email</h2>
-			<p>This privacy policy describes how DKIM Registry, operated by <strong>Proof of Email</strong> (hereinafter referred to as "we", "us", or "our"), accesses, uses, stores and shares your personal information when you use our website located at <a href="https://registry.prove.email">registry.prove.email</a> (the "website").</p>
+			<p>This privacy policy describes how DKIM Archive, operated by <strong>Proof of Email</strong> (hereinafter referred to as "we", "us", or "our"), accesses, uses, stores and shares your personal information when you use our website located at <a href="https://archive.prove.email">archive.prove.email</a> (the "website").</p>
 			<p><strong>Information we access:</strong></p>
 			<ul>
 				<li><strong>User email address:</strong> When you sign in with your Gmail account to contribute domains and selectors, we use your email address solely for displaying it to you within the platform.</li>

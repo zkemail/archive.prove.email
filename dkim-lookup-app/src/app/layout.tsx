@@ -6,7 +6,7 @@ import { NextAuthProvider } from './session-provider'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-	title: 'DKIM Registry',
+	title: 'DKIM Archive',
 	description: 'DKIM archive website',
 }
 
@@ -36,7 +36,7 @@ export default function RootLayout({
 						borderBottom: '1px solid #aaa',
 					}}>
 						<a href='/' className='defaultcolor' style={{ fontWeight: 600 }}>
-							DKIM Registry
+							DKIM Archive
 						</a>
 						<DevModeNotice />
 					</header>
