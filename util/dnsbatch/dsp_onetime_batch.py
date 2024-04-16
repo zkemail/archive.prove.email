@@ -18,6 +18,8 @@ import datetime
 import sys
 import time
 import modal
+import threading
+import queue
 
 stub = modal.Stub("dsp-onetime-batch")
 dns_image = (modal.Image.debian_slim(python_version="3.10").pip_install("dnspython"))
@@ -79,9 +81,27 @@ def process_domain(domain: str, selectors: list[str]):
 	for selector in selectors:
 		resolve_qname(domain, selector)
 
+q: "queue.Queue[tuple[str, str]]" = queue.Queue(maxsize=20)
+
+def worker():
+	while True:
+		qname = q.get()
+		resolve_qname(qname[0], qname[1])
+		q.task_done()
+
+
+def process_domain_threaded(domain: str, selectors: list[str]):
+	for _i in range(20):
+		t = threading.Thread(target=worker, daemon=True)
+		t.start()
+	for selector in selectors:
+		q.put((domain, selector))
+	q.join()
+	return len(selectors)
+
 
 @stub.function(image=dns_image)  # type: ignore
-def process_domain_wrapper(domain: str, selectors: list[str]):
+def process_domain_modal(domain: str, selectors: list[str]):
 	process_domain(domain, selectors)
 
 
@@ -99,9 +119,9 @@ def run_batch_job(domains_filename: str, selectors_filename: str, *, local: bool
 		time_left_hrs = ((len(domains) - index) * elapsed_hrs / index) if index > 0 else 0
 		print(f"processing domain {index}, elapsed: {elapsed_hrs:.2f}, time left: {time_left_hrs:.2f} hours, {domain}", file=sys.stderr)
 		if local:
-			process_domain(domain, selectors)
+			process_domain_threaded(domain, selectors)
 		else:
-			process_domain_wrapper.spawn(domain, selectors)
+			process_domain_modal.spawn(domain, selectors)
 
 
 # remote entrypoint
