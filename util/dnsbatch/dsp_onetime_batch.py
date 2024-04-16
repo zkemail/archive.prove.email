@@ -41,7 +41,7 @@ def parse_tags(txtData: str) -> dict[str, str]:
 	return dkimData
 
 
-def resolve_qname(domain: str, selector: str):
+def resolve_qname(domain: str, selector: str, local: bool):
 	import dns.exception
 	import dns.resolver
 	import dns.rdatatype
@@ -70,24 +70,24 @@ def resolve_qname(domain: str, selector: str):
 		if len(tags['p']) < 10:
 			print(f'# short p= tag found for {qname}, {txtData}\n')
 			return
-		tsv_row = f'DNS_BATCH_RESULT,{domain},{selector},{txtData}\n'  # extra newline at the end as a workaround for that the stdout from modal.com somtimes has merged lines if there is just one newline
-		print(tsv_row)
+		if local:
+			print(f'{domain}\t{selector}')
+		else:
+			tsv_row = f'DNS_BATCH_RESULT,{domain},{selector},{txtData}\n'  # extra newline at the end as a workaround for that the stdout from modal.com somtimes has merged lines if there is just one newline
+			print(tsv_row)
 		sys.stdout.flush()
 	except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer, dns.resolver.NoNameservers, dns.exception.Timeout) as _e:
 		#print(f'warning: dns resolver error: {e}')
 		pass
 
 
-def process_domain(domain: str, selectors: list[str]):
-	for selector in selectors:
-		resolve_qname(domain, selector)
-
 q: "queue.Queue[tuple[str, str]]" = queue.Queue(maxsize=20)
+
 
 def worker():
 	while True:
 		qname = q.get()
-		resolve_qname(qname[0], qname[1])
+		resolve_qname(qname[0], qname[1], local=True)
 		q.task_done()
 
 
@@ -99,7 +99,8 @@ def process_domain_threaded(domain: str, selectors: list[str]):
 
 @stub.function(image=dns_image)  # type: ignore
 def process_domain_modal(domain: str, selectors: list[str]):
-	process_domain(domain, selectors)
+	for selector in selectors:
+		resolve_qname(domain, selector, local=False)
 
 
 def run_batch_job(domains_filename: str, selectors_filename: str, *, local: bool = False, sparse: bool = False):
