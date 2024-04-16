@@ -66,7 +66,7 @@ export async function addDomainSelectorPair(domain: string, selector: string, so
 	})
 
 	newDsp.records.forEach(record => {
-		generateWitness(newDsp, record);
+		generateWitness(newDsp, record).catch(console.error);
 	});
 
 	return true;
