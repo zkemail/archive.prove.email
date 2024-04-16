@@ -72,6 +72,7 @@ def resolve_qname(domain: str, selector: str):
 			return
 		tsv_row = f'DNS_BATCH_RESULT,{domain},{selector},{txtData}\n'  # extra newline at the end as a workaround for that the stdout from modal.com somtimes has merged lines if there is just one newline
 		print(tsv_row)
+		sys.stdout.flush()
 	except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer, dns.resolver.NoNameservers, dns.exception.Timeout) as _e:
 		#print(f'warning: dns resolver error: {e}')
 		pass
@@ -91,12 +92,8 @@ def worker():
 
 
 def process_domain_threaded(domain: str, selectors: list[str]):
-	for _i in range(20):
-		t = threading.Thread(target=worker, daemon=True)
-		t.start()
 	for selector in selectors:
 		q.put((domain, selector))
-	q.join()
 	return len(selectors)
 
 
@@ -113,6 +110,12 @@ def run_batch_job(domains_filename: str, selectors_filename: str, *, local: bool
 	if sparse:
 		domains = domains[0::1000]
 	start_time = time.time()
+
+	if local:
+		for _i in range(20):
+			t = threading.Thread(target=worker, daemon=True)
+			t.start()
+
 	print(f"started at {datetime.datetime.fromtimestamp(start_time).isoformat(' ', timespec='seconds')}", file=sys.stderr)
 	for index, domain in enumerate(domains):
 		elapsed_hrs = (time.time() - start_time) / 3600
@@ -122,6 +125,7 @@ def run_batch_job(domains_filename: str, selectors_filename: str, *, local: bool
 			process_domain_threaded(domain, selectors)
 		else:
 			process_domain_modal.spawn(domain, selectors)
+	q.join()
 
 
 # remote entrypoint
