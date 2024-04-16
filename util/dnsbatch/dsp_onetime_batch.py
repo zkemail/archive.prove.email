@@ -103,7 +103,7 @@ def process_domain_modal(domain: str, selectors: list[str]):
 		resolve_qname(domain, selector, local=False)
 
 
-def run_batch_job(domains_filename: str, selectors_filename: str, *, local: bool = False, sparse: bool = False):
+def run_batch_job(domains_filename: str, selectors_filename: str, *, local: bool = False, sparse: bool = False, start_line: int):
 	with open(selectors_filename) as f:
 		selectors = f.read().splitlines()
 	with open(domains_filename) as f:
@@ -117,8 +117,10 @@ def run_batch_job(domains_filename: str, selectors_filename: str, *, local: bool
 			t = threading.Thread(target=worker, daemon=True)
 			t.start()
 
+	start_index = start_line - 1
 	print(f"started at {datetime.datetime.fromtimestamp(start_time).isoformat(' ', timespec='seconds')}", file=sys.stderr)
-	for index, domain in enumerate(domains):
+	for index in range(start_index, len(domains)):
+		domain = domains[index]
 		elapsed_hrs = (time.time() - start_time) / 3600
 		time_left_hrs = ((len(domains) - index) * elapsed_hrs / index) if index > 0 else 0
 		print(f"processing domain {index}, elapsed: {elapsed_hrs:.2f}, time left: {time_left_hrs:.2f} hours, {domain}", file=sys.stderr)
@@ -132,7 +134,7 @@ def run_batch_job(domains_filename: str, selectors_filename: str, *, local: bool
 # remote entrypoint
 @stub.local_entrypoint()  # type: ignore
 def main(domains_filename: str, selectors_filename: str, sparse: bool):
-	run_batch_job(domains_filename, selectors_filename, sparse=sparse)
+	run_batch_job(domains_filename, selectors_filename, sparse=sparse, start_line=1)
 
 
 # local entrypoint
@@ -140,5 +142,6 @@ if __name__ == "__main__":
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--domains-filename', type=str)
 	parser.add_argument('--selectors-filename', type=str)
+	parser.add_argument('--start-line', type=int, default=0)
 	args = parser.parse_args()
-	run_batch_job(args.domains_filename, args.selectors_filename, local=True)
+	run_batch_job(args.domains_filename, args.selectors_filename, local=True, start_line=args.start_line)
