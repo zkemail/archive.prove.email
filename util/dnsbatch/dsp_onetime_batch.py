@@ -122,7 +122,7 @@ def run_batch_job(domains_filename: str, selectors_filename: str, *, local: bool
 	for index in range(start_index, len(domains)):
 		domain = domains[index]
 		elapsed_hrs = (time.time() - start_time) / 3600
-		time_left_hrs = ((len(domains) - index) * elapsed_hrs / index) if index > 0 else 0
+		time_left_hrs = ((len(domains) - index) * elapsed_hrs / (index - start_index)) if index > start_index else 0
 		print(f"processing domain {index}, elapsed: {elapsed_hrs:.2f}, time left: {time_left_hrs:.2f} hours, {domain}", file=sys.stderr)
 		if local:
 			process_domain_threaded(domain, selectors)
