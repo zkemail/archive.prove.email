@@ -8,6 +8,7 @@ export default async function Page() {
 	// https://github.com/prisma/prisma/issues/4228
 	type CountResult = [{ count: BigInt }]
 	let [uniqueDomainsCount] = await prisma.$queryRaw`SELECT COUNT(DISTINCT domain) FROM "DomainSelectorPair";` as CountResult;
+	let [uniqueSelectorsCount] = await prisma.$queryRaw`SELECT COUNT(DISTINCT selector) FROM "DomainSelectorPair";` as CountResult;
 
 	let domainSelectorPairCount = await prisma.domainSelectorPair.count();
 	let dkimKeyCount = await prisma.dkimRecord.count();
@@ -31,6 +32,9 @@ export default async function Page() {
 			<h2>Statistics</h2>
 			<p>
 				Unique domains: {uniqueDomainsCount.count.toString()}
+			</p>
+			<p>
+				Unique selectors: {uniqueSelectorsCount.count.toString()}
 			</p>
 			<p>
 				Domain/selector-pairs: {domainSelectorPairCount}
