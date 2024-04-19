@@ -10,96 +10,8 @@ When domains and selectors are added, the site fetches the DKIM key via DNS and 
 
 For each record, the site also generates an on-chain proof with [Witness](https://witness.co), which functions as a data availability timestamp.
 
-## Local development
-
-```bash
-cd dkim-lookup-app
-pnpm install
-```
-
-Access to a [PostgreSQL](https://www.postgresql.org/) database is needed for development. See [below](#ubuntu_postgresql) for an example setup of PostgreSQL on Ubuntu.
-
-Copy `.env.example` to `.env` and configure the variables
-
-Initialize the database from `schema.prisma`
-
-```bash
-pnpm prisma migrate deploy
-```
-
-Start the development server
-
-```bash
-pnpm dev
-```
-
-<a name="ubuntu_postgresql"></a>
-### Setting up a PostgreSQL database on Ubuntu
-
-Install PostgreSQL server and client with `sudo apt install postgresql`
-
-Log in with `sudo -u postgres psql` and set a password with `\password postgres`
-
-Test the login: `psql postgresql://postgres:YOURPASSWORD@localhost`
-
-Your `.env` config would now be:
-
-```
-POSTGRES_URL_NON_POOLING="postgresql://postgres:YOURPASSWORD@localhost/dkim_lookup"
-POSTGRES_PRISMA_URL="postgresql://postgres:YOURPASSWORD@localhost/dkim_lookup"
-```
-
-## Unit tests
-
-Run the unit tests
-
-```bash
-pnpm vitest --run
-```
-
-## Database management
-
-Start the Prisma Studio database manager
-
-```bash
-pnpm prisma db studio
-```
-
-Resetting the database
-
-```bash
-pnpm prisma migrate reset
-```
-
-## Fetch DKIM keys from DNS and upload to database
-
-The `update_records` script reads a list of domains and selectors, fetches the corresponding DKIM records via DNS lookup, and publishes the results to a database.
-
-```bash
-pnpm update_records domains_and_selectors.tsv
-```
-
-A TSV file with domains and selectors can be created with the [mbox selector scraper](../util/mbox_scraper.py)
-or with [Gmail Metadata Scraper](https://github.com/zkemail/selector-scraper)
-
-
-## Batch updates
-
-The API endpoint `/api/batch_update` is designed to be called at regular intervals, for example as a cron job.
-The function updates the *N* oldest database records via DNS lookups.
-Enable the feature by defining *N* through the `BATCH_UPDATE_NUM_RECORDS` environment variable.
-
-To manually call `batch_update` on a local development server, run:
-
-```bash
-curl http://localhost:3000/api/batch_update -H "Accept: application/json" -H "Authorization: Bearer $CRON_SECRET"
-```
-
-To manually call `batch_update` on a production server on example.com, run:
-
-```bash
-curl https://example.com/api/batch_update -H "Accept: application/json" -H "Authorization: Bearer $CRON_SECRET"
-```
+## Development
+For information on how to help with development, see [development.md](development.md).
 
 ## Domain search API
 
@@ -111,15 +23,12 @@ An example call from the command line:
 curl "https://archive.prove.email/api/domains/ethereum.org" | python -m json.tool
 ```
 
-
 <a name="mailbox_scraper"></a>
 
-# Extracting domains and selectors from exported mailboxes
+## Extract domains and selectors from an exported mailbox
 
 The scraper tools (`util/mbox_scraper.py` and `util/pst_scraper.py`) allow for extacting domains and selectors
 from the messages in an email account from any provider, by scraping a file that is exported from the mail account.
-
-## Usage:
 
 ### 1. Export email messages
 
@@ -142,6 +51,7 @@ You can then use that feature and continue with [extracting domains and selector
 If no export feature is available, an alternative is to connect your email account to a client such as Mozilla Thunderbird, Gnome Evolution or Microsoft Outlook, and use the export feature from within the email client.
 
 <a name="archive_extract"></a>
+
 ### 2. Extract domains and selectors
 
 When you have obtained an .mbox or a .pst file, use `mbox_scraper.py` or `pst_scraper.py` to extract the domains and selectors
