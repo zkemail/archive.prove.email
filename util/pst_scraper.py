@@ -47,10 +47,14 @@ def parse_item(index: int, item, depth: int):
 		print(f'{indent}{type(item)} {index}: "{item.subject}"', file=sys.stderr)
 		parse_message(item)
 	else:
-		print(f'{indent}{type(item)} {index}: "{item.name}"', file=sys.stderr)
-		for i in range(len(item.sub_items)):
-			sub_item = item.sub_items[i]
-			parse_item(i, sub_item, depth + 1)
+		if isinstance(item, pypff.folder):
+			print(f'{indent}{type(item)} {index}: "{item.name}"', file=sys.stderr)
+		else:
+			print(f'{indent}{type(item)} {index}', file=sys.stderr)
+		if hasattr(item, 'sub_items') and item.sub_items is not None:
+			for i in range(len(item.sub_items)):
+				sub_item = item.sub_items[i]
+				parse_item(i, sub_item, depth + 1)
 
 
 def decode_pst():
