@@ -98,7 +98,7 @@ export default function Page() {
 				Here you can contribute to the database by providing a TSV file with domains and selectors.
 			</p>
 			<p>
-				Follow the instructions in this <a href="https://github.com/zkemail/archive.prove.email?tab=readme-ov-file#mbox_selector_scraper">README</a>{' '}
+				Follow the instructions in this <a href="https://github.com/zkemail/archive.prove.email?tab=readme-ov-file#mailbox_scraper">README</a>{' '}
 				to follow the fully private flow, where you only upload domains and selectors extracted from your inbox, and nothing else.
 			</p>
 			<div>

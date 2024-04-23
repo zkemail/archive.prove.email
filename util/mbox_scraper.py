@@ -1,8 +1,4 @@
-#!/usr/bin/env python
-
-# extracts DKIM domains and selectors from mbox files and outputs them as TSV
-# usage: mbox_selector_scraper.py file1.mbox [file2.mbox ...] > output.tsv
-
+import argparse
 import sys
 import mailbox
 
@@ -19,6 +15,7 @@ def add_to_dict(dct: dict[str, list[str]], domain: str, selector: str):
 
 
 def get_domain_selectors(outputDict: dict[str, list[str]], mboxFile: str):
+	print(f'processing {mboxFile}', file=sys.stderr)
 	for message in mailbox.mbox(mboxFile):
 		dkimSignatures = message.get_all('DKIM-Signature')
 		if not dkimSignatures:
@@ -31,14 +28,11 @@ def get_domain_selectors(outputDict: dict[str, list[str]], mboxFile: str):
 
 
 def main():
+	parser = argparse.ArgumentParser(description='extract domains and selectors from the DKIM-Signature header fields in an mbox file and output them in TSV format')
+	parser.add_argument('mbox_file')
+	args = parser.parse_args()
 	domainSelectorsDict: dict[str, list[str]] = {}
-	mboxFiles = sys.argv[1:]
-	if len(mboxFiles) == 0:
-		print('usage: mbox_selector_scraper.py file1.mbox [file2.mbox ...] > output.tsv')
-		sys.exit(1)
-	for f in mboxFiles:
-		print(f'processing {f}', file=sys.stderr)
-		get_domain_selectors(domainSelectorsDict, f)
+	get_domain_selectors(domainSelectorsDict, args.mbox_file)
 	domainSelectorsDict = dict(sorted(domainSelectorsDict.items()))
 	for domain, selectors in domainSelectorsDict.items():
 		if '\t' in domain:
