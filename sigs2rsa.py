@@ -1,7 +1,7 @@
 # https://blog.ploetzli.ch/2018/calculating-an-rsa-public-key-from-two-signatures/
 
 import binascii, hashlib
-from sage.all import *
+import sage.all
 
 def pkcs1_padding(size_bytes, hexdigest, hashfn):
     oid = {hashlib.sha256: '608648016503040201'}[hashfn]
@@ -19,7 +19,7 @@ def hash_pad(size_bytes, data, hashfn):
     return pkcs1_padding(size_bytes, hexdigest, hashfn)
 
 def message_sig_pair(size_bytes, data, signature, hashfn=hashlib.sha256):
-    return ( Integer('0x' + hash_pad(size_bytes, data, hashfn)), Integer('0x' + binascii.hexlify(signature).decode('utf-8')) )
+    return ( sage.all.Integer('0x' + hash_pad(size_bytes, data, hashfn)), sage.all.Integer('0x' + binascii.hexlify(signature).decode('utf-8')) )
 
 def find_n(*filenames):
     data_raw = []
@@ -35,7 +35,7 @@ def find_n(*filenames):
         pairs = [message_sig_pair(size_bytes, m, s, hashfn) for (m,s) in zip(data_raw, signature_raw)]
         for e in [0x10001, 3, 17]:
             gcd_input = [ (s^e - m) for (m,s) in pairs ]
-            result = gcd(*gcd_input)
+            result = sage.all.gcd(*gcd_input)
             if result != 1:
                 return (hashfn, e, result)
 
