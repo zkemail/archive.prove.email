@@ -1,12 +1,12 @@
 ## Using Docker
 
-Install
+### Install
 
 ```bash
 docker pull sagemath/sagemath
 ```
 
-Run
+### Run
 
 ```bash
 docker run -it --mount type=bind,source="$(pwd)",target=/app  sagemath/sagemath:latest sage /app/run.py
@@ -14,10 +14,12 @@ docker run -it --mount type=bind,source="$(pwd)",target=/app  sagemath/sagemath:
 
 ## Using Apt packages (Ubuntu 23.10)
 
-Install
+### Install
 
 ```bash
 sudo apt install sagemath
+
+# see https://stackoverflow.com/a/77705060/961254
 
 curl \
 -O https://mirror.enzu.com/ubuntu/pool/universe/s/singular/libsingular4-dev-common_4.3.1-p3+ds-1_all.deb \
@@ -55,7 +57,7 @@ singular-ui_4.3.1-p3+ds-1_amd64.deb \
 singular_4.3.1-p3+ds-1_amd64.deb
 ```
 
-Run
+### Run
 
 ```bash
 sage run.py
