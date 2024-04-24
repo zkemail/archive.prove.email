@@ -9,7 +9,7 @@ docker pull sagemath/sagemath
 ### Run
 
 ```bash
-docker run -it --mount type=bind,source="$(pwd)",target=/app  sagemath/sagemath:latest sage /app/run.py
+docker run -it --mount type=bind,source=$(pwd),target=/app --workdir=/app sagemath/sagemath:latest sage sigs2rsa.py FILE1 FILE2
 ```
 
 ## Using Apt packages (Ubuntu 23.10)
@@ -60,6 +60,6 @@ singular_4.3.1-p3+ds-1_amd64.deb
 ### Run
 
 ```bash
-sage run.py
+sage run.py FILE1 FILE2
 ```
 
