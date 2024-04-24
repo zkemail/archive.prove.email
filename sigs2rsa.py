@@ -21,7 +21,7 @@ def hash_pad(size_bytes, data, hashfn):
 def message_sig_pair(size_bytes, data, signature, hashfn):
     return ( sage.all.Integer('0x' + hash_pad(size_bytes, data, hashfn)), sage.all.Integer('0x' + binascii.hexlify(signature).decode('utf-8')) )
 
-def find_n(*filenames):
+def find_all_n(*filenames):
     data_raw = []
     signature_raw = []
     for fn in filenames:
@@ -31,14 +31,12 @@ def find_n(*filenames):
     if any(len(s) != size_bytes for s in signature_raw):
         raise Exception("All signature sizes must be identical")
     
-    results = []
     for hashfn in [hashlib.sha256, hashlib.sha512]:
         pairs = [message_sig_pair(size_bytes, m, s, hashfn) for (m,s) in zip(data_raw, signature_raw)]
         for e in [0x10001, 3, 17]:
             gcd_input = [ (s^e - m) for (m,s) in pairs ]
             n = sage.all.gcd(*gcd_input)
-            results.append({'hashfn': hashfn, 'e': e, 'n': n})
-    return results
+            print(f'hashfn={hashfn.__name__}, n={n}, e={e}')
 
 if __name__ == '__main__':
     import argparse
@@ -46,6 +44,4 @@ if __name__ == '__main__':
     parser.add_argument('file1', type=str)
     parser.add_argument('file2', type=str)
     args = parser.parse_args()
-    results = find_n(args.file1, args.file2)
-    for r in results:
-        print(r)
+    find_all_n(args.file1, args.file2)
