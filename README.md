@@ -60,6 +60,6 @@ singular_4.3.1-p3+ds-1_amd64.deb
 ### Run
 
 ```bash
-sage run.py FILE1 FILE2
+sage sigs2rsa.py FILE1 FILE2
 ```
 
