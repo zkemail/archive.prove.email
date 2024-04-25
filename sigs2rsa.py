@@ -38,7 +38,7 @@ def find_all_n(*filenames):
     for hashfn in [hashlib.sha256, hashlib.sha512]:
         pairs = [message_sig_pair(size_bytes, m, s, hashfn) for (m, s) in zip(data_raw, signature_raw)]
         for e in [0x10001, 3, 17]:
-            gcd_input = [(s ^ e - m) for (m, s) in pairs]
+            gcd_input = [(s**e - m) for (m, s) in pairs]
             n = sage.all.gcd(*gcd_input)
             print(f'hashfn={hashfn.__name__}, n={n}, e={e}')
 
