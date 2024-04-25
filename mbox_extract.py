@@ -2,7 +2,9 @@ import argparse
 import logging
 import sys
 import mailbox
-import dkim
+
+sys.path.insert(0, "dkimpy")
+import dkimpy.dkim as dkim
 from dataclasses import dataclass
 
 # https://russell.ballestrini.net/quickstart-to-dkim-sign-email-with-python/
