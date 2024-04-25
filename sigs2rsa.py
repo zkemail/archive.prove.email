@@ -25,7 +25,7 @@ def message_sig_pair(size_bytes, data, signature, hashfn):
     return (sage.all.Integer('0x' + hash_pad(size_bytes, data, hashfn)), sage.all.Integer('0x' + binascii.hexlify(signature).decode('utf-8')))
 
 
-def find_all_n(*filenames):
+def find_n(*filenames):
     data_raw = []
     signature_raw = []
     for fn in filenames:
@@ -41,6 +41,9 @@ def find_all_n(*filenames):
             gcd_input = [(s**e - m) for (m, s) in pairs]
             n = sage.all.gcd(*gcd_input)
             print(f'hashfn={hashfn.__name__}, n={n}, e={e}')
+            if n != 1:
+                return n
+    return 1
 
 
 if __name__ == '__main__':
@@ -49,4 +52,5 @@ if __name__ == '__main__':
     parser.add_argument('file1', type=str)
     parser.add_argument('file2', type=str)
     args = parser.parse_args()
-    find_all_n(args.file1, args.file2)
+    n = find_n(args.file1, args.file2)
+    print(hex(n))
