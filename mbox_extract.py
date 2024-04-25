@@ -5,7 +5,6 @@ import mailbox
 import dkim
 from dataclasses import dataclass
 
-
 # https://russell.ballestrini.net/quickstart-to-dkim-sign-email-with-python/
 
 privkey = """-----BEGIN PRIVATE KEY-----
@@ -25,6 +24,7 @@ R9PFTctb7138xCv7KHTVYJR/IhVOvhlVsISNDw2cn850ryrrGnbT6RUjYk2w6VGQ
 lcD1AW8sD6HEpo0=
 -----END PRIVATE KEY-----
 """
+
 
 def decode_dkim_header_field(dkimData: str):
     # decode a DKIM-Signature header field such as "v=1; a=rsa-sha256; d=example.net; s=brisbane;"
@@ -47,41 +47,12 @@ class MsgInfo:
     sig: str
 
 
-def get_dkim_pubkey(domain: str, selector: str):
-    # fetch the DKIM public key for a domain and selector
-    # this is a placeholder implementation that always returns the same key
-    return 'v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDd3Zu5bL8zj6n2z1Zw4X2rXj5FyJtJ0V3aLlQvZ6QV6J9Q2LzBqIj7kA2J7XzjN4Z3tQz7X1z3J3Z'
-
-
-#def recalculate_dkim_signature(msg: mailbox.mboxMessage, existingDkimSignatureKeyValues: dict[str, str], publicKey: str):
-
-def sign_msg(dkim_domain: str, dkim_selector: str, msg: str, includeHeaders: list[str], canonicalizeTuple: list[bytes]):
-    print(f'sign_msg: signing message with DKIM for domain {dkim_domain} and selector {dkim_selector}', file=sys.stderr)
-    # sign a message with DKIM
-    logging.basicConfig(format='>>>>>>>>>> %(levelname)s: %(message)s', level=logging.DEBUG)
-    signlogger = logging.getLogger()
-    signlogger.debug(f"signing...")
-    sig = dkim.sign(
-        message=msg.encode(),
-        selector=str(dkim_selector).encode(),
-        domain=dkim_domain.encode(),
-        privkey=privkey.encode(),
-        include_headers=list(map(lambda x: x.encode(), includeHeaders)),
-        canonicalize=canonicalizeTuple,
-        logger=signlogger
-    )
-    #print(sig, file=sys.stderr)
-
-
 def main():
     parser = argparse.ArgumentParser(description='extract domains and selectors from the DKIM-Signature header fields in an mbox file and output them in TSV format')
     parser.add_argument('mbox_file')
     args = parser.parse_args()
-    results: dict[str, list[MsgInfo]] = {}
     print(f'processing {args.mbox_file}', file=sys.stderr)
     for index, message in enumerate(mailbox.mbox(args.mbox_file)):
-        #print('payload', str(message))
-
         dkimSigs = message.get_all('DKIM-Signature')
         if not dkimSigs:
             continue
@@ -90,16 +61,28 @@ def main():
             print(dkimRecord, file=sys.stderr)
             domain = dkimRecord['d']
             selector = dkimRecord['s']
-            includeHeaders = dkimRecord['h']
+            includeHeaders = dkimRecord['h'].split(':')
             canonicalize = dkimRecord['c']
             signAlgo = dkimRecord['a']
             canonicalizeTuple = list(map(lambda x: x.encode(), canonicalize.split('/')))
+            bodyHash = dkimRecord['bh']
+            bodyLen = dkimRecord.get('l', None)
+            if bodyLen:
+                raise NotImplementedError('body length not supported')
 
-            sign_msg(domain, selector, str(message), includeHeaders.split(':'), canonicalizeTuple)
-            dskey = domain + "_" + selector
-            if dskey not in results:
-                results[dskey] = []
-            results[dskey].append(MsgInfo('', sig))
+            logging.basicConfig(format='>>>>>>>>>> %(levelname)s: %(message)s', level=logging.DEBUG)
+            signlogger = logging.getLogger()
+            signlogger.debug(f"signing...")
+
+            d = dkim.DKIM(str(message).encode(), logger=signlogger, signature_algorithm=signAlgo.encode(), linesep=b'\r\n', tlsrpt=False, debug_content=True)
+            sig = d.sign(selector.encode(),
+                         domain.encode(),
+                         privkey.encode(),
+                         canonicalize=canonicalizeTuple,
+                         include_headers=list(map(lambda x: x.encode(), includeHeaders)),
+                         length=False,
+                         preknownBodyHash=bodyHash.encode())
+
         break
 
 
