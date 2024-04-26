@@ -83,16 +83,25 @@ def main():
             selector = tags['s']
             includeHeaders = tags['h'].split(':')
             includeHeaders = list(map(lambda x: x.strip(), includeHeaders))
+            if 'received' in map(lambda x: x.lower(), includeHeaders):
+                print('received in includeHeaders not supported, skipping', file=sys.stderr)
+                continue
             canonicalize = tags['c']
             signAlgo = tags['a']
             canonicalizeTuple = list(map(lambda x: x.encode(), canonicalize.split('/')))
-            bodyHash = tags['bh']
+            bodyHash = tags.get('bh', None)
+            if not bodyHash:
+                print('body hash not found, skipping', file=sys.stderr)
+                continue
             bodyLen = tags.get('l', None)
             if bodyLen:
                 print('body length param not supported yet, skipping', file=sys.stderr)
                 continue
-
-            signature_base64 = ''.join(list(map(lambda x: x.strip(), tags['b'].splitlines())))
+            signature_tag = tags.get('b', None)
+            if not signature_tag:
+                print('signature tag not found, skipping', file=sys.stderr)
+                continue
+            signature_base64 = ''.join(list(map(lambda x: x.strip(), signature_tag.splitlines())))
             signature = base64.b64decode(signature_base64)
 
             infoOut = {}
