@@ -1,6 +1,5 @@
 import os
 import argparse
-import logging
 import sys
 import mailbox
 
@@ -30,7 +29,7 @@ lcD1AW8sD6HEpo0=
 
 
 def decode_dkim_header_field(dkimData: str):
-    print(f'decode_dkim_header_field: {dkimData}', file=sys.stderr)
+    #print(f'decode_dkim_header_field: {dkimData}', file=sys.stderr)
     # decode a DKIM-Signature header field such as "v=1; a=rsa-sha256; d=example.net; s=brisbane;"
     # to a dictionary such as {'v': '1', 'a': 'rsa-sha256', 'd': 'example.net', 's': 'brisbane'}
     tagValuePairStrings = list(map(lambda x: x.strip(), dkimData.split(';')))
@@ -68,19 +67,19 @@ def main():
         f.write('*\n')
     results: dict[str, list[MsgInfo]] = {}
     maxResults = 100
-    for index, message in enumerate(mailbox.mbox(args.mbox_file)):
-        if index >= maxResults:
+    message_counter = 0
+    for message in mailbox.mbox(args.mbox_file):
+        if message_counter >= maxResults:
             break
-        print('----------------------------------------------------')
+        message_counter += 1
+        #print(f'-----------------------{message_counter}-------------------------', file=sys.stderr)
         dkimSigs = message.get_all('DKIM-Signature')
         if not dkimSigs:
             continue
         for sig in dkimSigs:
             dkimRecord = decode_dkim_header_field(sig)
-            print(dkimRecord, file=sys.stderr)
             domain = dkimRecord['d']
             selector = dkimRecord['s']
-            print(dkimRecord['h'])
             includeHeaders = dkimRecord['h'].split(':')
             includeHeaders = list(map(lambda x: x.strip(), includeHeaders))
             canonicalize = dkimRecord['c']
@@ -89,16 +88,12 @@ def main():
             bodyHash = dkimRecord['bh']
             bodyLen = dkimRecord.get('l', None)
             if bodyLen:
-                print('body length param not supported yet, skipping')
+                print('body length param not supported yet, skipping', file=sys.stderr)
                 continue
-
-            logging.basicConfig(format='>>>>>>>>>> %(levelname)s: %(message)s', level=logging.DEBUG)
-            signlogger = logging.getLogger()
-            signlogger.debug(f"signing...")
 
             infoOut = {}
 
-            d = dkim.DKIM(str(message).encode(), logger=signlogger, signature_algorithm=signAlgo.encode(), linesep=b'\r\n', tlsrpt=False, debug_content=True)
+            d = dkim.DKIM(str(message).encode(), signature_algorithm=signAlgo.encode(), linesep=b'\r\n', tlsrpt=False)
             d.sign(selector.encode(),
                          domain.encode(),
                          privkey.encode(),
@@ -107,25 +102,26 @@ def main():
                          length=False,
                          preknownBodyHash=bodyHash.encode(),
                          infoOut=infoOut)
-            print('infoOut:', infoOut)
+            #print('infoOut:', infoOut, file=sys.stderr)
             signedData = infoOut['signedData']
             signature = infoOut['signature']
             dskey = domain + "_" + selector
             if dskey not in results:
                 results[dskey] = []
             results[dskey].append(MsgInfo(str(message), signedData, signature))
+    print(f'processed {message_counter} messages', file=sys.stderr)
 
     for dskey, msgInfos in results.items():
-        print(f'{dskey}:')
+        #print(f'{dskey}:', file=sys.stderr)
         outDirDsp = os.path.join(outDir, dskey)
         if len(msgInfos) < 2:
             continue
         for index, msgInfo in enumerate(msgInfos):
-            #print(f'  {msgInfo.fullMsg}')
-            print(f'  signedData: {msgInfo.signedData}')
-            print(f'  signature: {msgInfo.signature}')
+            #print(f'  {msgInfo.fullMsg}', file=sys.stderr)
+            #print(f'  signedData: {msgInfo.signedData}', file=sys.stderr)
+            #print(f'  signature: {msgInfo.signature}', file=sys.stderr)
             outDirDspMsgN = os.path.join(outDirDsp, str(index))
-            print(f'  outDirDspMsgN: {outDirDspMsgN}')
+            #print(f'  outDirDspMsgN: {outDirDspMsgN}', file=sys.stderr)
             if not os.path.exists(outDirDspMsgN):
                 os.makedirs(outDirDspMsgN)
             with open(os.path.join(outDirDspMsgN, 'fullMsg.txt'), 'w') as f:
