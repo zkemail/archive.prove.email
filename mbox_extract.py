@@ -29,6 +29,7 @@ lcD1AW8sD6HEpo0=
 
 
 def decode_dkim_header_field(dkimData: str):
+    print(f'decode_dkim_header_field: {dkimData}', file=sys.stderr)
     # decode a DKIM-Signature header field such as "v=1; a=rsa-sha256; d=example.net; s=brisbane;"
     # to a dictionary such as {'v': '1', 'a': 'rsa-sha256', 'd': 'example.net', 's': 'brisbane'}
     tagValuePairStrings = list(map(lambda x: x.strip(), dkimData.split(';')))
@@ -56,7 +57,11 @@ def main():
     args = parser.parse_args()
     print(f'processing {args.mbox_file}', file=sys.stderr)
     results: dict[str, list[MsgInfo]] = {}
+    maxResults = 10
     for index, message in enumerate(mailbox.mbox(args.mbox_file)):
+        if index >= maxResults:
+            break
+        print('----------------------------------------------------')
         dkimSigs = message.get_all('DKIM-Signature')
         if not dkimSigs:
             continue
@@ -65,7 +70,9 @@ def main():
             print(dkimRecord, file=sys.stderr)
             domain = dkimRecord['d']
             selector = dkimRecord['s']
+            print(dkimRecord['h'])
             includeHeaders = dkimRecord['h'].split(':')
+            includeHeaders = list(map(lambda x: x.strip(), includeHeaders))
             canonicalize = dkimRecord['c']
             signAlgo = dkimRecord['a']
             canonicalizeTuple = list(map(lambda x: x.encode(), canonicalize.split('/')))
@@ -97,8 +104,12 @@ def main():
                 results[dskey] = []
             results[dskey].append(MsgInfo(str(message), signedData, signature))
 
-        break
-
+    for dskey, msgInfos in results.items():
+        print(f'{dskey}:')
+        for msgInfo in msgInfos:
+            #print(f'  {msgInfo.fullMsg}')
+            print(f'  signedData: {msgInfo.signedData}')
+            print(f'  signature: {msgInfo.signature}')
 
 if __name__ == '__main__':
     main()
