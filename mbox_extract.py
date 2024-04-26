@@ -1,3 +1,4 @@
+import os
 import argparse
 import logging
 import sys
@@ -48,16 +49,25 @@ def decode_dkim_header_field(dkimData: str):
 class MsgInfo:
     fullMsg: str
     signedData: bytes
-    signature: str
+    signature: bytes
 
 
 def main():
     parser = argparse.ArgumentParser(description='extract domains and selectors from the DKIM-Signature header fields in an mbox file and output them in TSV format')
     parser.add_argument('mbox_file')
+    parser.add_argument('output_dir')
     args = parser.parse_args()
-    print(f'processing {args.mbox_file}', file=sys.stderr)
+    mbox_file = args.mbox_file
+    print(f'processing {mbox_file}', file=sys.stderr)
+    outDir = args.output_dir
+    if not os.path.exists(outDir):
+        os.makedirs(outDir)
+    # Create .gitignore file in outDir
+    gitignore_path = os.path.join(outDir, '.gitignore')
+    with open(gitignore_path, 'w') as f:
+        f.write('*\n')
     results: dict[str, list[MsgInfo]] = {}
-    maxResults = 10
+    maxResults = 100
     for index, message in enumerate(mailbox.mbox(args.mbox_file)):
         if index >= maxResults:
             break
@@ -79,7 +89,8 @@ def main():
             bodyHash = dkimRecord['bh']
             bodyLen = dkimRecord.get('l', None)
             if bodyLen:
-                raise NotImplementedError('body length not supported')
+                print('body length param not supported yet, skipping')
+                continue
 
             logging.basicConfig(format='>>>>>>>>>> %(levelname)s: %(message)s', level=logging.DEBUG)
             signlogger = logging.getLogger()
@@ -106,10 +117,24 @@ def main():
 
     for dskey, msgInfos in results.items():
         print(f'{dskey}:')
-        for msgInfo in msgInfos:
+        outDirDsp = os.path.join(outDir, dskey)
+        if len(msgInfos) < 2:
+            continue
+        for index, msgInfo in enumerate(msgInfos):
             #print(f'  {msgInfo.fullMsg}')
             print(f'  signedData: {msgInfo.signedData}')
             print(f'  signature: {msgInfo.signature}')
+            outDirDspMsgN = os.path.join(outDirDsp, str(index))
+            print(f'  outDirDspMsgN: {outDirDspMsgN}')
+            if not os.path.exists(outDirDspMsgN):
+                os.makedirs(outDirDspMsgN)
+            with open(os.path.join(outDirDspMsgN, 'fullMsg.txt'), 'w') as f:
+                f.write(msgInfo.fullMsg)
+            with open(os.path.join(outDirDspMsgN, 'signedData'), 'wb') as f:
+                f.write(msgInfo.signedData)
+            with open(os.path.join(outDirDspMsgN, 'signedData.sig'), 'wb') as f:
+                f.write(msgInfo.signature)
+
 
 if __name__ == '__main__':
     main()
