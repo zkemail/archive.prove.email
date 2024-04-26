@@ -52,6 +52,23 @@ class MsgInfo:
     signature: bytes
 
 
+def write_msg_info(msgInfo: MsgInfo, outDir: str, dskey: str, index: int):
+    outDirDsp = os.path.join(outDir, dskey)
+    #print(f'  {msgInfo.fullMsg}', file=sys.stderr)
+    #print(f'  signedData: {msgInfo.signedData}', file=sys.stderr)
+    #print(f'  signature: {msgInfo.signature}', file=sys.stderr)
+    outDirDspMsgN = os.path.join(outDirDsp, str(index))
+    #print(f'  outDirDspMsgN: {outDirDspMsgN}', file=sys.stderr)
+    if not os.path.exists(outDirDspMsgN):
+        os.makedirs(outDirDspMsgN)
+    with open(os.path.join(outDirDspMsgN, 'fullMsg.txt'), 'w') as f:
+        f.write(msgInfo.fullMsg)
+    with open(os.path.join(outDirDspMsgN, 'signedData'), 'wb') as f:
+        f.write(msgInfo.signedData)
+    with open(os.path.join(outDirDspMsgN, 'signedData.sig'), 'wb') as f:
+        f.write(msgInfo.signature)
+
+
 def main():
     parser = argparse.ArgumentParser(description='extract domains and selectors from the DKIM-Signature header fields in an mbox file and output them in TSV format')
     parser.add_argument('mbox_file')
@@ -67,7 +84,7 @@ def main():
     with open(gitignore_path, 'w') as f:
         f.write('*\n')
     results: dict[str, list[MsgInfo]] = {}
-    maxResults = 100
+    maxResults = 1000000000
     message_counter = 0
     for message in mailbox.mbox(args.mbox_file):
         if message_counter >= maxResults:
@@ -117,30 +134,16 @@ def main():
             #print('infoOut:', infoOut, file=sys.stderr)
             signedData = infoOut['signedData']
             dskey = domain + "_" + selector
-            if dskey not in results:
+            msg_info = MsgInfo(str(message), signedData, signature)
+            if dskey in results:
+                existing_results = results[dskey]
+                if len(existing_results) == 1:
+                    write_msg_info(existing_results[0], outDir, dskey, 0)
+                write_msg_info(msg_info, outDir, dskey, len(results[dskey]))
+            else:
                 results[dskey] = []
-            results[dskey].append(MsgInfo(str(message), signedData, signature))
+            results[dskey].append(msg_info)
     print(f'processed {message_counter} messages', file=sys.stderr)
-
-    for dskey, msgInfos in results.items():
-        #print(f'{dskey}:', file=sys.stderr)
-        outDirDsp = os.path.join(outDir, dskey)
-        if len(msgInfos) < 2:
-            continue
-        for index, msgInfo in enumerate(msgInfos):
-            #print(f'  {msgInfo.fullMsg}', file=sys.stderr)
-            #print(f'  signedData: {msgInfo.signedData}', file=sys.stderr)
-            #print(f'  signature: {msgInfo.signature}', file=sys.stderr)
-            outDirDspMsgN = os.path.join(outDirDsp, str(index))
-            #print(f'  outDirDspMsgN: {outDirDspMsgN}', file=sys.stderr)
-            if not os.path.exists(outDirDspMsgN):
-                os.makedirs(outDirDspMsgN)
-            with open(os.path.join(outDirDspMsgN, 'fullMsg.txt'), 'w') as f:
-                f.write(msgInfo.fullMsg)
-            with open(os.path.join(outDirDspMsgN, 'signedData'), 'wb') as f:
-                f.write(msgInfo.signedData)
-            with open(os.path.join(outDirDspMsgN, 'signedData.sig'), 'wb') as f:
-                f.write(msgInfo.signature)
 
 
 if __name__ == '__main__':
