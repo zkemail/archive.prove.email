@@ -2,6 +2,7 @@ import os
 import argparse
 import sys
 import mailbox
+import base64
 
 sys.path.insert(0, "dkimpy")
 import dkimpy.dkim as dkim
@@ -73,38 +74,39 @@ def main():
             break
         message_counter += 1
         #print(f'-----------------------{message_counter}-------------------------', file=sys.stderr)
-        dkimSigs = message.get_all('DKIM-Signature')
-        if not dkimSigs:
+        dkimSignatureFields = message.get_all('DKIM-Signature')
+        if not dkimSignatureFields:
             continue
-        for sig in dkimSigs:
-            dkimRecord = decode_dkim_header_field(sig)
-            domain = dkimRecord['d']
-            selector = dkimRecord['s']
-            includeHeaders = dkimRecord['h'].split(':')
+        for field in dkimSignatureFields:
+            tags = decode_dkim_header_field(field)
+            domain = tags['d']
+            selector = tags['s']
+            includeHeaders = tags['h'].split(':')
             includeHeaders = list(map(lambda x: x.strip(), includeHeaders))
-            canonicalize = dkimRecord['c']
-            signAlgo = dkimRecord['a']
+            canonicalize = tags['c']
+            signAlgo = tags['a']
             canonicalizeTuple = list(map(lambda x: x.encode(), canonicalize.split('/')))
-            bodyHash = dkimRecord['bh']
-            bodyLen = dkimRecord.get('l', None)
+            bodyHash = tags['bh']
+            bodyLen = tags.get('l', None)
             if bodyLen:
                 print('body length param not supported yet, skipping', file=sys.stderr)
                 continue
 
-            infoOut = {}
+            signature_base64 = ''.join(list(map(lambda x: x.strip(), tags['b'].splitlines())))
+            signature = base64.b64decode(signature_base64)
 
+            infoOut = {}
             d = dkim.DKIM(str(message).encode(), signature_algorithm=signAlgo.encode(), linesep=b'\r\n', tlsrpt=False)
             d.sign(selector.encode(),
-                         domain.encode(),
-                         privkey.encode(),
-                         canonicalize=canonicalizeTuple,
-                         include_headers=list(map(lambda x: x.encode(), includeHeaders)),
-                         length=False,
-                         preknownBodyHash=bodyHash.encode(),
-                         infoOut=infoOut)
+                   domain.encode(),
+                   privkey.encode(),
+                   canonicalize=canonicalizeTuple,
+                   include_headers=list(map(lambda x: x.encode(), includeHeaders)),
+                   length=False,
+                   preknownBodyHash=bodyHash.encode(),
+                   infoOut=infoOut)
             #print('infoOut:', infoOut, file=sys.stderr)
             signedData = infoOut['signedData']
-            signature = infoOut['signature']
             dskey = domain + "_" + selector
             if dskey not in results:
                 results[dskey] = []
