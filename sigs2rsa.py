@@ -1,6 +1,8 @@
 # https://blog.ploetzli.ch/2018/calculating-an-rsa-public-key-from-two-signatures/
 
 import binascii, hashlib
+import json
+import sys
 import sage.all
 
 
@@ -40,9 +42,9 @@ def find_n(*filenames):
         for e in [0x10001, 3, 17]:
             gcd_input = [(s**e - m) for (m, s) in pairs]
             n = sage.all.gcd(*gcd_input)
-            print(f'hashfn={hashfn.__name__}, n={n}, e={e}')
+            print(f'hashfn={hashfn.__name__}, n={n}, e={e}', file=sys.stderr)
             if n != 1:
-                return n
+                return (n, e)
     return 1
 
 
@@ -52,5 +54,5 @@ if __name__ == '__main__':
     parser.add_argument('file1', type=str)
     parser.add_argument('file2', type=str)
     args = parser.parse_args()
-    n = find_n(args.file1, args.file2)
-    print(hex(n))
+    n, e = find_n(args.file1, args.file2)
+    print(json.dumps({'n_hex': hex(n), 'e_hex': hex(e)}))
