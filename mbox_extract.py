@@ -76,6 +76,8 @@ def main():
             signlogger = logging.getLogger()
             signlogger.debug(f"signing...")
 
+            infoOut = {}
+
             d = dkim.DKIM(str(message).encode(), logger=signlogger, signature_algorithm=signAlgo.encode(), linesep=b'\r\n', tlsrpt=False, debug_content=True)
             sig = d.sign(selector.encode(),
                          domain.encode(),
@@ -83,7 +85,9 @@ def main():
                          canonicalize=canonicalizeTuple,
                          include_headers=list(map(lambda x: x.encode(), includeHeaders)),
                          length=False,
-                         preknownBodyHash=bodyHash.encode())
+                         preknownBodyHash=bodyHash.encode(),
+                         infoOut=infoOut)
+            print('infoOut:', infoOut)
 
         break
 
