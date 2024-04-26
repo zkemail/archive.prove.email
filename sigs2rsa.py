@@ -45,7 +45,7 @@ def find_n(*filenames):
             print(f'hashfn={hashfn.__name__}, n={n}, e={e}', file=sys.stderr)
             if n != 1:
                 return (n, e)
-    return 1
+    return 0, 0
 
 
 if __name__ == '__main__':
