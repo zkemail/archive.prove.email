@@ -45,8 +45,9 @@ def decode_dkim_header_field(dkimData: str):
 
 @dataclass
 class MsgInfo:
-    msg: str
-    sig: str
+    fullMsg: str
+    signedData: bytes
+    signature: str
 
 
 def main():
@@ -54,6 +55,7 @@ def main():
     parser.add_argument('mbox_file')
     args = parser.parse_args()
     print(f'processing {args.mbox_file}', file=sys.stderr)
+    results: dict[str, list[MsgInfo]] = {}
     for index, message in enumerate(mailbox.mbox(args.mbox_file)):
         dkimSigs = message.get_all('DKIM-Signature')
         if not dkimSigs:
@@ -79,7 +81,7 @@ def main():
             infoOut = {}
 
             d = dkim.DKIM(str(message).encode(), logger=signlogger, signature_algorithm=signAlgo.encode(), linesep=b'\r\n', tlsrpt=False, debug_content=True)
-            sig = d.sign(selector.encode(),
+            d.sign(selector.encode(),
                          domain.encode(),
                          privkey.encode(),
                          canonicalize=canonicalizeTuple,
@@ -88,6 +90,12 @@ def main():
                          preknownBodyHash=bodyHash.encode(),
                          infoOut=infoOut)
             print('infoOut:', infoOut)
+            signedData = infoOut['signedData']
+            signature = infoOut['signature']
+            dskey = domain + "_" + selector
+            if dskey not in results:
+                results[dskey] = []
+            results[dskey].append(MsgInfo(str(message), signedData, signature))
 
         break
 
