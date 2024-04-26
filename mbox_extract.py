@@ -47,7 +47,6 @@ def decode_dkim_header_field(dkimData: str):
 
 @dataclass
 class MsgInfo:
-    fullMsg: str
     signedData: bytes
     signature: bytes
 
@@ -61,11 +60,9 @@ def write_msg_info(msgInfo: MsgInfo, outDir: str, dskey: str, index: int):
     #print(f'  outDirDspMsgN: {outDirDspMsgN}', file=sys.stderr)
     if not os.path.exists(outDirDspMsgN):
         os.makedirs(outDirDspMsgN)
-    with open(os.path.join(outDirDspMsgN, 'fullMsg.txt'), 'w') as f:
-        f.write(msgInfo.fullMsg)
-    with open(os.path.join(outDirDspMsgN, 'signedData'), 'wb') as f:
+    with open(os.path.join(outDirDspMsgN, 'data'), 'wb') as f:
         f.write(msgInfo.signedData)
-    with open(os.path.join(outDirDspMsgN, 'signedData.sig'), 'wb') as f:
+    with open(os.path.join(outDirDspMsgN, 'data.sig'), 'wb') as f:
         f.write(msgInfo.signature)
 
 
@@ -123,7 +120,7 @@ def main():
                 continue
             signature_base64 = ''.join(list(map(lambda x: x.strip(), signature_tag.splitlines())))
             signature = base64.b64decode(signature_base64)
-            if len(signature)*8 != 512:
+            if len(signature) * 8 != 512:
                 print(f'skip non-512 bits signature', file=sys.stderr)
                 continue
             else:
@@ -142,7 +139,7 @@ def main():
             #print('infoOut:', infoOut, file=sys.stderr)
             signedData = infoOut['signedData']
             dskey = domain + "_" + selector
-            msg_info = MsgInfo(str(message), signedData, signature)
+            msg_info = MsgInfo(signedData, signature)
             if dskey in results:
                 existing_results = results[dskey]
                 if len(existing_results) == 1:
