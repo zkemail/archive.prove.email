@@ -105,6 +105,9 @@ def main():
                 continue
             canonicalize = tags['c']
             signAlgo = tags['a']
+            if signAlgo != 'rsa-sha256' and signAlgo != 'rsa-sha1':
+                print(f'skip signAlgo that is not rsa-sha256 or rsa-sha1: {signAlgo}', file=sys.stderr)
+                continue
             canonicalizeTuple = list(map(lambda x: x.encode(), canonicalize.split('/')))
             bodyHash = tags.get('bh', None)
             if not bodyHash:
@@ -120,6 +123,11 @@ def main():
                 continue
             signature_base64 = ''.join(list(map(lambda x: x.strip(), signature_tag.splitlines())))
             signature = base64.b64decode(signature_base64)
+            if len(signature)*8 != 512:
+                print(f'skip non-512 bits signature', file=sys.stderr)
+                continue
+            else:
+                print(f'signature len 64', file=sys.stderr)
 
             infoOut = {}
             d = dkim.DKIM(str(message).encode(), signature_algorithm=signAlgo.encode(), linesep=b'\r\n', tlsrpt=False)
