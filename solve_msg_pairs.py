@@ -2,6 +2,7 @@
 import argparse
 import os
 import subprocess
+import sys
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -11,7 +12,7 @@ if __name__ == '__main__':
     for d in os.listdir(rootdir):
         dspDir = os.path.join(rootdir, d)
         if os.path.isdir(dspDir):
-            print(dspDir)
+            print(dspDir, file=sys.stderr)
             msgDirs = os.listdir(dspDir)
             msgDirA = os.path.join(dspDir, msgDirs[0])
             msgDirB = os.path.join(dspDir, msgDirs[1])
@@ -27,5 +28,5 @@ if __name__ == '__main__':
                 msgDirA + "/data",
                 msgDirB + "/data",
             ]
-            print(" ".join(cmd))
+            print(" ".join(cmd), file=sys.stderr)
             subprocess.run(cmd)

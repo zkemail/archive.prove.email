@@ -104,7 +104,7 @@ def main():
             tags = decode_dkim_header_field(field)
             domain = tags['d']
             selector = tags['s']
-            print(f'domain: {domain}, selector: {selector}', file=sys.stderr)
+            #print(f'domain: {domain}, selector: {selector}', file=sys.stderr)
             # includeHeaders = tags['h'].split(':')
             # includeHeaders = list(map(lambda x: x.strip(), includeHeaders))
             # if 'received' in map(lambda x: x.lower(), includeHeaders):

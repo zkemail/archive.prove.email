@@ -5,7 +5,8 @@ import json
 from Crypto.PublicKey import RSA
 
 if __name__ == '__main__':
-    data = json.load(sys.stdin)
+  for line in sys.stdin:
+    data = json.loads(line)
     n_hex_str = data['n_hex']
     e_hex_str = data['e_hex']
     n = int(n_hex_str, 16)
