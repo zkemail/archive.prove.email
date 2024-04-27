@@ -80,7 +80,7 @@ def main():
     gitignore_path = os.path.join(outDir, '.gitignore')
     with open(gitignore_path, 'w') as f:
         f.write('*\n')
-    results: dict[str, list[MsgInfo]] = {}
+    #results: dict[str, list[MsgInfo]] = {}
     maxResults = 1000000000
     message_counter = 0
     for message in mailbox.mbox(args.mbox_file):
@@ -93,19 +93,19 @@ def main():
             continue
         for field in dkimSignatureFields:
             tags = decode_dkim_header_field(field)
-            domain = tags['d']
-            selector = tags['s']
-            includeHeaders = tags['h'].split(':')
-            includeHeaders = list(map(lambda x: x.strip(), includeHeaders))
-            if 'received' in map(lambda x: x.lower(), includeHeaders):
-                print('received in includeHeaders not supported, skipping', file=sys.stderr)
-                continue
-            canonicalize = tags['c']
+            #domain = tags['d']
+            #selector = tags['s']
+            # includeHeaders = tags['h'].split(':')
+            # includeHeaders = list(map(lambda x: x.strip(), includeHeaders))
+            # if 'received' in map(lambda x: x.lower(), includeHeaders):
+            #     #print('received in includeHeaders not supported, skipping', file=sys.stderr)
+            #     continue
+            #canonicalize = tags['c']
             signAlgo = tags['a']
             if signAlgo != 'rsa-sha256' and signAlgo != 'rsa-sha1':
                 print(f'skip signAlgo that is not rsa-sha256 or rsa-sha1: {signAlgo}', file=sys.stderr)
                 continue
-            canonicalizeTuple = list(map(lambda x: x.encode(), canonicalize.split('/')))
+            #canonicalizeTuple = list(map(lambda x: x.encode(), canonicalize.split('/')))
             bodyHash = tags.get('bh', None)
             if not bodyHash:
                 print('body hash not found, skipping', file=sys.stderr)
@@ -118,36 +118,44 @@ def main():
             if not signature_tag:
                 print('signature tag not found, skipping', file=sys.stderr)
                 continue
-            signature_base64 = ''.join(list(map(lambda x: x.strip(), signature_tag.splitlines())))
-            signature = base64.b64decode(signature_base64)
-            if len(signature) * 8 != 512:
-                print(f'skip non-512 bits signature', file=sys.stderr)
-                continue
-            else:
-                print(f'signature len 64', file=sys.stderr)
+            #signature_base64 = ''.join(list(map(lambda x: x.strip(), signature_tag.splitlines())))
+            #signature = base64.b64decode(signature_base64)
 
-            infoOut = {}
-            d = dkim.DKIM(str(message).encode(), signature_algorithm=signAlgo.encode(), linesep=b'\r\n', tlsrpt=False)
-            d.sign(selector.encode(),
-                   domain.encode(),
-                   privkey.encode(),
-                   canonicalize=canonicalizeTuple,
-                   include_headers=list(map(lambda x: x.encode(), includeHeaders)),
-                   length=False,
-                   preknownBodyHash=bodyHash.encode(),
-                   infoOut=infoOut)
+            #infoOut = {}
+            d = dkim.DKIM(str(message).encode(), debug_content=True)
+            # d.sign(selector.encode(),
+            #        domain.encode(),
+            #        privkey.encode(),
+            #        canonicalize=canonicalizeTuple,
+            #        include_headers=list(map(lambda x: x.encode(), includeHeaders)),
+            #        length=False,
+            #        preknownBodyHash=bodyHash.encode(),
+            #        infoOut=infoOut)
+
+            from dkimpy.dkim.dnsplug import get_txt_dnspython
+            try:
+                sig_result = d.verify(0, dnsfunc=get_txt_dnspython);
+            except dkim.ValidationError as e:
+                print(f'ValidationError: {e}', file=sys.stderr)
+                continue
+
+            print(f'sig_result: {sig_result}', file=sys.stderr)
+            if sig_result:
+                print('signature ok', file=sys.stderr)
+                sys.exit(0)
+
             #print('infoOut:', infoOut, file=sys.stderr)
-            signedData = infoOut['signedData']
-            dskey = domain + "_" + selector
-            msg_info = MsgInfo(signedData, signature)
-            if dskey in results:
-                existing_results = results[dskey]
-                if len(existing_results) == 1:
-                    write_msg_info(existing_results[0], outDir, dskey, 0)
-                write_msg_info(msg_info, outDir, dskey, len(results[dskey]))
-            else:
-                results[dskey] = []
-            results[dskey].append(msg_info)
+            #signedData = infoOut['signedData']
+            # dskey = domain + "_" + selector
+            # msg_info = MsgInfo(signedData, signature)
+            # if dskey in results:
+            #     existing_results = results[dskey]
+            #     if len(existing_results) == 1:
+            #         write_msg_info(existing_results[0], outDir, dskey, 0)
+            #     write_msg_info(msg_info, outDir, dskey, len(results[dskey]))
+            # else:
+            #     results[dskey] = []
+            # results[dskey].append(msg_info)
     print(f'processed {message_counter} messages', file=sys.stderr)
 
 
