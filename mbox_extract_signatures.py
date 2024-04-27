@@ -70,6 +70,8 @@ def main():
     parser = argparse.ArgumentParser(description='extract domains and selectors from the DKIM-Signature header fields in an mbox file and output them in TSV format')
     parser.add_argument('mbox_file')
     parser.add_argument('output_dir')
+    parser.add_argument('--skip', type=int, default=0, help='skip the first N messages')
+    parser.add_argument('--take', type=int, default=0, help='take the first N messages (0 = all remaining)')
     args = parser.parse_args()
     mbox_file = args.mbox_file
     print(f'processing {mbox_file}', file=sys.stderr)
@@ -80,21 +82,29 @@ def main():
     gitignore_path = os.path.join(outDir, '.gitignore')
     with open(gitignore_path, 'w') as f:
         f.write('*\n')
-    #results: dict[str, list[MsgInfo]] = {}
-    maxResults = 1000000000
+    results: dict[str, list[MsgInfo]] = {}
     message_counter = 0
-    for message in mailbox.mbox(args.mbox_file):
-        if message_counter >= maxResults:
-            break
+    print(f'processing {args.mbox_file}', file=sys.stderr)
+    mb = mailbox.mbox(args.mbox_file)
+    print(f'loaded {args.mbox_file}', file=sys.stderr)
+    skip = args.skip
+    take = args.take
+    for message in mb:
         message_counter += 1
-        #print(f'-----------------------{message_counter}-------------------------', file=sys.stderr)
+        if message_counter <= skip:
+            continue
+        if take > 0 and message_counter > skip + take:
+            break
+
+        print(f'-----------------------{message_counter}-------------------------', file=sys.stderr)
         dkimSignatureFields = message.get_all('DKIM-Signature')
         if not dkimSignatureFields:
             continue
         for field in dkimSignatureFields:
             tags = decode_dkim_header_field(field)
-            #domain = tags['d']
-            #selector = tags['s']
+            domain = tags['d']
+            selector = tags['s']
+            print(f'domain: {domain}, selector: {selector}', file=sys.stderr)
             # includeHeaders = tags['h'].split(':')
             # includeHeaders = list(map(lambda x: x.strip(), includeHeaders))
             # if 'received' in map(lambda x: x.lower(), includeHeaders):
@@ -118,10 +128,10 @@ def main():
             if not signature_tag:
                 print('signature tag not found, skipping', file=sys.stderr)
                 continue
-            #signature_base64 = ''.join(list(map(lambda x: x.strip(), signature_tag.splitlines())))
-            #signature = base64.b64decode(signature_base64)
+            signature_base64 = ''.join(list(map(lambda x: x.strip(), signature_tag.splitlines())))
+            signature = base64.b64decode(signature_base64)
 
-            #infoOut = {}
+            infoOut = {}
             d = dkim.DKIM(str(message).encode(), debug_content=True)
             # d.sign(selector.encode(),
             #        domain.encode(),
@@ -134,29 +144,33 @@ def main():
 
             from dkimpy.dkim.dnsplug import get_txt_dnspython
             try:
-                sig_result = d.verify(0, dnsfunc=get_txt_dnspython);
+                sig_result = d.verify(0, dnsfunc=get_txt_dnspython, infoOut=infoOut)
             except dkim.ValidationError as e:
                 print(f'ValidationError: {e}', file=sys.stderr)
                 continue
+            print('infoOut:', infoOut, file=sys.stderr)
+            try:
+                rsa_digest = infoOut['rsa_digest']
+            except KeyError:
+                print('rsa_digest not found, skipping', file=sys.stderr)
+                continue
 
             print(f'sig_result: {sig_result}', file=sys.stderr)
-            if sig_result:
-                print('signature ok', file=sys.stderr)
-                sys.exit(0)
+            if not sig_result:
+                print('signature not ok, skipping', file=sys.stderr)
+                continue
 
-            #print('infoOut:', infoOut, file=sys.stderr)
-            #signedData = infoOut['signedData']
-            # dskey = domain + "_" + selector
-            # msg_info = MsgInfo(signedData, signature)
-            # if dskey in results:
-            #     existing_results = results[dskey]
-            #     if len(existing_results) == 1:
-            #         write_msg_info(existing_results[0], outDir, dskey, 0)
-            #     write_msg_info(msg_info, outDir, dskey, len(results[dskey]))
-            # else:
-            #     results[dskey] = []
-            # results[dskey].append(msg_info)
-    print(f'processed {message_counter} messages', file=sys.stderr)
+            print('signature ok', file=sys.stderr)
+            dskey = domain + "_" + selector
+            msg_info = MsgInfo(rsa_digest, signature)
+            if dskey in results:
+                existing_results = results[dskey]
+                if len(existing_results) == 1:
+                    write_msg_info(existing_results[0], outDir, dskey, 0)
+                write_msg_info(msg_info, outDir, dskey, len(results[dskey]))
+            else:
+                results[dskey] = []
+            results[dskey].append(msg_info)
 
 
 if __name__ == '__main__':
