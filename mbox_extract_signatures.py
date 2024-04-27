@@ -150,9 +150,9 @@ def main():
                 continue
             print('infoOut:', infoOut, file=sys.stderr)
             try:
-                rsa_digest = infoOut['rsa_digest']
+                signed_data = infoOut['signed_data']
             except KeyError:
-                print('rsa_digest not found, skipping', file=sys.stderr)
+                print('signed_data not found, skipping', file=sys.stderr)
                 continue
 
             print(f'sig_result: {sig_result}', file=sys.stderr)
@@ -162,7 +162,7 @@ def main():
 
             print('signature ok', file=sys.stderr)
             dskey = domain + "_" + selector
-            msg_info = MsgInfo(rsa_digest, signature)
+            msg_info = MsgInfo(signed_data, signature)
             if dskey in results:
                 existing_results = results[dskey]
                 if len(existing_results) == 1:
