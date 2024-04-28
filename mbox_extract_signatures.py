@@ -149,6 +149,7 @@ def main():
                 print(f'ValidationError: {e}', file=sys.stderr)
                 continue
             print('infoOut:', infoOut, file=sys.stderr)
+            body_hash_mismatch = infoOut.get('body_hash_mismatch', False)
             try:
                 signed_data = infoOut['signed_data']
             except KeyError:
@@ -161,7 +162,7 @@ def main():
                 continue
 
             print('signature ok', file=sys.stderr)
-            dskey = domain + "_" + selector
+            dskey = (body_hash_mismatch and "BHM_" or "") + domain + "_" + selector
             msg_info = MsgInfo(signed_data, signature)
             if dskey in results:
                 existing_results = results[dskey]
