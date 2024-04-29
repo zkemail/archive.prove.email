@@ -1,3 +1,5 @@
+This repository contains a proof of concept for determining the public RSA key from a pair of email messages which are signed with the same private key.
+
 ## Setup
 
 ### Build the Docker image
@@ -15,23 +17,23 @@ pip3 install pycryptodome
 ## Extract signed data from an mbox file
 
 ```bash
-python3 mbox_extract_signatures.py MBOX_FILE OUTPUT_DIR
+python3 mbox_extract_signatures.py MBOX_FILE DATA_DIR
 ```
 
-This command extracts signed data and signatures from each message in an mbox file and puts it a directory structure:
+This command extracts signed data (canonicalized headers) and signatures from each message in an mbox file and puts it a directory structure:
 
 ```
-output_dir/domainX/selectorY/messageZ/data
-output_dir/domainX/selectorY/messageZ/data.sig
+data_dir/domainX/selectorY/messageZ/data
+data_dir/domainX/selectorY/messageZ/data.sig
 ...
 ```
 
-## Find RSA keys from signed data
+## Find public RSA keys from data and signatures
 
-This command finds RSA keys from signed data and signatures in the directory structure created by `mbox_extract_signatures.py`.
+This command finds public RSA keys from signed data and signatures of pairs of messages in the directory structure created by `mbox_extract_signatures.py`.
 
 ```bash
-python3 solve_msg_pairs.py OUTPUT_DIR
+python3 solve_msg_pairs.py DATA_DIR
 ```
 
 Example output:
