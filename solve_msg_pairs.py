@@ -1,8 +1,11 @@
 #!.venv/bin/python3
 import argparse
+import binascii
+import json
 import os
 import subprocess
 import sys
+from Crypto.PublicKey import RSA
 
 
 def subdirs(d):
@@ -39,4 +42,16 @@ if __name__ == '__main__':
                 msgDirB + "/data",
             ]
             print(" ".join(cmd), file=sys.stderr)
-            subprocess.run(cmd)
+            output = subprocess.check_output(cmd)
+            data = json.loads(output)
+            n_hex_str = data['n_hex']
+            e_hex_str = data['e_hex']
+            n = int(n_hex_str, 16)
+            e = int(e_hex_str, 16)
+            print(hex(n))
+            print(hex(e))
+            keyPEM = RSA.construct((n, e)).exportKey(format='PEM')
+            print('PEM:', keyPEM.decode('utf-8'))
+            keyDER = RSA.importKey(keyPEM).exportKey(format='DER')
+            keyDER_base64 = binascii.b2a_base64(keyDER).decode('utf-8')
+            print('DER:', keyDER_base64)
