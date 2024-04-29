@@ -1,3 +1,17 @@
+## Extract signed data from an mbox file
+
+```bash
+python3 mbox_extract_signatures.py MBOX_FILE OUTPUT_DIR
+```
+
+This command extracts signed data and signatures from each message in an mbox file and puts it a directory structure:
+
+```
+output_dir/domainX/selectorY/messageZ/data
+output_dir/domainX/selectorY/messageZ/data.sig
+...
+```
+
 ## Using Docker
 
 ### Install
@@ -63,4 +77,3 @@ singular_4.3.1-p3+ds-1_amd64.deb
 ```bash
 sage sigs2rsa.py FILE1 FILE2
 ```
-

@@ -32,14 +32,13 @@ class MsgInfo:
     signature: bytes
 
 
-def write_msg_info(msgInfo: MsgInfo, outDir: str, dskey: str, index: int):
-    outDirDsp = os.path.join(outDir, dskey)
-    outDirDspMsgN = os.path.join(outDirDsp, str(index))
-    if not os.path.exists(outDirDspMsgN):
-        os.makedirs(outDirDspMsgN)
-    with open(os.path.join(outDirDspMsgN, 'data'), 'wb') as f:
+def write_msg_info(msgInfo: MsgInfo, outDir: str, domain: str, selector: str, index: int):
+    outDir = os.path.join(outDir, domain, selector, str(index))
+    if not os.path.exists(outDir):
+        os.makedirs(outDir)
+    with open(os.path.join(outDir, 'data'), 'wb') as f:
         f.write(msgInfo.signedData)
-    with open(os.path.join(outDirDspMsgN, 'data.sig'), 'wb') as f:
+    with open(os.path.join(outDir, 'data.sig'), 'wb') as f:
         f.write(msgInfo.signature)
 
 
@@ -112,6 +111,9 @@ def main():
                 print(f'WARNING: ValidationError: {e}', file=sys.stderr)
                 continue
             body_hash_mismatch = infoOut.get('body_hash_mismatch', False)
+            if body_hash_mismatch:
+                print('INFO: body hash mismatch', file=sys.stderr)
+
             try:
                 signed_data = infoOut['signed_data']
             except KeyError:
@@ -120,14 +122,14 @@ def main():
                 sys.exit(1)
 
             print(f'register message info for {domain} and {selector}', file=sys.stderr)
-            dskey = (body_hash_mismatch and "BHM_" or "") + domain + "_" + selector
+            dskey = domain + "_" + selector
             msg_info = MsgInfo(signed_data, signature)
             if dskey in results:
                 existing_results = results[dskey]
                 print(f'store message info for {dskey}', file=sys.stderr)
                 if len(existing_results) == 1:
-                    write_msg_info(existing_results[0], outDir, dskey, 0)
-                write_msg_info(msg_info, outDir, dskey, len(results[dskey]))
+                    write_msg_info(existing_results[0], outDir, domain, selector, 0)
+                write_msg_info(msg_info, outDir, domain, selector, len(results[dskey]))
             else:
                 results[dskey] = []
             results[dskey].append(msg_info)
