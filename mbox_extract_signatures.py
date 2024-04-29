@@ -145,28 +145,25 @@ def main():
 
             from dkimpy.dkim.dnsplug import get_txt_dnspython
             try:
-                sig_result = d.verify(0, dnsfunc=get_txt_dnspython, infoOut=infoOut)
+                d.verify(0, dnsfunc=get_txt_dnspython, infoOut=infoOut)
             except dkim.ValidationError as e:
-                print(f'ValidationError: {e}', file=sys.stderr)
+                print(f'WARNING: ValidationError: {e}', file=sys.stderr)
                 continue
-            print('infoOut:', infoOut, file=sys.stderr)
+            #print('infoOut:', infoOut, file=sys.stderr)
             body_hash_mismatch = infoOut.get('body_hash_mismatch', False)
             try:
                 signed_data = infoOut['signed_data']
             except KeyError:
-                print('signed_data not found, skipping', file=sys.stderr)
-                continue
+                print('signed_data not found', file=sys.stderr)
+                print(f'infoOut: {infoOut}', file=sys.stderr)
+                sys.exit(1)
 
-            print(f'sig_result: {sig_result}', file=sys.stderr)
-            if not sig_result:
-                print('signature not ok, skipping', file=sys.stderr)
-                continue
-
-            print('signature ok', file=sys.stderr)
+            print(f'register message info for {domain} and {selector}', file=sys.stderr)
             dskey = (body_hash_mismatch and "BHM_" or "") + domain + "_" + selector
             msg_info = MsgInfo(signed_data, signature)
             if dskey in results:
                 existing_results = results[dskey]
+                print(f'store message info for {dskey}', file=sys.stderr)
                 if len(existing_results) == 1:
                     write_msg_info(existing_results[0], outDir, dskey, 0)
                 write_msg_info(msg_info, outDir, dskey, len(results[dskey]))
