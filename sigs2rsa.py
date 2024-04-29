@@ -27,6 +27,14 @@ def message_sig_pair(size_bytes, data, signature, hashfn):
     return (sage.all.Integer('0x' + hash_pad(size_bytes, data, hashfn)), sage.all.Integer('0x' + binascii.hexlify(signature).decode('utf-8')))
 
 
+def remove_small_prime_factors(n):
+    for p in sage.all.primes(100):
+        while n % p == 0:
+            print(f'removing small prime factor {p}', file=sys.stderr)
+            n = n // p
+    return n
+
+
 def find_n(*filenames):
     data_raw = []
     signature_raw = []
@@ -42,6 +50,7 @@ def find_n(*filenames):
         for e in [0x10001, 3, 17]:
             gcd_input = [(s**e - m) for (m, s) in pairs]
             n = sage.all.gcd(*gcd_input)
+            n = remove_small_prime_factors(n)
             print(f'hashfn={hashfn.__name__}, n={n}, e={e}', file=sys.stderr)
             if n != 1:
                 return (n, e)
