@@ -1,3 +1,4 @@
+#!.venv/bin/python3
 import os
 import argparse
 import sys
@@ -60,7 +61,7 @@ def main():
     results: dict[str, list[MsgInfo]] = {}
     message_counter = 0
     mb = mailbox.mbox(args.mbox_file)
-    print(f'loaded {args.mbox_file}', file=sys.stderr)
+    print(f'loaded {mbox_file}', file=sys.stderr)
     skip = args.skip
     take = args.take
     for message in mb:
@@ -73,7 +74,7 @@ def main():
         print(f'processing message {message_counter}', file=sys.stderr)
         dkimSignatureFields = message.get_all('DKIM-Signature')
         if not dkimSignatureFields:
-            print('no DKIM-Signature header field found, skipping', file=sys.stderr)
+            print('INFO: no DKIM-Signature header field found, skipping', file=sys.stderr)
             continue
         for field in dkimSignatureFields:
             tags = decode_dkim_header_field(field)
