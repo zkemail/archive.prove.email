@@ -133,7 +133,12 @@ def main():
             signature = base64.b64decode(signature_base64)
 
             infoOut = {}
-            d = dkim.DKIM(str(message).encode(), debug_content=True)
+            try:
+                d = dkim.DKIM(str(message).encode(), debug_content=True)
+            except UnicodeEncodeError as e:
+                print(f'WARNING: UnicodeEncodeError: {e}', file=sys.stderr)
+                continue
+
             # d.sign(selector.encode(),
             #        domain.encode(),
             #        privkey.encode(),
