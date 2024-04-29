@@ -49,7 +49,11 @@ def find_n(*filenames):
         pairs = [message_sig_pair(size_bytes, m, s, hashfn) for (m, s) in zip(data_raw, signature_raw)]
         for e in [0x10001, 3, 17]:
             gcd_input = [(s**e - m) for (m, s) in pairs]
+
+            starttime = sage.all.cputime()
             n = sage.all.gcd(*gcd_input)
+            print(f'sage.all.gcd cpu time={sage.all.cputime(starttime)}', file=sys.stderr)
+
             n = remove_small_prime_factors(n)
             print(f'hashfn={hashfn.__name__}, n={n}, e={e}', file=sys.stderr)
             if n != 1:
