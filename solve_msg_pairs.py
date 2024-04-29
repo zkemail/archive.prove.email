@@ -21,7 +21,8 @@ if __name__ == '__main__':
         domainPath = os.path.join(rootdir, d)
         for s in subdirs(domainPath):
             dspPath = os.path.join(domainPath, s)
-            print(dspPath, file=sys.stderr)
+            print()
+            print(f'processing {dspPath}', file=sys.stderr)
             msgDirs = subdirs(dspPath)
             if len(msgDirs) < 2:
                 print(f'expected at least 2 message directories in {dspPath}', file=sys.stderr)
@@ -41,17 +42,21 @@ if __name__ == '__main__':
                 msgDirA + "/data",
                 msgDirB + "/data",
             ]
-            print(" ".join(cmd), file=sys.stderr)
+            print("+ " + " ".join(cmd), file=sys.stderr)
             output = subprocess.check_output(cmd)
             data = json.loads(output)
-            n_hex_str = data['n_hex']
-            e_hex_str = data['e_hex']
-            n = int(n_hex_str, 16)
-            e = int(e_hex_str, 16)
-            print(hex(n))
-            print(hex(e))
-            keyPEM = RSA.construct((n, e)).exportKey(format='PEM')
-            print('PEM:', keyPEM.decode('utf-8'))
-            keyDER = RSA.importKey(keyPEM).exportKey(format='DER')
-            keyDER_base64 = binascii.b2a_base64(keyDER).decode('utf-8')
-            print('DER:', keyDER_base64)
+            n = int(data['n_hex'], 16)
+            e = int(data['e_hex'], 16)
+            if (n < 2):
+                print(f'no large GCD found for {dspPath}', file=sys.stderr)
+                continue
+            try:
+                print(f'found large GCD for {dspPath}', file=sys.stderr)
+                keyPEM = RSA.construct((n, e)).exportKey(format='PEM')
+                print('PEM:', keyPEM.decode('utf-8'))
+                keyDER = RSA.importKey(keyPEM).exportKey(format='DER')
+                keyDER_base64 = binascii.b2a_base64(keyDER).decode('utf-8')
+                print('DER:', keyDER_base64)
+            except ValueError as e:
+                print(f'ValueError: {e}', file=sys.stderr)
+                continue
