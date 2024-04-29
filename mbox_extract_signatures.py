@@ -10,6 +10,7 @@ from dataclasses import dataclass
 
 # https://russell.ballestrini.net/quickstart-to-dkim-sign-email-with-python/
 
+
 def decode_dkim_header_field(dkimData: str):
     # decode a DKIM-Signature header field such as "v=1; a=rsa-sha256; d=example.net; s=brisbane;"
     # to a dictionary such as {'v': '1', 'a': 'rsa-sha256', 'd': 'example.net', 's': 'brisbane'}
@@ -59,7 +60,6 @@ def main():
         f.write('*\n')
     results: dict[str, list[MsgInfo]] = {}
     message_counter = 0
-    print(f'processing {args.mbox_file}', file=sys.stderr)
     mb = mailbox.mbox(args.mbox_file)
     print(f'loaded {args.mbox_file}', file=sys.stderr)
     skip = args.skip
@@ -71,7 +71,7 @@ def main():
         if take > 0 and message_counter > skip + take:
             break
 
-        print(f'-----------------------{message_counter}-------------------------', file=sys.stderr)
+        print(f'processing message {message_counter}', file=sys.stderr)
         dkimSignatureFields = message.get_all('DKIM-Signature')
         if not dkimSignatureFields:
             print('no DKIM-Signature header field found, skipping', file=sys.stderr)
@@ -82,19 +82,19 @@ def main():
             selector = tags['s']
             signAlgo = tags['a']
             if signAlgo != 'rsa-sha256' and signAlgo != 'rsa-sha1':
-                print(f'skip signAlgo that is not rsa-sha256 or rsa-sha1: {signAlgo}', file=sys.stderr)
+                print(f'WARNING: skip signAlgo that is not rsa-sha256 or rsa-sha1: {signAlgo}', file=sys.stderr)
                 continue
             bodyHash = tags.get('bh', None)
             if not bodyHash:
-                print('body hash not found, skipping', file=sys.stderr)
+                print('WARNING: body hash tag (bh) not found, skipping', file=sys.stderr)
                 continue
             bodyLen = tags.get('l', None)
             if bodyLen:
-                print('body length param not supported yet, skipping', file=sys.stderr)
+                print('WARNING: body length tag (l) not supported yet, skipping', file=sys.stderr)
                 continue
             signature_tag = tags.get('b', None)
             if not signature_tag:
-                print('signature tag not found, skipping', file=sys.stderr)
+                print('WARNING: signature tag (b) not found, skipping', file=sys.stderr)
                 continue
             signature_base64 = ''.join(list(map(lambda x: x.strip(), signature_tag.splitlines())))
             signature = base64.b64decode(signature_base64)
@@ -115,7 +115,7 @@ def main():
             try:
                 signed_data = infoOut['signed_data']
             except KeyError:
-                print('signed_data not found', file=sys.stderr)
+                print('Error: signed_data not found', file=sys.stderr)
                 print(f'infoOut: {infoOut}', file=sys.stderr)
                 sys.exit(1)
 
