@@ -99,6 +99,7 @@ def main():
         print(f'-----------------------{message_counter}-------------------------', file=sys.stderr)
         dkimSignatureFields = message.get_all('DKIM-Signature')
         if not dkimSignatureFields:
+            print('no DKIM-Signature header field found, skipping', file=sys.stderr)
             continue
         for field in dkimSignatureFields:
             tags = decode_dkim_header_field(field)
