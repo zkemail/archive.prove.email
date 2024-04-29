@@ -55,7 +55,8 @@ def find_n(*filenames):
             print(f'sage.all.gcd cpu time={sage.all.cputime(starttime)}', file=sys.stderr)
 
             n = remove_small_prime_factors(n)
-            print(f'hashfn={hashfn.__name__}, n={n}, e={e}', file=sys.stderr)
+            print(f'hashfn={hashfn.__name__}, n=({n.nbits()} bit number), e={e}', file=sys.stderr)
+
             if n != 1:
                 return (n, e)
     return 0, 0
