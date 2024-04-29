@@ -19,6 +19,7 @@ if __name__ == '__main__':
             cmd = [
                 "docker",
                 "run",
+                "--rm",
                 "--mount",
                 f"type=bind,source={os.getcwd()},target=/app",
                 "--workdir=/app",
