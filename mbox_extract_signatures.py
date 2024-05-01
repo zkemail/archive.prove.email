@@ -60,7 +60,7 @@ def main():
         f.write('*\n')
     results: dict[str, list[MsgInfo]] = {}
     message_counter = 0
-    mb = mailbox.mbox(args.mbox_file)
+    mb = mailbox.mbox(args.mbox_file, create=False)
     print(f'loaded {mbox_file}', file=sys.stderr)
     skip = args.skip
     take = args.take
