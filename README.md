@@ -23,9 +23,13 @@ pip3 install pycryptodome
 
 ## Extract signed data from an mbox file
 
+Example:
+
 ```bash
-python3 mbox_extract_signatures.py MBOX_FILE DATA_DIR
+python3 mbox_extract_signatures.py inbox.mbox mbox_exracted_dir
 ```
+
+Run `python3 mbox_extract_signatures.py --help` for more information.
 
 This command extracts signed data (canonicalized headers) and signatures from each message in an mbox file and puts it a directory structure:
 
@@ -39,9 +43,13 @@ data_dir/domainX/selectorY/messageZ/data.sig
 
 This command finds public RSA keys from signed data and signatures of pairs of messages in the directory structure created by `mbox_extract_signatures.py`.
 
+Example:
+
 ```bash
-python3 solve_msg_pairs.py DATA_DIR --debug
+python3 solve_msg_pairs.py mbox_exracted_dir --debug --threads 4 --output-format=DER
 ```
+
+Run `python3 solve_msg_pairs.py --help` for more information.
 
 Example output:
 
