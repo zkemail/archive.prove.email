@@ -121,8 +121,6 @@ def main():
     parser = argparse.ArgumentParser(description='extract domains and selectors from the DKIM-Signature header fields in an mbox file and output them in TSV format')
     parser.add_argument('mbox_file')
     parser.add_argument('--debug', action="store_const", dest="loglevel", const=logging.DEBUG, default=logging.INFO)
-    parser.add_argument('--skip', type=int, default=0, help='skip the first N messages')
-    parser.add_argument('--take', type=int, default=0, help='take the first N messages (0 = all remaining)')
     parser.add_argument('--threads', type=int, default=1)
     args = parser.parse_args()
 
@@ -135,15 +133,8 @@ def main():
     message_counter = 0
     mb = mailbox.mbox(args.mbox_file, create=False)
     logging.info(f'loaded {mbox_file}')
-    skip = args.skip
-    take = args.take
     for message in mb:
         message_counter += 1
-        if message_counter <= skip:
-            continue
-        if take > 0 and message_counter > skip + take:
-            break
-
         logging.info(f'processing message {message_counter}')
         dkimSignatureFields = message.get_all('DKIM-Signature')
         if not dkimSignatureFields:
