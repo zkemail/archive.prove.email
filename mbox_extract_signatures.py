@@ -110,8 +110,8 @@ def solve_msg_pairs(results: dict[Dsp, list[MsgInfo]], threads: int):
             msg1 = msg_infos[0]
             msg2 = msg_infos[1]
             dsp_queue.put((dsp, msg1, msg2))
+    logging.debug(f'starting {threads} threads')
     for _i in range(threads):
-        logging.debug(f'starting thread {_i}')
         t_in = threading.Thread(target=read_and_resolve_worker, daemon=True)
         t_in.start()
     dsp_queue.join()
@@ -130,11 +130,11 @@ def main():
     logging.basicConfig(level=args.loglevel, format='%(name)s: %(levelname)s: %(message)s')
 
     mbox_file = args.mbox_file
-    print(f'processing {mbox_file}', file=sys.stderr)
+    logging.info(f'processing {mbox_file}')
     results: dict[Dsp, list[MsgInfo]] = {}
     message_counter = 0
     mb = mailbox.mbox(args.mbox_file, create=False)
-    print(f'loaded {mbox_file}', file=sys.stderr)
+    logging.info(f'loaded {mbox_file}')
     skip = args.skip
     take = args.take
     for message in mb:
@@ -144,10 +144,10 @@ def main():
         if take > 0 and message_counter > skip + take:
             break
 
-        print(f'processing message {message_counter}', file=sys.stderr)
+        logging.info(f'processing message {message_counter}')
         dkimSignatureFields = message.get_all('DKIM-Signature')
         if not dkimSignatureFields:
-            print('INFO: no DKIM-Signature header field found, skipping', file=sys.stderr)
+            logging.info('INFO: no DKIM-Signature header field found, skipping')
             continue
         for field in dkimSignatureFields:
             tags = decode_dkim_header_field(field)
@@ -155,19 +155,19 @@ def main():
             selector = tags['s']
             signAlgo = tags['a']
             if signAlgo != 'rsa-sha256' and signAlgo != 'rsa-sha1':
-                print(f'WARNING: skip signAlgo that is not rsa-sha256 or rsa-sha1: {signAlgo}', file=sys.stderr)
+                logging.warning(f'skip signAlgo that is not rsa-sha256 or rsa-sha1: {signAlgo}')
                 continue
             bodyHash = tags.get('bh', None)
             if not bodyHash:
-                print('WARNING: body hash tag (bh) not found, skipping', file=sys.stderr)
+                logging.warning('body hash tag (bh) not found, skipping')
                 continue
             bodyLen = tags.get('l', None)
             if bodyLen:
-                print('WARNING: body length tag (l) not supported yet, skipping', file=sys.stderr)
+                logging.warning('body length tag (l) not supported yet, skipping')
                 continue
             signature_tag = tags.get('b', None)
             if not signature_tag:
-                print('WARNING: signature tag (b) not found, skipping', file=sys.stderr)
+                logging.warning('signature tag (b) not found, skipping')
                 continue
             signature_base64 = ''.join(list(map(lambda x: x.strip(), signature_tag.splitlines())))
             signature = base64.b64decode(signature_base64)
@@ -176,31 +176,29 @@ def main():
             try:
                 d = dkim.DKIM(str(message).encode(), debug_content=True)
             except UnicodeEncodeError as e:
-                print(f'WARNING: UnicodeEncodeError: {e}', file=sys.stderr)
+                logging.warning(f'UnicodeEncodeError: {e}')
                 continue
 
             try:
                 d.verify(0, infoOut=infoOut)  # type: ignore
             except dkim.ValidationError as e:
-                print(f'WARNING: ValidationError: {e}', file=sys.stderr)
+                logging.warning(f'ValidationError: {e}')
                 continue
             body_hash_mismatch = infoOut.get('body_hash_mismatch', False)
             if body_hash_mismatch:
-                print('INFO: body hash mismatch', file=sys.stderr)
+                logging.info('body hash mismatch')
 
             try:
                 signed_data = infoOut['signed_data']
             except KeyError:
-                print('Error: signed_data not found', file=sys.stderr)
-                print(f'infoOut: {infoOut}', file=sys.stderr)
+                logging.error(f'signed_data not found, infoOut: {infoOut}')
                 sys.exit(1)
 
-            print(f'register message info for {domain} and {selector}', file=sys.stderr)
             dsp = Dsp(domain, selector)
+            logging.info(f'register message info for {dsp}')
             msg_info = MsgInfo(signed_data, signature)
             if not dsp in results:
                 results[dsp] = []
-            print(f'store message info for {dsp}', file=sys.stderr)
             results[dsp].append(msg_info)
 
     solve_msg_pairs(results, args.threads)
