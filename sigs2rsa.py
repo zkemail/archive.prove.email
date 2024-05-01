@@ -37,18 +37,13 @@ def remove_small_prime_factors(n):
     return n
 
 
-def find_n(*filenames):
-    data_raw = []
-    signature_raw = []
-    for fn in filenames:
-        data_raw.append(open(fn, 'rb').read())
-        signature_raw.append(open(fn + '.sig', 'rb').read())
-    size_bytes = len(signature_raw[0])
-    if any(len(s) != size_bytes for s in signature_raw):
+def find_n(messages: list[bytes], signatures: list[bytes]):
+    size_bytes = len(signatures[0])
+    if any(len(s) != size_bytes for s in signatures):
         raise Exception("All signature sizes must be identical")
 
     for hashfn in [hashlib.sha256, hashlib.sha512]:
-        pairs = [message_sig_pair(size_bytes, m, s, hashfn) for (m, s) in zip(data_raw, signature_raw)]
+        pairs = [message_sig_pair(size_bytes, m, s, hashfn) for (m, s) in zip(messages, signatures)]
         for e in [0x10001, 3, 17]:
             logging.debug(f'solving for hashfn={hashfn.__name__}, e={e}')
             gcd_input = [(s**e - m) for (m, s) in pairs]
@@ -68,11 +63,17 @@ def find_n(*filenames):
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('file1', type=str)
-    parser.add_argument('file2', type=str)
+    parser.add_argument('data1_base64')
+    parser.add_argument('signature1_base64')
+    parser.add_argument('data2_base64')
+    parser.add_argument('signature2_base64')
     parser.add_argument('--loglevel', type=int, default=logging.INFO)
     args = parser.parse_args()
+    data1 = binascii.a2b_base64(args.data1_base64)
+    data2 = binascii.a2b_base64(args.data2_base64)
+    signature1 = binascii.a2b_base64(args.signature1_base64)
+    signature2 = binascii.a2b_base64(args.signature2_base64)
     logging.root.name = os.path.basename(__file__)
     logging.basicConfig(level=args.loglevel, format='%(name)s: %(levelname)s: %(message)s')
-    n, e = find_n(args.file1, args.file2)
+    n, e = find_n([data1, data2], [signature1, signature2])
     print(json.dumps({'n_hex': hex(n), 'e_hex': hex(e)}))
