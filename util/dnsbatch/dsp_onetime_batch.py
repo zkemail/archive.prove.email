@@ -41,6 +41,9 @@ def parse_tags(txtData: str) -> dict[str, str]:
 	return dkimData
 
 
+out_queue: "queue.Queue[tuple[str, str]]" = queue.Queue(maxsize=20)
+
+
 def resolve_qname(domain: str, selector: str, local: bool):
 	import dns.exception
 	import dns.resolver
@@ -71,7 +74,8 @@ def resolve_qname(domain: str, selector: str, local: bool):
 			print(f'# short p= tag found for {qname}, {txtData}\n')
 			return
 		if local:
-			print(f'{domain}\t{selector}')
+			#print(f'{domain}\t{selector}')
+			out_queue.put((domain, selector))
 		else:
 			tsv_row = f'DNS_BATCH_RESULT,{domain},{selector},{txtData}\n'  # extra newline at the end as a workaround for that the stdout from modal.com somtimes has merged lines if there is just one newline
 			print(tsv_row)
@@ -81,19 +85,27 @@ def resolve_qname(domain: str, selector: str, local: bool):
 		pass
 
 
-q: "queue.Queue[tuple[str, str]]" = queue.Queue(maxsize=20)
+in_queue: "queue.Queue[tuple[str, str]]" = queue.Queue(maxsize=20)
 
 
-def worker():
+def read_and_resolve_worker():
 	while True:
-		qname = q.get()
+		qname = in_queue.get()
 		resolve_qname(qname[0], qname[1], local=True)
-		q.task_done()
+		in_queue.task_done()
+
+
+def publish_results_worker():
+	while True:
+		domain, selector = out_queue.get()
+		print(f'{domain}\t{selector}')
+		sys.stdout.flush()
+		out_queue.task_done()
 
 
 def process_domain_threaded(domain: str, selectors: list[str]):
 	for selector in selectors:
-		q.put((domain, selector))
+		in_queue.put((domain, selector))
 	return len(selectors)
 
 
@@ -114,8 +126,10 @@ def run_batch_job(domains_filename: str, selectors_filename: str, *, local: bool
 
 	if local:
 		for _i in range(20):
-			t = threading.Thread(target=worker, daemon=True)
-			t.start()
+			t_in = threading.Thread(target=read_and_resolve_worker, daemon=True)
+			t_in.start()
+		t_out = threading.Thread(target=publish_results_worker, daemon=True)
+		t_out.start()
 
 	start_index = start_line - 1
 	print(f"started at {datetime.datetime.fromtimestamp(start_time).isoformat(' ', timespec='seconds')}", file=sys.stderr)
@@ -128,7 +142,7 @@ def run_batch_job(domains_filename: str, selectors_filename: str, *, local: bool
 			process_domain_threaded(domain, selectors)
 		else:
 			process_domain_modal.spawn(domain, selectors)
-	q.join()
+	in_queue.join()
 
 
 # remote entrypoint
