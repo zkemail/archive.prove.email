@@ -42,16 +42,11 @@ Example output:
 
 ```
 processing mbox_yahoo/service.comms.yahoo.net/ep1
-+ docker run --rm --mount type=bind,source=/home/olof/checkout/zk/reconstr_rsa,target=/app --workdir=/app sagemath:latest sage sigs2rsa.py mbox_yahoo/service.comms.yahoo.net/ep1/1/data mbox_yahoo/service.comms.yahoo.net/ep1/2/data
-sage.all.gcd cpu time=18.420908999999998
-removing small prime factor 2
-hashfn=openssl_sha256, n=(1024 bit number), e=65537
++ docker run --rm --mount type=bind,source=/home/olof/checkout/zk/reconstr_rsa,target=/app --workdir=/app sagemath:latest sage sigs2rsa.py mbox_yahoo/service.comms.yahoo.net/ep1/1/data mbox_yahoo/service.comms.yahoo.net/ep1/2/data --loglevel 10
+DEBUG:root:solving for hashfn=openssl_sha256, e=65537
+DEBUG:root:sage.all.gcd cpu time=17.794597
+DEBUG:root:removing small prime factor 2
+DEBUG:root:result n=(1024 bit number)
 found large GCD for mbox_yahoo/service.comms.yahoo.net/ep1
-PEM: -----BEGIN PUBLIC KEY-----
-MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDcDXY0US14pjNIvn7nDbRpzmuI
-Hp0Uq75Zv3+3rTNoJVDgP8//HCo/9Xb3BttLwL8J7sMVHQ0SHsG27X8SYdViDFwA
-cLSYu6q5wTTaRKO80UUbIVM6YLKcdo9uPd2XyfvmxdcIth2ZMHC6HIVesvfDnf3K
-0asuP07jtYJK0Zdn4QIDAQAB
------END PUBLIC KEY-----
 DER: MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDcDXY0US14pjNIvn7nDbRpzmuIHp0Uq75Zv3+3rTNoJVDgP8//HCo/9Xb3BttLwL8J7sMVHQ0SHsG27X8SYdViDFwAcLSYu6q5wTTaRKO80UUbIVM6YLKcdo9uPd2XyfvmxdcIth2ZMHC6HIVesvfDnf3K0asuP07jtYJK0Zdn4QIDAQAB
 ```

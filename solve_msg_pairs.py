@@ -17,6 +17,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('rootdir')
     parser.add_argument('--debug', action="store_const", dest="loglevel", const=logging.DEBUG, default=logging.INFO)
+    parser.add_argument('--output-format', type=str, default='DER', choices=['DER', 'PEM'])
     args = parser.parse_args()
     rootdir = args.rootdir
     for d in subdirs(rootdir):
@@ -56,11 +57,14 @@ if __name__ == '__main__':
                 continue
             try:
                 print(f'found large GCD for {dspPath}', file=sys.stderr)
-                keyPEM = RSA.construct((n, e)).exportKey(format='PEM')
-                print('PEM:', keyPEM.decode('utf-8'))
-                keyDER = RSA.importKey(keyPEM).exportKey(format='DER')
-                keyDER_base64 = binascii.b2a_base64(keyDER).decode('utf-8')
-                print('DER:', keyDER_base64)
+                rsa_key = RSA.construct((n, e))
+                if args.output_format == 'PEM':
+                    keyPEM = rsa_key.exportKey(format='PEM')
+                    print('PEM:', keyPEM.decode('utf-8'))
+                else:
+                    keyDER = rsa_key.exportKey(format='DER')
+                    keyDER_base64 = binascii.b2a_base64(keyDER).decode('utf-8')
+                    print('DER:', keyDER_base64)
             except ValueError as e:
                 print(f'ValueError: {e}', file=sys.stderr)
                 continue
