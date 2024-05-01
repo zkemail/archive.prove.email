@@ -19,6 +19,8 @@ class Property:
 # https://github.com/libyal/libfmapi/blob/main/documentation/MAPI%20definitions.asciidoc
 PR_TRANSPORT_MESSAGE_HEADERS = Property(0x007d, 0x001f)
 
+dsps: set[str] = set()
+
 
 def parse_header(data: str):
 	h = email.parser.HeaderParser().parsestr(data)
@@ -29,7 +31,7 @@ def parse_header(data: str):
 		dkimRecord = decode_dkim_header_field(dkim_field)
 		domain = dkimRecord['d']
 		selector = dkimRecord['s']
-		print(f'{domain}\t{selector}')
+		dsps.add(f'{domain}\t{selector}')
 
 
 def parse_message(msg):
@@ -69,3 +71,5 @@ def decode_pst():
 
 if __name__ == '__main__':
 	decode_pst()
+	for dsp in dsps:
+		print(dsp)
