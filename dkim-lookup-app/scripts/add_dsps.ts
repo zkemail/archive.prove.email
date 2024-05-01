@@ -25,7 +25,8 @@ async function main() {
 		console.log(`reading DSPs from file: ${filename}`);
 		const fileContent = readFileSync(filename, 'utf8');
 		const lines = fileContent.split('\n').map(line => line.trim()).filter(line => line);
-		for (let line of lines) {
+		for (let [i, line] of lines.entries()) {
+			console.log(`processing line ${i + 1} of ${lines.length}`);
 			await process_line(line);
 		}
 	}
