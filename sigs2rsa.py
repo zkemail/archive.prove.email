@@ -2,6 +2,7 @@
 
 import binascii, hashlib
 import json
+import os
 import sys
 import sage.all
 import logging
@@ -71,6 +72,7 @@ if __name__ == '__main__':
     parser.add_argument('file2', type=str)
     parser.add_argument('--loglevel', type=int, default=logging.INFO)
     args = parser.parse_args()
-    logging.basicConfig(level=args.loglevel)
+    logging.root.name = os.path.basename(__file__)
+    logging.basicConfig(level=args.loglevel, format='%(name)s: %(levelname)s: %(message)s')
     n, e = find_n(args.file1, args.file2)
     print(json.dumps({'n_hex': hex(n), 'e_hex': hex(e)}))

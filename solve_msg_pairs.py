@@ -19,10 +19,10 @@ dsp_directory_queue: "queue.Queue[str]" = queue.Queue()
 
 
 def call_solver_and_process_result(dspPath):
-    print(f'processing {dspPath}', file=sys.stderr)
+    logging.info(f'processing {dspPath}')
     msgDirs = subdirs(dspPath)
     if len(msgDirs) < 2:
-        print(f'expected at least 2 message directories in {dspPath}', file=sys.stderr)
+        logging.error(f'expected at least 2 message directories in {dspPath}')
         return
     msgDirA = os.path.join(dspPath, msgDirs[0])
     msgDirB = os.path.join(dspPath, msgDirs[1])
@@ -41,16 +41,16 @@ def call_solver_and_process_result(dspPath):
         "--loglevel",
         str(args.loglevel),
     ]
-    print("+ " + " ".join(cmd), file=sys.stderr)
+    logging.debug("+ " + " ".join(cmd))
     output = subprocess.check_output(cmd)
     data = json.loads(output)
     n = int(data['n_hex'], 16)
     e = int(data['e_hex'], 16)
     if (n < 2):
-        print(f'no large GCD found for {dspPath}', file=sys.stderr)
+        logging.info(f'no large GCD found for {dspPath}')
         return
     try:
-        print(f'found large GCD for {dspPath}', file=sys.stderr)
+        logging.info(f'found large GCD for {dspPath}')
         rsa_key = RSA.construct((n, e))
         if args.output_format == 'PEM':
             keyPEM = rsa_key.exportKey(format='PEM')
@@ -60,7 +60,7 @@ def call_solver_and_process_result(dspPath):
             keyDER_base64 = binascii.b2a_base64(keyDER).decode('utf-8')
             print('DER:', keyDER_base64)
     except ValueError as e:
-        print(f'ValueError: {e}', file=sys.stderr)
+        logging.error(f'ValueError: {e}')
         return
 
 
@@ -80,15 +80,17 @@ if __name__ == '__main__':
     args = parser.parse_args()
     rootdir = args.rootdir
 
+    logging.root.name = os.path.basename(__file__)
+    logging.basicConfig(level=args.loglevel, format='%(name)s: %(levelname)s: %(message)s')
     for d in subdirs(rootdir):
         domainPath = os.path.join(rootdir, d)
         for s in subdirs(domainPath):
             dspPath = os.path.join(domainPath, s)
-            print(f'queuing {dspPath}', file=sys.stderr)
+            logging.debug(f'queuing {dspPath}')
             dsp_directory_queue.put(dspPath)
 
     for _i in range(args.threads):
-        print(f'starting thread {_i}', file=sys.stderr)
+        logging.debug(f'starting thread {_i}')
         t_in = threading.Thread(target=read_and_resolve_worker)
         t_in.start()
 
