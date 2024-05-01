@@ -2,6 +2,8 @@ This repository contains a proof of concept for determining the public RSA key f
 
 ## Setup
 
+Start by cloning this repository and navigating to the repository root directory.
+
 ### Build the Docker image
 
 ```bash
