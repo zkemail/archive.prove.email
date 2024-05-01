@@ -54,12 +54,14 @@ Run `python3 solve_msg_pairs.py --help` for more information.
 Example output:
 
 ```
-processing mbox_yahoo/service.comms.yahoo.net/ep1
-+ docker run --rm --mount type=bind,source=/home/olof/checkout/zk/reconstr_rsa,target=/app --workdir=/app sagemath:latest sage sigs2rsa.py mbox_yahoo/service.comms.yahoo.net/ep1/1/data mbox_yahoo/service.comms.yahoo.net/ep1/2/data --loglevel 10
-DEBUG:root:solving for hashfn=openssl_sha256, e=65537
-DEBUG:root:sage.all.gcd cpu time=17.794597
-DEBUG:root:removing small prime factor 2
-DEBUG:root:result n=(1024 bit number)
-found large GCD for mbox_yahoo/service.comms.yahoo.net/ep1
+solve_msg_pairs.py: DEBUG: queuing mbox_yahoo/service.comms.yahoo.net/ep1
+solve_msg_pairs.py: DEBUG: starting thread 0
+solve_msg_pairs.py: INFO: processing mbox_yahoo/service.comms.yahoo.net/ep1
+solve_msg_pairs.py: DEBUG: + docker run --rm --mount type=bind,source=/home/olof/checkout/zk/reconstr_rsa,target=/app --workdir=/app sagemath:latest sage sigs2rsa.py mbox_yahoo/service.comms.yahoo.net/ep1/1/data mbox_yahoo/service.comms.yahoo.net/ep1/2/data --loglevel 10
+sigs2rsa.py: DEBUG: solving for hashfn=openssl_sha256, e=65537
+sigs2rsa.py: DEBUG: sage.all.gcd cpu time=18.360299
+sigs2rsa.py: DEBUG: removing small prime factor 2
+sigs2rsa.py: DEBUG: result n=(1024 bit number)
+solve_msg_pairs.py: INFO: found large GCD for mbox_yahoo/service.comms.yahoo.net/ep1
 DER: MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDcDXY0US14pjNIvn7nDbRpzmuIHp0Uq75Zv3+3rTNoJVDgP8//HCo/9Xb3BttLwL8J7sMVHQ0SHsG27X8SYdViDFwAcLSYu6q5wTTaRKO80UUbIVM6YLKcdo9uPd2XyfvmxdcIth2ZMHC6HIVesvfDnf3K0asuP07jtYJK0Zdn4QIDAQAB
 ```
