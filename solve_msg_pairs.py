@@ -80,15 +80,16 @@ if __name__ == '__main__':
     args = parser.parse_args()
     rootdir = args.rootdir
 
-    for _i in range(args.threads):
-        print(f'starting thread {_i}', file=sys.stderr)
-        t_in = threading.Thread(target=read_and_resolve_worker, daemon=True)
-        t_in.start()
-
     for d in subdirs(rootdir):
         domainPath = os.path.join(rootdir, d)
         for s in subdirs(domainPath):
             dspPath = os.path.join(domainPath, s)
             print(f'queuing {dspPath}', file=sys.stderr)
             dsp_directory_queue.put(dspPath)
+
+    for _i in range(args.threads):
+        print(f'starting thread {_i}', file=sys.stderr)
+        t_in = threading.Thread(target=read_and_resolve_worker)
+        t_in.start()
+
     dsp_directory_queue.join()
