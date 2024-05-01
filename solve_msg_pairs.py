@@ -2,6 +2,7 @@
 import argparse
 import binascii
 import json
+import logging
 import os
 import subprocess
 import sys
@@ -15,6 +16,7 @@ def subdirs(d):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('rootdir')
+    parser.add_argument('--debug', action="store_const", dest="loglevel", const=logging.DEBUG, default=logging.INFO)
     args = parser.parse_args()
     rootdir = args.rootdir
     for d in subdirs(rootdir):
@@ -41,6 +43,8 @@ if __name__ == '__main__':
                 "sigs2rsa.py",
                 msgDirA + "/data",
                 msgDirB + "/data",
+                "--loglevel",
+                str(args.loglevel),
             ]
             print("+ " + " ".join(cmd), file=sys.stderr)
             output = subprocess.check_output(cmd)

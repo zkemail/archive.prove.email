@@ -35,7 +35,7 @@ data_dir/domainX/selectorY/messageZ/data.sig
 This command finds public RSA keys from signed data and signatures of pairs of messages in the directory structure created by `mbox_extract_signatures.py`.
 
 ```bash
-python3 solve_msg_pairs.py DATA_DIR
+python3 solve_msg_pairs.py DATA_DIR --debug
 ```
 
 Example output:

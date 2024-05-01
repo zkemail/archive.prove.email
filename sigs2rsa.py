@@ -4,6 +4,7 @@ import binascii, hashlib
 import json
 import sys
 import sage.all
+import logging
 
 
 def pkcs1_padding(size_bytes, hexdigest, hashfn):
@@ -30,7 +31,7 @@ def message_sig_pair(size_bytes, data, signature, hashfn):
 def remove_small_prime_factors(n):
     for p in sage.all.primes(100):
         while n % p == 0:
-            print(f'removing small prime factor {p}', file=sys.stderr)
+            logging.debug(f'removing small prime factor {p}')
             n = n // p
     return n
 
@@ -48,14 +49,15 @@ def find_n(*filenames):
     for hashfn in [hashlib.sha256, hashlib.sha512]:
         pairs = [message_sig_pair(size_bytes, m, s, hashfn) for (m, s) in zip(data_raw, signature_raw)]
         for e in [0x10001, 3, 17]:
+            logging.debug(f'solving for hashfn={hashfn.__name__}, e={e}')
             gcd_input = [(s**e - m) for (m, s) in pairs]
 
             starttime = sage.all.cputime()
             n = sage.all.gcd(*gcd_input)
-            print(f'sage.all.gcd cpu time={sage.all.cputime(starttime)}', file=sys.stderr)
+            logging.debug(f'sage.all.gcd cpu time={sage.all.cputime(starttime)}')
 
             n = remove_small_prime_factors(n)
-            print(f'hashfn={hashfn.__name__}, n=({n.nbits()} bit number), e={e}', file=sys.stderr)
+            logging.debug(f'result n=({n.nbits()} bit number)')
 
             if n != 1:
                 return (n, e)
@@ -67,6 +69,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('file1', type=str)
     parser.add_argument('file2', type=str)
+    parser.add_argument('--loglevel', type=int, default=logging.INFO)
     args = parser.parse_args()
+    logging.basicConfig(level=args.loglevel)
     n, e = find_n(args.file1, args.file2)
     print(json.dumps({'n_hex': hex(n), 'e_hex': hex(e)}))
