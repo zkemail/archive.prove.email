@@ -57,8 +57,9 @@ def call_solver_and_process_result(dspPath):
             print('PEM:', keyPEM.decode('utf-8'))
         else:
             keyDER = rsa_key.exportKey(format='DER')
-            keyDER_base64 = binascii.b2a_base64(keyDER).decode('utf-8')
+            keyDER_base64 = binascii.b2a_base64(keyDER, newline=False).decode('utf-8')
             print('DER:', keyDER_base64)
+        sys.stdout.flush()
     except ValueError as e:
         logging.error(f'ValueError: {e}')
         return
