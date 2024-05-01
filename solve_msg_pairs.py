@@ -92,7 +92,7 @@ if __name__ == '__main__':
 
     for _i in range(args.threads):
         logging.debug(f'starting thread {_i}')
-        t_in = threading.Thread(target=read_and_resolve_worker)
+        t_in = threading.Thread(target=read_and_resolve_worker, daemon=True)
         t_in.start()
 
     dsp_directory_queue.join()
