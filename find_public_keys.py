@@ -95,14 +95,14 @@ def call_solver_and_process_result(dsp: Dsp, msg1: MsgInfo, msg2: MsgInfo, logle
         return
 
 
-def read_and_resolve_worker():
+def read_and_resolve_worker(loglevel: int):
     while True:
         dsp, msg1, msg2 = dsp_queue.get()
-        call_solver_and_process_result(dsp, msg1, msg2, logging.INFO, 'DER')
+        call_solver_and_process_result(dsp, msg1, msg2, loglevel, 'DER')
         dsp_queue.task_done()
 
 
-def solve_msg_pairs(results: dict[Dsp, list[MsgInfo]], threads: int):
+def solve_msg_pairs(results: dict[Dsp, list[MsgInfo]], threads: int, loglevel: int):
     results = {dsp: msg_infos for dsp, msg_infos in results.items() if len(msg_infos) >= 2}
     logging.info(f'solving {len(results.items())} message pairs')
     for [dsp, msg_infos] in results.items():
@@ -112,7 +112,7 @@ def solve_msg_pairs(results: dict[Dsp, list[MsgInfo]], threads: int):
             dsp_queue.put((dsp, msg1, msg2))
     logging.debug(f'starting {threads} threads')
     for _i in range(threads):
-        t_in = threading.Thread(target=read_and_resolve_worker, daemon=True)
+        t_in = threading.Thread(target=read_and_resolve_worker, daemon=True, args=(loglevel, ))
         t_in.start()
     dsp_queue.join()
 
@@ -197,7 +197,7 @@ def main():
                 results[dsp] = []
             results[dsp].append(msg_info)
 
-    solve_msg_pairs(results, args.threads)
+    solve_msg_pairs(results, args.threads, args.loglevel)
 
 
 if __name__ == '__main__':
