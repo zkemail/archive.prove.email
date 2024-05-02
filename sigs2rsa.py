@@ -55,6 +55,9 @@ def find_n(messages: list[bytes], signatures: list[bytes]):
 
             starttime = sage.all.cputime()
             n = sage.all.gcd(*gcd_input)
+            if n.nbits() > 10000:
+                logging.error(f'skip n with > 10000 bits')
+                continue
             logging.debug(f'sage.all.gcd cpu time={sage.all.cputime(starttime)}')
 
             n = remove_small_prime_factors(n)
