@@ -120,10 +120,11 @@ class ProgramArgs(argparse.Namespace):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='extract domains and selectors from the DKIM-Signature header fields in an mbox file and output them in TSV format')
-    parser.add_argument('mbox_file')
-    parser.add_argument('--debug', action="store_const", dest="loglevel", const=logging.DEBUG, default=logging.INFO)
-    parser.add_argument('--threads', type=int, default=1)
+    parser = argparse.ArgumentParser(description='extract message data together with signatures from the DKIM-Signature header field of each message in an mbox file,\
+            and try to find the RSA public key from pairs of messages signed with the same key')
+    parser.add_argument('mbox_file', help='mbox file to process data and signatures from')
+    parser.add_argument('--debug', action="store_const", dest="loglevel", const=logging.DEBUG, default=logging.INFO, help='enable debug logging')
+    parser.add_argument('--threads', type=int, default=1, help='number of threads to use for solving')
     args = parser.parse_args(namespace=ProgramArgs)
 
     logging.root.name = os.path.basename(__file__)
