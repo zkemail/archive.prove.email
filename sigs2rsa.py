@@ -43,6 +43,10 @@ def find_n(messages: list[bytes], signatures: list[bytes]):
         logging.error(f"all signature sizes must be identical")
         return 0, 0
 
+    if len(set(signatures)) != len(signatures):
+        logging.error(f"duplicate signatures found")
+        return 0, 0
+
     for hashfn in [hashlib.sha256, hashlib.sha512]:
         pairs = [message_sig_pair(size_bytes, m, s, hashfn) for (m, s) in zip(messages, signatures)]
         for e in [0x10001, 3, 17]:
