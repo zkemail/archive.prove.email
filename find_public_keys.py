@@ -49,7 +49,7 @@ class MsgInfo:
 dsp_queue: "queue.Queue[tuple[Dsp, MsgInfo, MsgInfo]]" = queue.Queue()
 
 
-def call_solver_and_process_result(dsp: Dsp, msg1: MsgInfo, msg2: MsgInfo, loglevel: int, output_format: str):
+def call_solver_and_process_result(dsp: Dsp, msg1: MsgInfo, msg2: MsgInfo, loglevel: int):
     logging.info(f'processing {dsp}')
     cmd = [
         "docker",
@@ -82,13 +82,9 @@ def call_solver_and_process_result(dsp: Dsp, msg1: MsgInfo, msg2: MsgInfo, logle
     try:
         logging.info(f'found large GCD for {dsp}')
         rsa_key = RSA.construct((n, e))
-        if output_format == 'PEM':
-            keyPEM = rsa_key.exportKey(format='PEM')
-            print('PEM:', keyPEM.decode('utf-8'))
-        else:
-            keyDER = rsa_key.exportKey(format='DER')
-            keyDER_base64 = binascii.b2a_base64(keyDER, newline=False).decode('utf-8')
-            print('DER:', keyDER_base64)
+        keyDER = rsa_key.exportKey(format='DER')
+        keyDER_base64 = binascii.b2a_base64(keyDER, newline=False).decode('utf-8')
+        print('DER:', keyDER_base64)
         sys.stdout.flush()
     except ValueError as e:
         logging.error(f'ValueError: {e}')
@@ -98,7 +94,7 @@ def call_solver_and_process_result(dsp: Dsp, msg1: MsgInfo, msg2: MsgInfo, logle
 def read_and_resolve_worker(loglevel: int):
     while True:
         dsp, msg1, msg2 = dsp_queue.get()
-        call_solver_and_process_result(dsp, msg1, msg2, loglevel, 'DER')
+        call_solver_and_process_result(dsp, msg1, msg2, loglevel)
         dsp_queue.task_done()
 
 
