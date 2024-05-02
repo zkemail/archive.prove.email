@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import argparse
+import pickle
 import queue
 import subprocess
 import sys
@@ -113,12 +114,6 @@ def solve_msg_pairs(results: dict[Dsp, list[MsgInfo]], threads: int, loglevel: i
     dsp_queue.join()
 
 
-class ProgramArgs(argparse.Namespace):
-    mbox_file: str
-    loglevel: int
-    threads: int
-
-
 def parse_mbox_file(mbox_file: str) -> dict[Dsp, list[MsgInfo]]:
     results: dict[Dsp, list[MsgInfo]] = {}
     message_counter = 0
@@ -126,7 +121,7 @@ def parse_mbox_file(mbox_file: str) -> dict[Dsp, list[MsgInfo]]:
     logging.info(f'loaded {mbox_file}')
     for message in mb:
         message_counter += 1
-        logging.info(f'processing message {message_counter}')
+        logging.debug(f'processing message {message_counter}')
         dkimSignatureFields = message.get_all('DKIM-Signature')
         if not dkimSignatureFields:
             logging.info('INFO: no DKIM-Signature header field found, skipping')
@@ -168,7 +163,7 @@ def parse_mbox_file(mbox_file: str) -> dict[Dsp, list[MsgInfo]]:
                 continue
             body_hash_mismatch = infoOut.get('body_hash_mismatch', False)
             if body_hash_mismatch:
-                logging.info('body hash mismatch')
+                logging.debug('body hash mismatch')
 
             try:
                 signed_data = infoOut['signed_data']
@@ -177,7 +172,7 @@ def parse_mbox_file(mbox_file: str) -> dict[Dsp, list[MsgInfo]]:
                 sys.exit(1)
 
             dsp = Dsp(domain, selector)
-            logging.info(f'register message info for {dsp}')
+            logging.debug(f'register message info for {dsp}')
             msg_info = MsgInfo(signed_data, signature)
             if not dsp in results:
                 results[dsp] = []
@@ -185,10 +180,19 @@ def parse_mbox_file(mbox_file: str) -> dict[Dsp, list[MsgInfo]]:
     return results
 
 
+class ProgramArgs(argparse.Namespace):
+    load_mbox: bool
+    mbox_file: str
+    datasig_file: str
+    loglevel: int
+    threads: int
+
+
 def main():
     parser = argparse.ArgumentParser(description='extract message data together with signatures from the DKIM-Signature header field of each message in an mbox file,\
             and try to find the RSA public key from pairs of messages signed with the same key')
-    parser.add_argument('mbox_file', help='mbox file to process data and signatures from')
+    parser.add_argument('--mbox-file', help='load data from an mbox file and save to corresponding .mbox.datasig', type=str)
+    parser.add_argument('--datasig-file', help='find public keys from the data in an .mbox.datasig file', type=str)
     parser.add_argument('--debug', action="store_const", dest="loglevel", const=logging.DEBUG, default=logging.INFO, help='enable debug logging')
     parser.add_argument('--threads', type=int, default=1, help='number of threads to use for solving')
     args = parser.parse_args(namespace=ProgramArgs)
@@ -196,10 +200,15 @@ def main():
     logging.root.name = os.path.basename(__file__)
     logging.basicConfig(level=args.loglevel, format='%(name)s: %(levelname)s: %(message)s')
 
-    logging.info(f'processing {args.mbox_file}')
-    results = parse_mbox_file(args.mbox_file)
+    if args.mbox_file:
+        logging.info(f'processing {args.mbox_file}')
+        results = parse_mbox_file(args.mbox_file)
+        pickle.dump(results, open(f'{args.mbox_file}.datasig', 'wb'))
+        logging.info(f'results saved to {args.mbox_file}.datasig')
 
-    solve_msg_pairs(results, args.threads, args.loglevel)
+    if args.datasig_file:
+        results = pickle.load(open(args.datasig_file, 'rb'))
+        solve_msg_pairs(results, args.threads, args.loglevel)
 
 
 if __name__ == '__main__':
