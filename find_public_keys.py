@@ -84,7 +84,7 @@ def call_solver_and_process_result(dsp: Dsp, msg1: MsgInfo, msg2: MsgInfo, logle
         rsa_key = RSA.construct((n, e))
         keyDER = rsa_key.exportKey(format='DER')
         keyDER_base64 = binascii.b2a_base64(keyDER, newline=False).decode('utf-8')
-        print(f'{dsp.domain}\t{dsp.selector}\t{keyDER_base64}')
+        print(f'{dsp.domain}\t{dsp.selector}\tk=rsa; p={keyDER_base64}')
         sys.stdout.flush()
     except ValueError as e:
         logging.error(f'ValueError: {e}')
