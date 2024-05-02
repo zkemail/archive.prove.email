@@ -50,7 +50,7 @@ dsp_queue: "queue.Queue[tuple[Dsp, MsgInfo, MsgInfo]]" = queue.Queue()
 
 
 def call_solver_and_process_result(dsp: Dsp, msg1: MsgInfo, msg2: MsgInfo, loglevel: int):
-    logging.info(f'processing {dsp}')
+    logging.info(f'searching for public key for {dsp}')
     cmd = [
         "docker",
         "run",
@@ -70,17 +70,17 @@ def call_solver_and_process_result(dsp: Dsp, msg1: MsgInfo, msg2: MsgInfo, logle
         base64.b64encode(msg2.signedData).decode('utf-8'),
         base64.b64encode(msg2.signature).decode('utf-8'),
     ]
-    logging.debug(f'+ {" ".join(cmd)} (...data...)')
+    logging.debug(" ".join(cmd) + ' [... data parameters ...]')
 
     output = subprocess.check_output(cmd + data_parameters)
     data = json.loads(output)
     n = int(data['n_hex'], 16)
     e = int(data['e_hex'], 16)
     if (n < 2):
-        logging.info(f'no large GCD found for {dsp}')
+        logging.info(f'no public key found for {dsp}')
         return
     try:
-        logging.info(f'found large GCD for {dsp}')
+        logging.info(f'found public key for {dsp}')
         rsa_key = RSA.construct((n, e))
         keyDER = rsa_key.exportKey(format='DER')
         keyDER_base64 = binascii.b2a_base64(keyDER, newline=False).decode('utf-8')
@@ -100,13 +100,13 @@ def read_and_resolve_worker(loglevel: int):
 
 def solve_msg_pairs(results: dict[Dsp, list[MsgInfo]], threads: int, loglevel: int):
     results = {dsp: msg_infos for dsp, msg_infos in results.items() if len(msg_infos) >= 2}
-    logging.info(f'solving {len(results.items())} message pairs')
+    logging.info(f'searching for public key for {len(results.items())} message pairs')
     for [dsp, msg_infos] in results.items():
         if len(msg_infos) > 1:
             msg1 = msg_infos[0]
             msg2 = msg_infos[1]
             dsp_queue.put((dsp, msg1, msg2))
-    logging.debug(f'starting {threads} threads')
+    logging.info(f'starting {threads} threads')
     for _i in range(threads):
         t_in = threading.Thread(target=read_and_resolve_worker, daemon=True, args=(loglevel, ))
         t_in.start()
