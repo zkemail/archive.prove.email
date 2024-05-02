@@ -40,7 +40,8 @@ def remove_small_prime_factors(n):
 def find_n(messages: list[bytes], signatures: list[bytes]):
     size_bytes = len(signatures[0])
     if any(len(s) != size_bytes for s in signatures):
-        raise Exception("All signature sizes must be identical")
+        logging.error(f"all signature sizes must be identical")
+        return 0, 0
 
     for hashfn in [hashlib.sha256, hashlib.sha512]:
         pairs = [message_sig_pair(size_bytes, m, s, hashfn) for (m, s) in zip(messages, signatures)]
@@ -55,7 +56,7 @@ def find_n(messages: list[bytes], signatures: list[bytes]):
             n = remove_small_prime_factors(n)
             logging.debug(f'result n=({n.nbits()} bit number)')
 
-            if n != 1:
+            if n > 1:
                 return (n, e)
     return 0, 0
 
