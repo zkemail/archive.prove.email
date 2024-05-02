@@ -114,17 +114,31 @@ def solve_msg_pairs(results: dict[Dsp, list[MsgInfo]], threads: int, loglevel: i
     dsp_queue.join()
 
 
+@dataclass
+class Statistics:
+    total: int = 0
+    missing_dkim_signature: int = 0
+    non_rsa_sign_algo: int = 0
+    missing_body_hash: int = 0
+    body_hash_mismatch: int = 0
+    body_length_tag_not_supported: int = 0
+    missing_signature_tag: int = 0
+    unicode_error: int = 0
+    validation_error: int = 0
+
+
 def parse_mbox_file(mbox_file: str) -> dict[Dsp, list[MsgInfo]]:
     results: dict[Dsp, list[MsgInfo]] = {}
-    message_counter = 0
+    message_index = 0
+    logging.info(f'loading {mbox_file}')
     mb = mailbox.mbox(mbox_file, create=False)
-    logging.info(f'loaded {mbox_file}')
+    statistics = Statistics()
+    logging.info(f'processing {len(mb)} messages')
     for message in mb:
-        message_counter += 1
-        logging.debug(f'processing message {message_counter}')
+        message_index += 1
         dkimSignatureFields = message.get_all('DKIM-Signature')
         if not dkimSignatureFields:
-            logging.info('INFO: no DKIM-Signature header field found, skipping')
+            statistics.missing_dkim_signature += 1
             continue
         for field in dkimSignatureFields:
             tags = decode_dkim_header_field(field)
@@ -132,19 +146,19 @@ def parse_mbox_file(mbox_file: str) -> dict[Dsp, list[MsgInfo]]:
             selector = tags['s']
             signAlgo = tags['a']
             if signAlgo != 'rsa-sha256' and signAlgo != 'rsa-sha1':
-                logging.warning(f'skip signAlgo that is not rsa-sha256 or rsa-sha1: {signAlgo}')
+                statistics.non_rsa_sign_algo += 1
                 continue
             bodyHash = tags.get('bh', None)
             if not bodyHash:
-                logging.warning('body hash tag (bh) not found, skipping')
+                statistics.missing_body_hash += 1
                 continue
             bodyLen = tags.get('l', None)
             if bodyLen:
-                logging.warning('body length tag (l) not supported yet, skipping')
+                statistics.body_length_tag_not_supported += 1
                 continue
             signature_tag = tags.get('b', None)
             if not signature_tag:
-                logging.warning('signature tag (b) not found, skipping')
+                statistics.missing_signature_tag += 1
                 continue
             signature_base64 = ''.join(list(map(lambda x: x.strip(), signature_tag.splitlines())))
             signature = base64.b64decode(signature_base64)
@@ -153,17 +167,19 @@ def parse_mbox_file(mbox_file: str) -> dict[Dsp, list[MsgInfo]]:
             try:
                 d = dkim.DKIM(str(message).encode(), debug_content=True)
             except UnicodeEncodeError as e:
-                logging.warning(f'UnicodeEncodeError: {e}')
+                logging.error(f'message {message_index}: UnicodeEncodeError: {e}')
+                statistics.unicode_error += 1
                 continue
 
             try:
                 d.verify(0, infoOut=infoOut)  # type: ignore
             except dkim.ValidationError as e:
-                logging.warning(f'ValidationError: {e}')
+                logging.error(f'message {message_index}: ValidationError: {e}')
+                statistics.validation_error += 1
                 continue
             body_hash_mismatch = infoOut.get('body_hash_mismatch', False)
             if body_hash_mismatch:
-                logging.debug('body hash mismatch')
+                statistics.body_hash_mismatch += 1
 
             try:
                 signed_data = infoOut['signed_data']
@@ -172,11 +188,13 @@ def parse_mbox_file(mbox_file: str) -> dict[Dsp, list[MsgInfo]]:
                 sys.exit(1)
 
             dsp = Dsp(domain, selector)
-            logging.debug(f'register message info for {dsp}')
             msg_info = MsgInfo(signed_data, signature)
             if not dsp in results:
                 results[dsp] = []
             results[dsp].append(msg_info)
+            statistics.total += 1
+    logging.info(f'processed {message_index} messages')
+    logging.info(f'statistics: {statistics}')
     return results
 
 
@@ -201,7 +219,6 @@ def main():
     logging.basicConfig(level=args.loglevel, format='%(name)s: %(levelname)s: %(message)s')
 
     if args.mbox_file:
-        logging.info(f'processing {args.mbox_file}')
         results = parse_mbox_file(args.mbox_file)
         pickle.dump(results, open(f'{args.mbox_file}.datasig', 'wb'))
         logging.info(f'results saved to {args.mbox_file}.datasig')
