@@ -101,6 +101,7 @@ export function stringToSourceIdentifier(s: string): SourceIdentifier {
 export function sourceIdentifierToHumanReadable(sourceIdentifierStr: string) {
 	switch (stringToSourceIdentifier(sourceIdentifierStr)) {
 		case 'top_1m_lookup':
+		case 'scraper':
 			return 'Scraped';
 		case 'api':
 			return 'Inbox upload';
