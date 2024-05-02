@@ -119,22 +119,11 @@ class ProgramArgs(argparse.Namespace):
     threads: int
 
 
-def main():
-    parser = argparse.ArgumentParser(description='extract message data together with signatures from the DKIM-Signature header field of each message in an mbox file,\
-            and try to find the RSA public key from pairs of messages signed with the same key')
-    parser.add_argument('mbox_file', help='mbox file to process data and signatures from')
-    parser.add_argument('--debug', action="store_const", dest="loglevel", const=logging.DEBUG, default=logging.INFO, help='enable debug logging')
-    parser.add_argument('--threads', type=int, default=1, help='number of threads to use for solving')
-    args = parser.parse_args(namespace=ProgramArgs)
-
-    logging.root.name = os.path.basename(__file__)
-    logging.basicConfig(level=args.loglevel, format='%(name)s: %(levelname)s: %(message)s')
-
-    logging.info(f'processing {args.mbox_file}')
+def parse_mbox_file(mbox_file: str) -> dict[Dsp, list[MsgInfo]]:
     results: dict[Dsp, list[MsgInfo]] = {}
     message_counter = 0
-    mb = mailbox.mbox(args.mbox_file, create=False)
-    logging.info(f'loaded {args.mbox_file}')
+    mb = mailbox.mbox(mbox_file, create=False)
+    logging.info(f'loaded {mbox_file}')
     for message in mb:
         message_counter += 1
         logging.info(f'processing message {message_counter}')
@@ -193,6 +182,22 @@ def main():
             if not dsp in results:
                 results[dsp] = []
             results[dsp].append(msg_info)
+    return results
+
+
+def main():
+    parser = argparse.ArgumentParser(description='extract message data together with signatures from the DKIM-Signature header field of each message in an mbox file,\
+            and try to find the RSA public key from pairs of messages signed with the same key')
+    parser.add_argument('mbox_file', help='mbox file to process data and signatures from')
+    parser.add_argument('--debug', action="store_const", dest="loglevel", const=logging.DEBUG, default=logging.INFO, help='enable debug logging')
+    parser.add_argument('--threads', type=int, default=1, help='number of threads to use for solving')
+    args = parser.parse_args(namespace=ProgramArgs)
+
+    logging.root.name = os.path.basename(__file__)
+    logging.basicConfig(level=args.loglevel, format='%(name)s: %(levelname)s: %(message)s')
+
+    logging.info(f'processing {args.mbox_file}')
+    results = parse_mbox_file(args.mbox_file)
 
     solve_msg_pairs(results, args.threads, args.loglevel)
 
