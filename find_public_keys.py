@@ -12,10 +12,11 @@ import mailbox
 import base64
 import threading
 from Crypto.PublicKey import RSA
+from lib.util import ProgressReporter
+from dataclasses import dataclass
 
 sys.path.insert(0, "dkimpy")
 import dkimpy.dkim as dkim
-from dataclasses import dataclass
 
 # https://russell.ballestrini.net/quickstart-to-dkim-sign-email-with-python/
 
@@ -132,10 +133,13 @@ def parse_mbox_file(mbox_file: str) -> dict[Dsp, list[MsgInfo]]:
     message_index = 0
     logging.info(f'loading {mbox_file}')
     mb = mailbox.mbox(mbox_file, create=False)
+    number_of_messages = len(mb)
+    progressReporter = ProgressReporter(number_of_messages, 0)
     statistics = Statistics()
     logging.info(f'processing {len(mb)} messages')
     for message in mb:
         message_index += 1
+        progressReporter.increment()
         dkimSignatureFields = message.get_all('DKIM-Signature')
         if not dkimSignatureFields:
             statistics.missing_dkim_signature += 1
