@@ -117,22 +117,27 @@ def solve_msg_pairs(results: dict[Dsp, list[MsgInfo]], threads: int):
     dsp_queue.join()
 
 
+class ProgramArgs(argparse.Namespace):
+    mbox_file: str
+    loglevel: int
+    threads: int
+
+
 def main():
     parser = argparse.ArgumentParser(description='extract domains and selectors from the DKIM-Signature header fields in an mbox file and output them in TSV format')
     parser.add_argument('mbox_file')
     parser.add_argument('--debug', action="store_const", dest="loglevel", const=logging.DEBUG, default=logging.INFO)
     parser.add_argument('--threads', type=int, default=1)
-    args = parser.parse_args()
+    args = parser.parse_args(namespace=ProgramArgs)
 
     logging.root.name = os.path.basename(__file__)
     logging.basicConfig(level=args.loglevel, format='%(name)s: %(levelname)s: %(message)s')
 
-    mbox_file = args.mbox_file
-    logging.info(f'processing {mbox_file}')
+    logging.info(f'processing {args.mbox_file}')
     results: dict[Dsp, list[MsgInfo]] = {}
     message_counter = 0
     mb = mailbox.mbox(args.mbox_file, create=False)
-    logging.info(f'loaded {mbox_file}')
+    logging.info(f'loaded {args.mbox_file}')
     for message in mb:
         message_counter += 1
         logging.info(f'processing message {message_counter}')
