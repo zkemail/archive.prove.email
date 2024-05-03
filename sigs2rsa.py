@@ -30,7 +30,7 @@ def message_sig_pair(size_bytes, data, signature, hashfn):
 
 
 def remove_small_prime_factors(n):
-    for p in sage.all.primes(100):
+    for p in sage.all.primes(10000):
         while n % p == 0:
             logging.debug(f'removing small prime factor {p}')
             n = n // p
