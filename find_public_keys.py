@@ -217,7 +217,7 @@ def load_signed_data(datasig_files: list[str]):
 
 class ProgramArgs(argparse.Namespace):
     load_mbox: bool
-    mbox_file: str
+    mbox_files: list[str] | None
     datasig_files: list[str] | None
     filter_domain: str
     loglevel: int
@@ -228,7 +228,7 @@ def main():
     parser = argparse.ArgumentParser(description='extract message data together with signatures from the DKIM-Signature header field of each message in an mbox file,\
             and try to find the RSA public key from pairs of messages signed with the same key',
                                      allow_abbrev=False)
-    parser.add_argument('--mbox-file', help='load data from an mbox file and save to corresponding .mbox.datasig', type=str)
+    parser.add_argument('--mbox-files', help='load data from mbox files and save to corresponding .mbox.datasig', type=str, nargs='*')
     parser.add_argument('--datasig-files', help='find public keys from the data in one or many .datasig files', type=str, nargs='*')
     parser.add_argument('--filter-domain', help='only process messages with this domain', type=str)
     parser.add_argument('--debug', action="store_const", dest="loglevel", const=logging.DEBUG, default=logging.INFO, help='enable debug logging')
@@ -238,10 +238,11 @@ def main():
     logging.root.name = os.path.basename(__file__)
     logging.basicConfig(level=args.loglevel, format='%(name)s: %(levelname)s: %(message)s')
 
-    if args.mbox_file:
-        results = parse_mbox_file(args.mbox_file)
-        pickle.dump(results, open(f'{args.mbox_file}.datasig', 'wb'))
-        logging.info(f'results saved to {args.mbox_file}.datasig')
+    if args.mbox_files:
+        for mbox_file in args.mbox_files:
+            results = parse_mbox_file(mbox_file)
+            pickle.dump(results, open(f'{mbox_file}.datasig', 'wb'))
+            logging.info(f'results saved to {mbox_file}.datasig')
     elif args.datasig_files:
         signed_data = load_signed_data(args.datasig_files)
         solve_msg_pairs(signed_data, args.filter_domain, args.threads, args.loglevel)
