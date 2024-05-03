@@ -102,9 +102,6 @@ def read_and_resolve_worker(loglevel: int):
 
 
 def solve_msg_pairs(signed_messages: dict[Dsp, list[MsgInfo]], filter_domain: str, threads: int, loglevel: int):
-    signed_messages = {dsp: msg_infos for dsp, msg_infos in signed_messages.items() if len(msg_infos) >= 2}
-    signed_messages = {dsp: msg_infos for dsp, msg_infos in signed_messages.items() if not filter_domain or dsp.domain == filter_domain}
-
     logging.info(f'searching for public key for {len(signed_messages.items())} message pairs')
     for [dsp, msg_infos] in signed_messages.items():
         if len(msg_infos) > 1:
@@ -220,6 +217,7 @@ class ProgramArgs(argparse.Namespace):
     load_mbox: bool
     mbox_files: list[str] | None
     datasig_files: list[str] | None
+    list_only: bool
     filter_domain: str
     loglevel: int
     threads: int
@@ -231,6 +229,7 @@ def main():
                                      allow_abbrev=False)
     parser.add_argument('--mbox-files', help='load data from mbox files and save to corresponding .mbox.datasig', type=str, nargs='*')
     parser.add_argument('--datasig-files', help='find public keys from the data in one or many .datasig files', type=str, nargs='*')
+    parser.add_argument('--list-only', help='use together with --datasig-files to list the domains and selectors in the datasig files and exit', action='store_true')
     parser.add_argument('--filter-domain', help='only process messages with this domain', type=str)
     parser.add_argument('--debug', action="store_const", dest="loglevel", const=logging.DEBUG, default=logging.INFO, help='enable debug logging')
     parser.add_argument('--threads', type=int, default=1, help='number of threads to use for solving')
@@ -246,6 +245,14 @@ def main():
             logging.info(f'results saved to {mbox_file}.datasig')
     elif args.datasig_files:
         signed_data = load_signed_data(args.datasig_files)
+        signed_data = {dsp: msg_infos for dsp, msg_infos in signed_data.items() if len(msg_infos) >= 2}
+        if args.filter_domain:
+            signed_data = {dsp: msg_infos for dsp, msg_infos in signed_data.items() if dsp.domain == args.filter_domain}
+
+        if args.list_only:
+            for dsp in signed_data.keys():
+                print(f'{dsp.domain}\t{dsp.selector}')
+            return
         solve_msg_pairs(signed_data, args.filter_domain, args.threads, args.loglevel)
     else:
         parser.error('no action specified')
