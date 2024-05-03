@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db";
+import { RecordWithSelector, prisma } from "@/lib/db";
 import { Prisma } from "@prisma/client";
 import { parseDkimRecord } from "@/lib/utils";
 import { readFileSync } from "node:fs";
@@ -64,7 +64,8 @@ async function main() {
 		console.log(`reading DSPs from file: ${filename}`);
 		const fileContent = readFileSync(filename, 'utf8');
 		const lines = fileContent.split('\n').map(line => line.trim()).filter(line => line);
-		for (let [i, line] of lines.entries()) {
+		for (let i = 0; i < lines.length; i++) {
+			const line = lines[i];
 			console.log(`processing line ${i + 1} of ${lines.length}`);
 			const [domain, selector, solved_key] = await process_line(line);
 
