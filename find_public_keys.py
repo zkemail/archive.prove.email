@@ -226,10 +226,11 @@ def main():
         results = parse_mbox_file(args.mbox_file)
         pickle.dump(results, open(f'{args.mbox_file}.datasig', 'wb'))
         logging.info(f'results saved to {args.mbox_file}.datasig')
-
-    if args.datasig_file:
+    elif args.datasig_file:
         results = pickle.load(open(args.datasig_file, 'rb'))
         solve_msg_pairs(results, args.threads, args.loglevel)
+    else:
+        parser.error('no action specified')
 
 
 if __name__ == '__main__':
