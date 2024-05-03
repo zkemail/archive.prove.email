@@ -100,8 +100,10 @@ def read_and_resolve_worker(loglevel: int):
         dsp_queue.task_done()
 
 
-def solve_msg_pairs(results: dict[Dsp, list[MsgInfo]], threads: int, loglevel: int):
+def solve_msg_pairs(results: dict[Dsp, list[MsgInfo]], filter_domain: str, threads: int, loglevel: int):
     results = {dsp: msg_infos for dsp, msg_infos in results.items() if len(msg_infos) >= 2}
+    results = {dsp: msg_infos for dsp, msg_infos in results.items() if not filter_domain or dsp.domain == filter_domain}
+
     logging.info(f'searching for public key for {len(results.items())} message pairs')
     for [dsp, msg_infos] in results.items():
         if len(msg_infos) > 1:
@@ -206,6 +208,7 @@ class ProgramArgs(argparse.Namespace):
     load_mbox: bool
     mbox_file: str
     datasig_file: str
+    filter_domain: str
     loglevel: int
     threads: int
 
@@ -215,6 +218,7 @@ def main():
             and try to find the RSA public key from pairs of messages signed with the same key')
     parser.add_argument('--mbox-file', help='load data from an mbox file and save to corresponding .mbox.datasig', type=str)
     parser.add_argument('--datasig-file', help='find public keys from the data in an .mbox.datasig file', type=str)
+    parser.add_argument('--filter-domain', help='only process messages with this domain', type=str)
     parser.add_argument('--debug', action="store_const", dest="loglevel", const=logging.DEBUG, default=logging.INFO, help='enable debug logging')
     parser.add_argument('--threads', type=int, default=1, help='number of threads to use for solving')
     args = parser.parse_args(namespace=ProgramArgs)
@@ -228,7 +232,7 @@ def main():
         logging.info(f'results saved to {args.mbox_file}.datasig')
     elif args.datasig_file:
         results = pickle.load(open(args.datasig_file, 'rb'))
-        solve_msg_pairs(results, args.threads, args.loglevel)
+        solve_msg_pairs(results, args.filter_domain, args.threads, args.loglevel)
     else:
         parser.error('no action specified')
 
