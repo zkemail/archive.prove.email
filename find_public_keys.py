@@ -100,12 +100,12 @@ def read_and_resolve_worker(loglevel: int):
         dsp_queue.task_done()
 
 
-def solve_msg_pairs(results: dict[Dsp, list[MsgInfo]], filter_domain: str, threads: int, loglevel: int):
-    results = {dsp: msg_infos for dsp, msg_infos in results.items() if len(msg_infos) >= 2}
-    results = {dsp: msg_infos for dsp, msg_infos in results.items() if not filter_domain or dsp.domain == filter_domain}
+def solve_msg_pairs(signed_messages: dict[Dsp, list[MsgInfo]], filter_domain: str, threads: int, loglevel: int):
+    signed_messages = {dsp: msg_infos for dsp, msg_infos in signed_messages.items() if len(msg_infos) >= 2}
+    signed_messages = {dsp: msg_infos for dsp, msg_infos in signed_messages.items() if not filter_domain or dsp.domain == filter_domain}
 
-    logging.info(f'searching for public key for {len(results.items())} message pairs')
-    for [dsp, msg_infos] in results.items():
+    logging.info(f'searching for public key for {len(signed_messages.items())} message pairs')
+    for [dsp, msg_infos] in signed_messages.items():
         if len(msg_infos) > 1:
             msg1 = msg_infos[0]
             msg2 = msg_infos[1]
@@ -204,10 +204,21 @@ def parse_mbox_file(mbox_file: str) -> dict[Dsp, list[MsgInfo]]:
     return results
 
 
+def load_signed_data(datasig_files: list[str]):
+    result: dict[Dsp, list[MsgInfo]] = {}
+    for f in datasig_files:
+        file_load_result = pickle.load(open(f, 'rb'))
+        for dsp, msg_infos in file_load_result.items():
+            if not dsp in result:
+                result[dsp] = []
+            result[dsp].extend(msg_infos)
+    return result
+
+
 class ProgramArgs(argparse.Namespace):
     load_mbox: bool
     mbox_file: str
-    datasig_file: str
+    datasig_files: list[str] | None
     filter_domain: str
     loglevel: int
     threads: int
@@ -215,9 +226,10 @@ class ProgramArgs(argparse.Namespace):
 
 def main():
     parser = argparse.ArgumentParser(description='extract message data together with signatures from the DKIM-Signature header field of each message in an mbox file,\
-            and try to find the RSA public key from pairs of messages signed with the same key')
+            and try to find the RSA public key from pairs of messages signed with the same key',
+                                     allow_abbrev=False)
     parser.add_argument('--mbox-file', help='load data from an mbox file and save to corresponding .mbox.datasig', type=str)
-    parser.add_argument('--datasig-file', help='find public keys from the data in an .mbox.datasig file', type=str)
+    parser.add_argument('--datasig-files', help='find public keys from the data in one or many .datasig files', type=str, nargs='*')
     parser.add_argument('--filter-domain', help='only process messages with this domain', type=str)
     parser.add_argument('--debug', action="store_const", dest="loglevel", const=logging.DEBUG, default=logging.INFO, help='enable debug logging')
     parser.add_argument('--threads', type=int, default=1, help='number of threads to use for solving')
@@ -230,9 +242,9 @@ def main():
         results = parse_mbox_file(args.mbox_file)
         pickle.dump(results, open(f'{args.mbox_file}.datasig', 'wb'))
         logging.info(f'results saved to {args.mbox_file}.datasig')
-    elif args.datasig_file:
-        results = pickle.load(open(args.datasig_file, 'rb'))
-        solve_msg_pairs(results, args.filter_domain, args.threads, args.loglevel)
+    elif args.datasig_files:
+        signed_data = load_signed_data(args.datasig_files)
+        solve_msg_pairs(signed_data, args.filter_domain, args.threads, args.loglevel)
     else:
         parser.error('no action specified')
 
