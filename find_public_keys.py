@@ -95,6 +95,7 @@ def call_solver_and_process_result(dsp: Dsp, msg1: MsgInfo, msg2: MsgInfo, logle
 
 def read_and_resolve_worker(loglevel: int):
     while True:
+        logging.info(f'message pairs left: {dsp_queue.qsize()}')
         dsp, msg1, msg2 = dsp_queue.get()
         call_solver_and_process_result(dsp, msg1, msg2, loglevel)
         dsp_queue.task_done()
