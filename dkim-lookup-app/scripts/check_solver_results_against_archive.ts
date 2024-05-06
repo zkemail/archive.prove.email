@@ -1,4 +1,4 @@
-import { RecordWithSelector, prisma } from "@/lib/db";
+import { prisma } from "@/lib/db";
 import { Prisma } from "@prisma/client";
 import { parseDkimRecord } from "@/lib/utils";
 import { readFileSync } from "node:fs";
@@ -12,8 +12,8 @@ async function process_line(line: string) {
 	return [domain, selector, key];
 }
 
-export async function findRecords(domain: string, selector: string): Promise<RecordWithSelector[]> {
-	return await prisma.dkimRecord.findMany({
+export async function findKnownKeys(domain: string, selector: string) {
+	let records = await prisma.dkimRecord.findMany({
 		where: {
 			domainSelectorPair: {
 				AND: [
@@ -36,27 +36,24 @@ export async function findRecords(domain: string, selector: string): Promise<Rec
 			domainSelectorPair: true
 		}
 	});
-}
-
-async function check_key(domain: string, selector: string, key: string) {
-	let records = await findRecords(domain, selector);
-	let new_p = parseDkimRecord(key).p;
+	let result = [];
 	for (let record of records) {
-		let existing_p = parseDkimRecord(record.value).p;
-		if (new_p === existing_p) {
-			return true;
+		const p = parseDkimRecord(record.value).p;
+		if (p) {
+			result.push(p);
+		}
+		else {
+			console.log(`skip known key with empty/invalid value for domain: ${domain}, selector: ${selector}, record: ${record.value}`);
 		}
 	}
-	return false;
+	return result;
 }
-
 
 async function main() {
 	console.log('reading DSPs from stdin');
-	let existingDsps = [];
-	let notExistingDsps = [];
-	let knownDspsKeyArchiveMismatch = [];
-	let knownDspsKeyArchiveMatch = [];
+	let previouslyUnseenKeysFound = [];
+	let solvedKeysNotMatchingArchive = [];
+	let solvedKeysMatchingArchive = [];
 
 	const args = process.argv.slice(2);
 	if (args.length == 1) {
@@ -66,51 +63,36 @@ async function main() {
 		const lines = fileContent.split('\n').map(line => line.trim()).filter(line => line);
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
-			console.log(`processing line ${i + 1} of ${lines.length}`);
 			const [domain, selector, solved_key] = await process_line(line);
-
-			let searchResult = await prisma.domainSelectorPair.findFirst({
-				where: {
-					domain: domain,
-					selector: selector
-				}
-			});
-			if (searchResult) {
-				existingDsps.push([domain, selector]);
-				console.log(`domain: ${domain}, selector: ${selector}, already exists in archive, checking key`);
-				if (await check_key(domain, selector, solved_key)) {
-					knownDspsKeyArchiveMatch.push([domain, selector]);
-				}
-				else {
-					console.log(`domain: ${domain}, selector: ${selector}, solved key does not match any of the keys in the archive, solved_key: ${solved_key}`);
-					knownDspsKeyArchiveMismatch.push([domain, selector, solved_key]);
-				}
+			const knownKeys = await findKnownKeys(domain, selector);
+			if (knownKeys.length == 0) {
+				previouslyUnseenKeysFound.push([domain, selector]);
 			}
 			else {
-				console.log(`domain: ${domain}, selector: ${selector}, does not exist in archive`);
-				notExistingDsps.push([domain, selector]);
+				if (knownKeys.includes(solved_key)) {
+					solvedKeysMatchingArchive.push([domain, selector]);
+				}
+				else {
+					solvedKeysNotMatchingArchive.push([domain, selector, solved_key]);
+				}
 			}
-			console.log(`existingDsps: ${existingDsps.length}, notExistingDsps: ${notExistingDsps.length}, knownDspsKeyArchiveMatch: ${knownDspsKeyArchiveMatch.length}, knownDspsKeyArchiveMismatch: ${knownDspsKeyArchiveMismatch.length}`);
+			console.log(`line ${i + 1} of ${lines.length}, previouslyUnseenKeysFound: ${previouslyUnseenKeysFound.length}, solvedKeysMatchingArchive: ${solvedKeysMatchingArchive.length}, solvedKeysNotMatchingArchive: ${solvedKeysNotMatchingArchive.length}`);
 		}
 
+
 		console.log();
-		console.log(`existingDsps: ${existingDsps.length}`);
-		for (let [domain, selector] of existingDsps) {
-			console.log(`domain: ${domain}, selector: ${selector}`);
+		console.log(`solved keys for which there are no keys in the archive for the corresponding DSP: ${previouslyUnseenKeysFound.length}`);
+		for (let [domain, selector, solved_key] of previouslyUnseenKeysFound) {
+			console.log(`domain: ${domain}, selector: ${selector}, solved_key: ${solved_key}`);
 		}
 		console.log();
-		console.log(`notExistingDsps: ${notExistingDsps.length}`);
-		for (let [domain, selector] of notExistingDsps) {
-			console.log(`domain: ${domain}, selector: ${selector}`);
+		console.log(`solved keys which match a key in the archive: ${solvedKeysMatchingArchive.length}`);
+		for (let [domain, selector, solved_key] of solvedKeysMatchingArchive) {
+			console.log(`domain: ${domain}, selector: ${selector}, solved_key: ${solved_key}`);
 		}
 		console.log();
-		console.log(`knowns DSPs where the solved key matches any of the keys in the archive: ${knownDspsKeyArchiveMatch.length}`);
-		for (let [domain, selector] of knownDspsKeyArchiveMatch) {
-			console.log(`domain: ${domain}, selector: ${selector}`);
-		}
-		console.log();
-		console.log(`knowns DSPs where the solved key does not match any of the keys in the archive: ${knownDspsKeyArchiveMismatch.length}`);
-		for (let [domain, selector, solved_key] of knownDspsKeyArchiveMismatch) {
+		console.log(`solved keys for which there are keys in the archive for the corresponding DSP, but no match: ${solvedKeysNotMatchingArchive.length}`);
+		for (let [domain, selector, solved_key] of solvedKeysNotMatchingArchive) {
 			console.log(`domain: ${domain}, selector: ${selector}, solved_key: ${solved_key}`);
 		}
 	}
