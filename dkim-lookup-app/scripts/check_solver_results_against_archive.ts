@@ -63,17 +63,18 @@ async function main() {
 		const lines = fileContent.split('\n').map(line => line.trim()).filter(line => line);
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
-			const [domain, selector, solved_key] = await process_line(line);
+			const [domain, selector, solved_key_tag_list] = await process_line(line);
+			const key_der_format = parseDkimTagList(solved_key_tag_list).p;
 			const knownKeys = await findKnownKeys(domain, selector);
 			if (knownKeys.length == 0) {
-				previouslyUnseenKeysFound.push([domain, selector]);
+				previouslyUnseenKeysFound.push([domain, selector, solved_key_tag_list]);
 			}
 			else {
-				if (knownKeys.includes(solved_key)) {
-					solvedKeysMatchingArchive.push([domain, selector]);
+				if (knownKeys.includes(key_der_format)) {
+					solvedKeysMatchingArchive.push([domain, selector, solved_key_tag_list]);
 				}
 				else {
-					solvedKeysNotMatchingArchive.push([domain, selector, solved_key]);
+					solvedKeysNotMatchingArchive.push([domain, selector, solved_key_tag_list]);
 				}
 			}
 			console.log(`line ${i + 1} of ${lines.length}, previouslyUnseenKeysFound: ${previouslyUnseenKeysFound.length}, solvedKeysMatchingArchive: ${solvedKeysMatchingArchive.length}, solvedKeysNotMatchingArchive: ${solvedKeysNotMatchingArchive.length}`);
@@ -87,8 +88,8 @@ async function main() {
 		}
 		console.log();
 		console.log(`solved keys which match a key in the archive: ${solvedKeysMatchingArchive.length}`);
-		for (let [domain, selector, solved_key] of solvedKeysMatchingArchive) {
-			console.log(`domain: ${domain}, selector: ${selector}, solved_key: ${solved_key}`);
+		for (let [domain, selector] of solvedKeysMatchingArchive) {
+			console.log(`domain: ${domain}, selector: ${selector}`);
 		}
 		console.log();
 		console.log(`solved keys for which there are keys in the archive for the corresponding DSP, but no match: ${solvedKeysNotMatchingArchive.length}`);
