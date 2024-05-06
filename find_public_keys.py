@@ -40,7 +40,8 @@ def decode_dkim_header_field(dkimData: str):
 class Dsp:
     domain: str
     selector: str
-    def __init__ (self, domain: str, selector: str):
+
+    def __init__(self, domain: str, selector: str):
         object.__setattr__(self, 'domain', domain.lower())
         object.__setattr__(self, 'selector', selector.lower())
 
@@ -51,10 +52,10 @@ class MsgInfo:
     signature: bytes
 
 
-dsp_queue: "queue.Queue[tuple[Dsp, MsgInfo, MsgInfo]]" = queue.Queue()
+dsp_queue: "queue.Queue[tuple[int, Dsp, list[tuple[MsgInfo, MsgInfo]]]]" = queue.Queue()
 
 
-def call_solver_and_process_result(dsp: Dsp, msg1: MsgInfo, msg2: MsgInfo, loglevel: int):
+def call_solver_and_process_result(dsp: Dsp, msg1: MsgInfo, msg2: MsgInfo, loglevel: int, dsp_index: int, msg_pair_id: str) -> str:
     logging.info(f'searching for public key for {dsp}')
     cmd = [
         "docker",
@@ -83,34 +84,40 @@ def call_solver_and_process_result(dsp: Dsp, msg1: MsgInfo, msg2: MsgInfo, logle
     e = int(data['e_hex'], 16)
     if (n < 2):
         logging.info(f'no public key found for {dsp}')
-        return
+        return '-'
     try:
         logging.info(f'found public key for {dsp}')
         rsa_key = RSA.construct((n, e))
         keyDER = rsa_key.exportKey(format='DER')
         keyDER_base64 = binascii.b2a_base64(keyDER, newline=False).decode('utf-8')
-        print(f'{dsp.domain}\t{dsp.selector}\tk=rsa; p={keyDER_base64}')
-        sys.stdout.flush()
+        return f'k=rsa; p={keyDER_base64}'
     except ValueError as e:
         logging.error(f'ValueError: {e}')
-        return
+        return f'ValueError: {e}'
 
 
 def read_and_resolve_worker(loglevel: int):
     while True:
-        logging.info(f'message pairs left: {dsp_queue.qsize()}')
-        dsp, msg1, msg2 = dsp_queue.get()
-        call_solver_and_process_result(dsp, msg1, msg2, loglevel)
+        logging.info(f'DSPs left: {dsp_queue.qsize()}')
+        dsp_index, dsp, msg_pairs = dsp_queue.get()
+        for msg_pair_index, [msg1, msg2] in enumerate(msg_pairs):
+            msg_pair_id = f'{msg_pair_index+1}/{len(msg_pairs)}'
+            key_result = call_solver_and_process_result(dsp, msg1, msg2, loglevel, dsp_index, msg_pair_id)
+            row_values = [str(dsp_index).zfill(4), dsp.domain, dsp.selector, key_result]
+            print("\t".join(row_values))
+            sys.stdout.flush()
         dsp_queue.task_done()
 
 
 def solve_msg_pairs(signed_messages: dict[Dsp, list[MsgInfo]], filter_domain: str, threads: int, loglevel: int):
     logging.info(f'searching for public key for {len(signed_messages.items())} message pairs')
-    for [dsp, msg_infos] in signed_messages.items():
-        if len(msg_infos) > 1:
-            msg1 = msg_infos[0]
-            msg2 = msg_infos[1]
-            dsp_queue.put((dsp, msg1, msg2))
+    for i, [dsp, msg_infos] in enumerate(signed_messages.items()):
+        if len(msg_infos) == 2:
+            dsp_queue.put((i, dsp, [(msg_infos[0], msg_infos[1])]))
+        elif len(msg_infos) == 3:
+            dsp_queue.put((i, dsp, [(msg_infos[0], msg_infos[1]), (msg_infos[1], msg_infos[2])]))
+        elif len(msg_infos) >= 4:
+            dsp_queue.put((i, dsp, [(msg_infos[0], msg_infos[1]), (msg_infos[2], msg_infos[3])]))
     logging.info(f'starting {threads} threads')
     for _i in range(threads):
         t_in = threading.Thread(target=read_and_resolve_worker, daemon=True, args=(loglevel, ))
