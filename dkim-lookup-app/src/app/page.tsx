@@ -1,10 +1,10 @@
 import { DomainSearchResults } from '@/components/DomainSearchResults';
 import { SearchInput } from '@/components/SearchInput';
 import { findKeysPaginated } from './actions';
-import { parseDkimRecord } from '@/lib/utils';
+import { parseDkimTagList } from '@/lib/utils';
 
 function dkimValueHasPrivateKey(dkimValue: string): boolean {
-	return parseDkimRecord(dkimValue).p !== null;
+	return !!parseDkimTagList(dkimValue).p;
 }
 
 export default async function Home({ searchParams }: {

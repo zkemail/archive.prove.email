@@ -13,12 +13,22 @@ export interface DnsDkimFetchResult {
 	timestamp: Date;
 }
 
-export function parseDkimRecord(dkimValue: string): Record<string, string | null> {
-	const result: Record<string, string | null> = {};
-	const parts = dkimValue.split(';');
+// relaxed implementation of Tag=Value List, see https://datatracker.ietf.org/doc/html/rfc6376#section-3.2
+export function parseDkimTagList(dkimValue: string): Record<string, string> {
+	const result: Record<string, string> = {};
+	const parts = dkimValue.split(';').map(part => part.trim());
 	for (const part of parts) {
-		const [key, value] = part.split('=');
-		result[key.trim()] = value?.trim() || null;
+		const i = part.indexOf('=');
+		if (i <= 0) {
+			continue;
+		}
+		const key = part.slice(0, i).trim();
+		const value = part.slice(i + 1).trim();
+		if (result.hasOwnProperty(key)) {
+			// duplicate key, keep the first one
+			continue;
+		}
+		result[key] = value;
 	}
 	return result;
 }

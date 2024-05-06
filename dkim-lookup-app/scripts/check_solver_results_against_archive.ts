@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { Prisma } from "@prisma/client";
-import { parseDkimRecord } from "@/lib/utils";
+import { parseDkimTagList } from "@/lib/utils";
 import { readFileSync } from "node:fs";
 
 
@@ -38,7 +38,7 @@ export async function findKnownKeys(domain: string, selector: string) {
 	});
 	let result = [];
 	for (let record of records) {
-		const p = parseDkimRecord(record.value).p;
+		const p = parseDkimTagList(record.value).p;
 		if (p) {
 			result.push(p);
 		}

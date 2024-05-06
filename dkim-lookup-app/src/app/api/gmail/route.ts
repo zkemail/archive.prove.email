@@ -1,5 +1,5 @@
 import { authOptions } from '@/app/auth';
-import { DomainAndSelector, parseDkimRecord } from '@/lib/utils';
+import { DomainAndSelector, parseDkimTagList } from '@/lib/utils';
 import { gmail_v1, google } from 'googleapis';
 import { getToken } from 'next-auth/jwt';
 import { getServerSession } from 'next-auth/next';
@@ -18,7 +18,7 @@ async function handleMessage(messageId: string, gmail: gmail_v1.Gmail, resultArr
 			console.log('missing DKIM-Signature value', dkimSig);
 			continue;
 		}
-		let tags = parseDkimRecord(dkimSig.value);
+		let tags = parseDkimTagList(dkimSig.value);
 		let domain = tags.d
 		if (!domain) {
 			console.log('missing d tag', tags);
