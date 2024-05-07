@@ -230,11 +230,12 @@ class ProgramArgs(argparse.Namespace):
     load_mbox: bool
     mbox_files: list[str] | None
     datasig_files: list[str] | None
-    list_only: bool
+    list_dsps: bool
     filter_domain: str
     loglevel: int
     threads: int
     sparse_nth: int
+    display_signed_text: bool
 
 
 def main():
@@ -242,9 +243,12 @@ def main():
             and try to find the RSA public key from pairs of messages signed with the same key',
                                      allow_abbrev=False)
     parser.add_argument('--mbox-files', help='load data from mbox files and save to corresponding .mbox.datasig', type=str, nargs='*')
+
     parser.add_argument('--datasig-files', help='find public keys from the data in one or many .datasig files', type=str, nargs='*')
     parser.add_argument('--sparse-nth', type=int, help='use together with --datasig-files to only process every Nth domain', default=1)
-    parser.add_argument('--list-only', help='use together with --datasig-files to list the domains and selectors in the datasig files and exit', action='store_true')
+    parser.add_argument('--list-dsps', help='use together with --datasig-files to list the domains and selectors in the datasig files and exit', action='store_true')
+    parser.add_argument('--display-signed-text', action='store_true', help='use together with --datasig-files to display the signed text of each message')
+
     parser.add_argument('--filter-domain', help='only process messages with this domain', type=str)
     parser.add_argument('--debug', action="store_const", dest="loglevel", const=logging.DEBUG, default=logging.INFO, help='enable debug logging')
     parser.add_argument('--threads', type=int, default=1, help='number of threads to use for solving')
@@ -264,9 +268,16 @@ def main():
         if args.filter_domain:
             signed_data = {dsp: msg_infos for dsp, msg_infos in signed_data.items() if dsp.domain == args.filter_domain}
 
-        if args.list_only:
+        if args.list_dsps:
             for dsp in signed_data.keys():
                 print(f'{dsp.domain}\t{dsp.selector}')
+            return
+        if args.display_signed_text:
+            for dsp, msg_infos in signed_data.items():
+                for i, msg_info in enumerate(msg_infos):
+                    print(f'signed text for domain: {dsp.domain}, selector: {dsp.selector}, message {i}:')
+                    print(msg_info.signedData.decode('utf-8'))
+                    print()
             return
         solve_msg_pairs(signed_data, args.threads, args.loglevel, args.sparse_nth)
     else:
