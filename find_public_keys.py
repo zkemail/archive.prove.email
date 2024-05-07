@@ -109,9 +109,12 @@ def read_and_resolve_worker(loglevel: int):
         dsp_queue.task_done()
 
 
-def solve_msg_pairs(signed_messages: dict[Dsp, list[MsgInfo]], filter_domain: str, threads: int, loglevel: int):
-    logging.info(f'searching for public key for {len(signed_messages.items())} message pairs')
-    for i, [dsp, msg_infos] in enumerate(signed_messages.items()):
+def solve_msg_pairs(signed_messages: dict[Dsp, list[MsgInfo]], threads: int, loglevel: int, sparse_nth: int):
+    msg_list = list(signed_messages.items())
+    if sparse_nth > 1:
+        msg_list = msg_list[::sparse_nth]
+    logging.info(f'searching for public key for {len(msg_list)} message pairs')
+    for i, (dsp, msg_infos) in enumerate(msg_list):
         if len(msg_infos) == 2:
             dsp_queue.put((i, dsp, [(msg_infos[0], msg_infos[1])]))
         elif len(msg_infos) == 3:
@@ -231,6 +234,7 @@ class ProgramArgs(argparse.Namespace):
     filter_domain: str
     loglevel: int
     threads: int
+    sparse_nth: int
 
 
 def main():
@@ -239,6 +243,7 @@ def main():
                                      allow_abbrev=False)
     parser.add_argument('--mbox-files', help='load data from mbox files and save to corresponding .mbox.datasig', type=str, nargs='*')
     parser.add_argument('--datasig-files', help='find public keys from the data in one or many .datasig files', type=str, nargs='*')
+    parser.add_argument('--sparse-nth', type=int, help='use together with --datasig-files to only process every Nth domain', default=1)
     parser.add_argument('--list-only', help='use together with --datasig-files to list the domains and selectors in the datasig files and exit', action='store_true')
     parser.add_argument('--filter-domain', help='only process messages with this domain', type=str)
     parser.add_argument('--debug', action="store_const", dest="loglevel", const=logging.DEBUG, default=logging.INFO, help='enable debug logging')
@@ -263,7 +268,7 @@ def main():
             for dsp in signed_data.keys():
                 print(f'{dsp.domain}\t{dsp.selector}')
             return
-        solve_msg_pairs(signed_data, args.filter_domain, args.threads, args.loglevel)
+        solve_msg_pairs(signed_data, args.threads, args.loglevel, args.sparse_nth)
     else:
         parser.error('no action specified')
 
