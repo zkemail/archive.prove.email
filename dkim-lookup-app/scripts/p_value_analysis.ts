@@ -39,13 +39,15 @@ async function main() {
 	}
 	console.log(`found ${invalid_records_without_p.length} records that do not contain p=`);
 	for (let r of invalid_records_without_p) {
-		console.log(`domain: ${r.domainSelectorPair.domain}, selector: ${r.domainSelectorPair.selector}, value: ${r.value}`);
+		const dns = `${r.domainSelectorPair.selector}._domainkey.${r.domainSelectorPair.domain}`
+		console.log(`${dns}\t${r.value}`);
 	}
 
 	console.log();
-	console.log(`found ${invalid_records_with_p.length} records that contain p=, but where p cannot be parsed`);
+	console.log(`found ${invalid_records_with_p.length} records that contain p=, but that could not be parsed as a tag list`);
 	for (let r of invalid_records_with_p) {
-		console.log(`domain: ${r.domainSelectorPair.domain}, selector: ${r.domainSelectorPair.selector}, value: ${r.value}`);
+		const dns = `${r.domainSelectorPair.selector}._domainkey.${r.domainSelectorPair.domain}`
+		console.log(`${dns}\t${r.value}`);
 	}
 }
 
