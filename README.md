@@ -26,14 +26,16 @@ pip3 install pycryptodome
 These commands extract signed data (canonicalized headers) and signatures from each message in an email archive,
 and searches for public RSA keys for pairs of messages with the same DKIM domain and selector.
 
-Example:
+Load mbox files and extract signed data and signatures to corresponding .datasig files:
 
 ```bash
-# Load an mbox file and extract signed data and signatures to a .datasig file
-python3 find_public_keys.py --mbox-file inbox.mbox
-
-# Find public RSA keys from the .datasig file
-python3 find_public_keys.py --datasig-file inbox.mbox.datasig
+python3 extract_signed_data.py --mbox-files inbox1.mbox inbox2.mbox
 ```
 
-Run `python3 find_public_keys.py --help` for more information.
+Find public RSA keys from the .datasig files
+
+```bash
+python3 find_public_keys.py --datasig-files inbox1.mbox.datasig inbox2.mbox.datasig
+```
+
+Run `python3 extract_signed_data.py --help` and `python3 find_public_keys.py --help` for more information.
