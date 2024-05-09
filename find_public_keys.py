@@ -50,6 +50,7 @@ class Dsp:
 class MsgInfo:
     signedData: bytes
     signature: bytes
+    source: str
 
 
 dsp_queue: "queue.Queue[tuple[int, Dsp, list[tuple[MsgInfo, MsgInfo]]]]" = queue.Queue()
@@ -103,7 +104,7 @@ def read_and_resolve_worker(loglevel: int):
         for msg_pair_index, [msg1, msg2] in enumerate(msg_pairs):
             msg_pair_id = f'{msg_pair_index+1}/{len(msg_pairs)}'
             key_result = call_solver_and_process_result(dsp, msg1, msg2, loglevel, dsp_index, msg_pair_id)
-            row_values = [str(dsp_index).zfill(4), dsp.domain, dsp.selector, key_result]
+            row_values = [str(dsp_index).zfill(4), dsp.domain, dsp.selector, key_result, msg1.source, msg2.source]
             print("\t".join(row_values))
             sys.stdout.flush()
         dsp_queue.task_done()
@@ -141,17 +142,16 @@ class Statistics:
     validation_error: int = 0
 
 
-def parse_mbox_file(mbox_file: str) -> dict[Dsp, list[MsgInfo]]:
+def parse_mbox_file(filepath: str) -> dict[Dsp, list[MsgInfo]]:
     results: dict[Dsp, list[MsgInfo]] = {}
-    message_index = 0
-    logging.info(f'loading {mbox_file}')
-    mb = mailbox.mbox(mbox_file, create=False)
+    filename = os.path.basename(filepath)
+    logging.info(f'loading {filepath}')
+    mb = mailbox.mbox(filepath, create=False)
     number_of_messages = len(mb)
     progressReporter = ProgressReporter(number_of_messages, 0)
     statistics = Statistics()
     logging.info(f'processing {len(mb)} messages')
-    for message in mb:
-        message_index += 1
+    for message_index, message in enumerate(mb):
         progressReporter.increment()
         dkimSignatureFields = message.get_all('DKIM-Signature')
         if not dkimSignatureFields:
@@ -205,12 +205,12 @@ def parse_mbox_file(mbox_file: str) -> dict[Dsp, list[MsgInfo]]:
                 sys.exit(1)
 
             dsp = Dsp(domain, selector)
-            msg_info = MsgInfo(signed_data, signature)
+            msg_info = MsgInfo(signed_data, signature, f'{filename}:{message_index}')
             if not dsp in results:
                 results[dsp] = []
             results[dsp].append(msg_info)
             statistics.total += 1
-    logging.info(f'processed {message_index} messages')
+    logging.info(f'processed {len(mb)} messages')
     logging.info(f'statistics: {statistics}')
     return results
 
