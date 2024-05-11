@@ -7,7 +7,7 @@ import mailbox
 import sys
 import email.utils
 import argparse
-from common import decode_dkim_header_field
+from common import decode_dkim_tag_value_list
 
 
 def domain_statistics(mboxFile: str):
@@ -32,7 +32,7 @@ def domain_statistics(mboxFile: str):
 			print(f'warning: invalid From header {fromAddress}', file=sys.stderr)
 			continue
 		fromDomain = fromAddress.rpartition('@')[2]
-		dkimRecord = decode_dkim_header_field(dkimSignature)
+		dkimRecord = decode_dkim_tag_value_list(dkimSignature)
 		dkimDomain = dkimRecord['d']
 		dkimDomains.add(dkimDomain)
 		fromDomains.add(fromDomain)
@@ -82,7 +82,7 @@ if __name__ == '__main__':
 	argparser = argparse.ArgumentParser(description='Collect various statistics about domains, selectors, and DKIM signatures')
 	argparser.add_argument('--mboxFile', help='Show statistics about DKIM sigatures and domains for an .mbox file')
 	tsvHelp = 'For a .tsv file with two columns(domain, selector), show a list of selectors, with percentage of domains convered for each selector. Also print accumulated percentage of domains covered when using the N most common selectors'
-	argparser.add_argument('--tsvFile',  help=tsvHelp)
+	argparser.add_argument('--tsvFile', help=tsvHelp)
 	args = argparser.parse_args()
 
 	if (not args.mboxFile and not args.tsvFile):

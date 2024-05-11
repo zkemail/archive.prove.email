@@ -2,7 +2,7 @@ import argparse
 import sys
 import mailbox
 
-from common import decode_dkim_header_field
+from common import decode_dkim_tag_value_list
 
 
 def add_to_dict(dct: dict[str, list[str]], domain: str, selector: str):
@@ -21,7 +21,7 @@ def get_domain_selectors(outputDict: dict[str, list[str]], mboxFile: str):
 		if not dkimSignatures:
 			continue
 		for dkimSignature in dkimSignatures:
-			dkimRecord = decode_dkim_header_field(dkimSignature)
+			dkimRecord = decode_dkim_tag_value_list(dkimSignature)
 			domain = dkimRecord['d']
 			selector = dkimRecord['s']
 			add_to_dict(outputDict, domain, selector)

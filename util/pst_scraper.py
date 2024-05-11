@@ -4,7 +4,7 @@ import pypff
 import email.parser
 from dataclasses import dataclass
 from typing import cast
-from common import decode_dkim_header_field
+from common import decode_dkim_tag_value_list
 
 
 @dataclass
@@ -28,7 +28,7 @@ def parse_header(data: str):
 	if not dkim_fields:
 		return
 	for dkim_field in dkim_fields:
-		dkimRecord = decode_dkim_header_field(dkim_field)
+		dkimRecord = decode_dkim_tag_value_list(dkim_field)
 		domain = dkimRecord['d']
 		selector = dkimRecord['s']
 		dsps.add(f'{domain}\t{selector}')
