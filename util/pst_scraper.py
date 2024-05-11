@@ -4,7 +4,7 @@ import pypff
 import email.parser
 from dataclasses import dataclass
 from typing import cast
-from common import decode_dkim_tag_value_list
+from dkim_util import decode_dkim_tag_value_list
 
 
 @dataclass

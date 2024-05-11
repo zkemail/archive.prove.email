@@ -2,7 +2,7 @@ import argparse
 import sys
 import mailbox
 
-from common import decode_dkim_tag_value_list
+from dkim_util import decode_dkim_tag_value_list
 
 
 def add_to_dict(dct: dict[str, list[str]], domain: str, selector: str):

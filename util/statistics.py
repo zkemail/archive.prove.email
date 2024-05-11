@@ -7,7 +7,7 @@ import mailbox
 import sys
 import email.utils
 import argparse
-from common import decode_dkim_tag_value_list
+from dkim_util import decode_dkim_tag_value_list
 
 
 def domain_statistics(mboxFile: str):
