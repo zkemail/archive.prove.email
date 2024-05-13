@@ -18,6 +18,10 @@ const nextConfig = {
 					key: 'Content-Security-Policy',
 					value: cspValue.join('; '),
 				},
+				{
+					key: 'X-Content-Type-Options',
+					value: 'nosniff',
+				},
 			],
 		}]
 	},
