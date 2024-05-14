@@ -14,25 +14,28 @@ async function process_line(line: string) {
 		console.log(`domain: ${domain}, selector: ${selector}, added: ${added}`);
 	}
 	catch (error: any) {
-		console.error(`add_dsps.ts error: ${error}`);
+		console.log(`add_dsps.ts error: ${error}`);
 	}
 }
 
 async function main() {
 	const args = process.argv.slice(2);
+	const start_time = Date.now();
 	if (args.length == 1) {
 		const filename = args[0];
-		console.log(`reading DSPs from file: ${filename}`);
+		console.error(`reading DSPs from file: ${filename}`);
 		const fileContent = readFileSync(filename, 'utf8');
 		const lines = fileContent.split('\n').map(line => line.trim()).filter(line => line);
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
-			console.log(`processing line ${i + 1} of ${lines.length}`);
+			let elapsed = Date.now() - start_time;
+			let time_left = (elapsed / (i + 1)) * (lines.length - i);
+			console.error(`processing line ${i + 1} of ${lines.length}, time left: ${(time_left / 1000 / 60).toFixed(2)} minutes`);
 			await process_line(line);
 		}
 	}
 	else {
-		console.log('reading DSPs from stdin');
+		console.error('reading DSPs from stdin');
 		for await (const line of createInterface({ input: process.stdin })) {
 			await process_line(line);
 		}
