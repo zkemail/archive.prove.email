@@ -7,7 +7,14 @@ export async function generateWitness(dsp: DomainSelectorPair, dkimRecord: DkimR
 	let canonicalRecordString = getCanonicalRecordString(dsp, dkimRecord.value);
 	const witness = new WitnessClient(process.env.WITNESS_API_KEY);
 	const leafHash = witness.hash(canonicalRecordString);
-	const timestamp = await witness.postLeafAndGetTimestamp(leafHash);
+	let timestamp;
+	try {
+		timestamp = await witness.postLeafAndGetTimestamp(leafHash);
+	}
+	catch (error: any) {
+		console.error(`witness.postLeafAndGetTimestamp failed for ${recordToString(dkimRecord)}, leafHash ${leafHash}: ${error}`);
+		return;
+	}
 	console.log(`leaf ${leafHash} was timestamped at ${timestamp}`);
 	const proof = await witness.getProofForLeafHash(leafHash);
 	const verified = await witness.verifyProofChain(proof);
