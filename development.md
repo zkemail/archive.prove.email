@@ -12,10 +12,9 @@ For general guidelines on contributing to the projects under ZK Email, see the [
 
 ### Installation
 
-Navigate to the app directory and install dependencies
+Install dependencies
 
 ```bash
-cd dkim-lookup-app
 pnpm install
 ```
 

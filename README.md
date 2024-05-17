@@ -27,7 +27,7 @@ curl "https://archive.prove.email/api/domains/ethereum.org" | python -m json.too
 
 ## Extract domains and selectors from an exported mailbox
 
-The scraper tools (`util/mbox_scraper.py` and `util/pst_scraper.py`) allow for extacting domains and selectors
+The scraper tools (src/util/mbox_scraper.py` and `(src/util/pst_scraper.py`) allow for extacting domains and selectors
 from the messages in an email account from any provider, by scraping a file that is exported from the mail account.
 
 ### 1. Export email messages
@@ -59,14 +59,14 @@ When you have obtained an .mbox or a .pst file, use `mbox_scraper.py` or `pst_sc
 Example for .mbox files:
 
 ```bash
-python3 util/mbox_scraper.py inbox.mbox > domains_and_selectors.tsv
+python3 src/util/mbox_scraper.py inbox.mbox > domains_and_selectors.tsv
 ```
 
 Example for .pst files:
 
 ```bash
 pip3 install libpff-python
-python3 util/pst_scraper.py inbox.pst > domains_and_selectors.tsv
+python3 src/util/pst_scraper.py inbox.pst > domains_and_selectors.tsv
 ```
 
 The output file, (`domains_and_selectors.tsv` in the examples above), is a [TSV](https://en.wikipedia.org/wiki/Tab-separated_values) file with two columns: domain and selector.

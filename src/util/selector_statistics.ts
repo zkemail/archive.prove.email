@@ -3,7 +3,7 @@ import path from "path";
 import fs from "fs";
 
 // usage:
-// pnpm tsx scripts/selector_statistics.ts OUTPUT_DIRECTORY
+// pnpm tsx src/util/selector_statistics.ts OUTPUT_DIRECTORY
 
 async function main() {
 

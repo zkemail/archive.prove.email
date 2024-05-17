@@ -8,11 +8,11 @@
 				"base": "$tsc",
 				"fileLocation": [
 					"relative",
-					"${workspaceFolder}/dkim-lookup-app"
+					"${workspaceFolder}"
 				],
 			},
 			"options": {
-				"cwd": "${workspaceFolder}/dkim-lookup-app"
+				"cwd": "${workspaceFolder}"
 			}
 		}
 	]
