@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url = env("POSTGRES_PRISMA_URL") // connection pooling
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL") // connection pooling
   directUrl = env("POSTGRES_URL_NON_POOLING") // direct connection
 }
 
@@ -18,11 +18,11 @@ model DomainSelectorPair {
 }
 
 model DkimRecord {
-  id         Int      @id @default(autoincrement())
+  id                   Int                @id @default(autoincrement())
   domainSelectorPair   DomainSelectorPair @relation(fields: [domainSelectorPairId], references: [id])
   domainSelectorPairId Int
-  firstSeenAt  DateTime
-  lastSeenAt  DateTime?
-  provenanceVerified Boolean?
-  value      String
+  firstSeenAt          DateTime
+  lastSeenAt           DateTime?
+  provenanceVerified   Boolean?
+  value                String
 }
