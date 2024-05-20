@@ -1,8 +1,11 @@
 import { DomainSelectorPair, Prisma } from "@prisma/client";
 import { createDkimRecord, dspToString, prisma, recordToString, updateDspTimestamp } from "./db";
 import { generateWitness } from "./generateWitness";
-import { DnsDkimFetchResult, SourceIdentifier } from "./utils";
+import { DnsDkimFetchResult, SourceIdentifier, kValueToKeyType, parseDkimTagList } from "./utils";
 import dns from 'dns';
+import { promisify } from "util";
+import { KeyType } from "@prisma/client";
+import { execFileSync } from "node:child_process";
 
 async function refreshKeysFromDns(dsp: DomainSelectorPair) {
 	let now = new Date();
@@ -58,7 +61,9 @@ export async function addDomainSelectorPair(domain: string, selector: string, so
 					value: record.value,
 					firstSeenAt: record.timestamp,
 					lastSeenAt: record.timestamp,
-					provenanceVerified: false
+					provenanceVerified: false,
+					keyType: record.keyType,
+					keyData: record.keyDataBase64,
 				}))]
 			}
 		},
@@ -69,8 +74,52 @@ export async function addDomainSelectorPair(domain: string, selector: string, so
 	newDsp.records.forEach(record => {
 		generateWitness(newDsp, record);
 	});
-
 	return true;
+}
+
+async function runCommand(file: string, args: string[], input: Buffer) {
+	console.log(`running ${file} ${args.join(' ')}`);
+	try {
+		const result = execFileSync(file, args, { input });
+		return result.toString();
+	}
+	catch (error) {
+		console.log(`error running ${file} ${args.join(' ')}: ${error}`);
+		return null;
+	}
+}
+
+// return key info if the key is valid, othwerwise raise an exception
+async function decodeKeyInfo(dkimRecordTsv: string): Promise<{ keyType: KeyType, keyDataBase64: string | null }> {
+	const tagValues = parseDkimTagList(dkimRecordTsv);
+	console.log(`tagValues: ${JSON.stringify(tagValues)}`);
+	const keyType = kValueToKeyType(tagValues['k']);
+	if (!tagValues.hasOwnProperty('p')) {
+		console.log(`no p= tag found in dkim record`);
+		throw `no p= tag found in dkim record`;
+	}
+	const p_base64 = tagValues['p'].trim();
+	if (p_base64 === '') {
+		console.log(`empty p= tag found in dkim record`);
+		// an empty p= tag is allowed and means that the key is revoked, see https://datatracker.ietf.org/doc/html/rfc6376#section-3.6.1
+		return { keyType, keyDataBase64: '' };
+	}
+
+	const p_binary = Buffer.from(p_base64, 'base64');
+	if (keyType === 'RSA') {
+		console.log(`running openssl asn1parse on RSA key`);
+		const asn1parse_output = await runCommand('/usr/bin/env', ['openssl', 'asn1parse', '-inform', 'DER'], p_binary);
+		if (!asn1parse_output) {
+			throw `error running openssl asn1parse on RSA key`;
+		}
+		console.log(`openssl output: ${JSON.stringify(asn1parse_output)}`);
+
+		// p_base64 may contain non-base64 characters, which are ignored by Buffer.from
+		const p_base64_normalized = p_binary.toString('base64');
+		return { keyType, keyDataBase64: p_base64_normalized };
+	} else {
+		return { keyType, keyDataBase64: null };
+	}
 }
 
 export async function fetchDkimDnsRecord(domain: string, selector: string): Promise<DnsDkimFetchResult[]> {
@@ -89,11 +138,15 @@ export async function fetchDkimDnsRecord(domain: string, selector: string): Prom
 	for (let record of records) {
 		console.log(`record: ${record}`);
 		console.log(`found dns record for ${qname}`);
+		const { keyType, keyDataBase64 } = await decodeKeyInfo(record);
+		console.log(`keyType: ${keyType}, keyDataBase64: ${keyDataBase64}`);
 		const dkimRecord: DnsDkimFetchResult = {
 			selector,
 			domain,
 			value: record,
 			timestamp: new Date(),
+			keyType,
+			keyDataBase64
 		};
 		result.push(dkimRecord);
 	}

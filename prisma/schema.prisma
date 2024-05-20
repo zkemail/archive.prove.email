@@ -22,6 +22,11 @@ model DomainSelectorPair {
   sourceIdentifier String
 }
 
+enum KeyType {
+  RSA
+  Ed25519
+}
+
 model DkimRecord {
   id                   Int                @id @default(autoincrement())
   domainSelectorPair   DomainSelectorPair @relation(fields: [domainSelectorPairId], references: [id])
@@ -29,5 +34,8 @@ model DkimRecord {
   firstSeenAt          DateTime
   lastSeenAt           DateTime?
   provenanceVerified   Boolean?
-  value                String
+  value                String // The DKIM record as it appears in DNS TXT records
+  keyType              KeyType?
+  keyData              String?
+  source               String?
 }

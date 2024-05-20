@@ -79,7 +79,9 @@ export async function createDkimRecord(dsp: DomainSelectorPair, dkimDsnRecord: D
 			value: dkimDsnRecord.value,
 			firstSeenAt: dkimDsnRecord.timestamp,
 			lastSeenAt: dkimDsnRecord.timestamp,
-			provenanceVerified: false
+			provenanceVerified: false,
+			keyType: dkimDsnRecord.keyType,
+			keyData: dkimDsnRecord.keyDataBase64,
 		},
 	});
 	console.log(`created dkim record ${recordToString(dkimRecord)} for domain/selector pair ${dspToString(dsp)}`);

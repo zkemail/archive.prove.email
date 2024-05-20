@@ -1,5 +1,6 @@
 import { ReadonlyHeaders } from "next/dist/server/web/spec-extension/adapters/headers";
 import { RateLimiterMemory } from "rate-limiter-flexible";
+import { KeyType } from "@prisma/client";
 
 export type DomainAndSelector = {
 	domain: string,
@@ -11,6 +12,23 @@ export interface DnsDkimFetchResult {
 	selector: string;
 	value: string;
 	timestamp: Date;
+	keyType: KeyType;
+	keyDataBase64: string | null;
+}
+
+
+export function kValueToKeyType(s: string | null | undefined): KeyType {
+	if (s === null || s === undefined) {
+		// if k is not specified, RSA is implied, see https://datatracker.ietf.org/doc/html/rfc6376#section-3.6.1
+		return 'RSA';
+	}
+	if (s.toLowerCase() === 'rsa') {
+		return 'RSA';
+	}
+	if (s.toLowerCase() === 'ed25519') {
+		return 'Ed25519';
+	}
+	throw new Error(`Unknown key type: "${s}"`);
 }
 
 // relaxed implementation of Tag=Value List, see https://datatracker.ietf.org/doc/html/rfc6376#section-3.2
