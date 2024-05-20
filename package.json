@@ -5,10 +5,9 @@
 	"private": true,
 	"scripts": {
 		"dev": "next dev",
-		"build": "prisma generate && prisma migrate deploy && next build",
+		"build": "prisma generate --generator client_js && prisma migrate deploy && next build",
 		"start": "next start",
 		"preinstall": "npx only-allow pnpm",
-		"postinstall": "prisma generate",
 		"check-types": "tsc --noEmit",
 		"lint": "next lint"
 	},

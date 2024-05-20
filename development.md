@@ -15,6 +15,7 @@ For general guidelines on contributing to the projects under ZK Email, see the [
 Install dependencies
 
 ```bash
+pip3 install prisma
 pnpm install
 ```
 
