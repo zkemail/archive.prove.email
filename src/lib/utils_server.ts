@@ -1,7 +1,7 @@
 import { DomainSelectorPair, Prisma } from "@prisma/client";
 import { createDkimRecord, dspToString, prisma, recordToString, updateDspTimestamp } from "./db";
 import { generateWitness } from "./generateWitness";
-import { DnsDkimFetchResult, SourceIdentifier, kValueToKeyType, parseDkimTagList } from "./utils";
+import { DnsDkimFetchResult, DspSourceIdentifier, kValueToKeyType, parseDkimTagList } from "./utils";
 import dns from 'dns';
 import { promisify } from "util";
 import { KeyType } from "@prisma/client";
@@ -20,7 +20,7 @@ async function refreshKeysFromDns(dsp: DomainSelectorPair) {
 /**
  * @returns true iff a record was added
  */
-export async function addDomainSelectorPair(domain: string, selector: string, sourceIdentifier: SourceIdentifier): Promise<boolean> {
+export async function addDomainSelectorPair(domain: string, selector: string, sourceIdentifier: DspSourceIdentifier): Promise<boolean> {
 
 	domain = domain.toLowerCase();
 	selector = selector.toLowerCase();

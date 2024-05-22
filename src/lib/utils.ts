@@ -115,19 +115,31 @@ export function truncate(s: string, maxLength: number) {
 	}
 }
 
-export const SourceIdentifiers = ['top_1m_lookup', 'api', 'selector_guesser', 'seed', 'try_selectors', 'api_auto', 'scraper', 'unknown'] as const;
-export type SourceIdentifier = typeof SourceIdentifiers[number];
+export const DspSourceIdentifiers = ['top_1m_lookup', 'api', 'selector_guesser', 'seed', 'try_selectors', 'api_auto', 'scraper', 'public_key_gcd_batch', 'unknown'] as const;
+export type DspSourceIdentifier = typeof DspSourceIdentifiers[number];
 
-export function stringToSourceIdentifier(s: string): SourceIdentifier {
-	const sourceIdentifier = SourceIdentifiers.find(id => id === s);
+export function stringToDspSourceIdentifier(s: string): DspSourceIdentifier {
+	const sourceIdentifier = DspSourceIdentifiers.find(id => id === s);
 	if (sourceIdentifier) {
 		return sourceIdentifier;
 	}
 	return 'unknown';
 }
 
-export function sourceIdentifierToHumanReadable(sourceIdentifierStr: string) {
-	switch (stringToSourceIdentifier(sourceIdentifierStr)) {
+export const KeySourceIdentifiers = ['public_key_gcd_batch', 'unknown'] as const;
+export type KeySourceIdentifier = typeof KeySourceIdentifiers[number];
+
+export function stringToKeySourceIdentifier(s: string): KeySourceIdentifier {
+	const sourceIdentifier = KeySourceIdentifiers.find(id => id === s);
+	if (sourceIdentifier) {
+		return sourceIdentifier;
+	}
+	return 'unknown';
+}
+
+
+export function dspSourceIdentifierToHumanReadable(sourceIdentifierStr: string) {
+	switch (stringToDspSourceIdentifier(sourceIdentifierStr)) {
 		case 'top_1m_lookup':
 		case 'scraper':
 			return 'Scraped';
@@ -141,6 +153,18 @@ export function sourceIdentifierToHumanReadable(sourceIdentifierStr: string) {
 			return 'Seed';
 		case 'try_selectors':
 			return 'Try selectors';
+		case 'public_key_gcd_batch':
+			return 'Mail archive';
+		case 'unknown':
+			return 'Unknown';
+	}
+}
+
+
+export function keySourceIdentifierToHumanReadable(sourceIdentifierStr: string) {
+	switch (stringToKeySourceIdentifier(sourceIdentifierStr)) {
+		case 'public_key_gcd_batch':
+			return 'Reverse engineered';
 		case 'unknown':
 			return 'Unknown';
 	}

@@ -1,7 +1,7 @@
 import { RecordWithSelector } from '@/lib/db';
 import { FC, ReactNode } from 'react';
 import { cardStyle } from './styles';
-import { getCanonicalRecordString, sourceIdentifierToHumanReadable } from '@/lib/utils';
+import { getCanonicalRecordString, dspSourceIdentifierToHumanReadable, keySourceIdentifierToHumanReadable } from '@/lib/utils';
 import { WitnessClient } from '@witnessco/client';
 import { Timestamp } from './Timestamp';
 
@@ -72,11 +72,13 @@ export const SelectorResult: React.FC<SelectorResultProps> = ({ record }) => {
 					{record.value}
 				</pre>
 			</Row>
-			<Row label='Origin:'>{
-				record.domainSelectorPair.sourceIdentifier ?
-					sourceIdentifierToHumanReadable(record.domainSelectorPair.sourceIdentifier)
-					: 'Inbox upload'
-			}</Row>
+			{
+				record.domainSelectorPair.sourceIdentifier && record.domainSelectorPair.sourceIdentifier !== 'unknown' &&
+				<Row label='Selector origin:'>
+					{dspSourceIdentifierToHumanReadable(record.domainSelectorPair.sourceIdentifier)}
+				</Row>
+			}
+			{record.source && <Row label='Key origin:'>{keySourceIdentifierToHumanReadable(record.source)}</Row>}
 		</div>
 	);
 };
