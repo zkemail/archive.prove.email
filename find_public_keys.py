@@ -16,7 +16,7 @@ from common import Dsp, MsgInfo
 dsp_queue: "queue.Queue[tuple[int, Dsp, list[tuple[MsgInfo, MsgInfo]]]]" = queue.Queue()
 
 
-def call_solver_and_process_result(dsp: Dsp, msg1: MsgInfo, msg2: MsgInfo, loglevel: int, dsp_index: int, msg_pair_id: str) -> str:
+def call_solver_and_process_result(dsp: Dsp, msg1: MsgInfo, msg2: MsgInfo, loglevel: int) -> str:
     logging.info(f'searching for public key for {dsp}')
     cmd = [
         "docker",
@@ -61,10 +61,9 @@ def read_and_resolve_worker(loglevel: int):
     while True:
         logging.info(f'DSPs left: {dsp_queue.qsize()}')
         dsp_index, dsp, msg_pairs = dsp_queue.get()
-        for msg_pair_index, [msg1, msg2] in enumerate(msg_pairs):
-            msg_pair_id = f'{msg_pair_index+1}/{len(msg_pairs)}'
-            key_result = call_solver_and_process_result(dsp, msg1, msg2, loglevel, dsp_index, msg_pair_id)
-            row_values = [str(dsp_index).zfill(4), dsp.domain, dsp.selector, key_result, msg1.source, msg2.source]
+        for msg1, msg2 in msg_pairs:
+            key_result = call_solver_and_process_result(dsp, msg1, msg2, loglevel)
+            row_values = [str(dsp_index).zfill(4), dsp.domain, dsp.selector, key_result, msg1.source, msg2.source, msg1.date, msg2.date]
             print("\t".join(row_values))
             sys.stdout.flush()
         dsp_queue.task_done()

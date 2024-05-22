@@ -107,7 +107,8 @@ def parse_mbox_file(filepath: str) -> dict[Dsp, list[MsgInfo]]:
                 sys.exit(1)
 
             dsp = Dsp(domain, selector)
-            msg_info = MsgInfo(signed_data, signature, f'{filename}:{message_index}')
+            msg_date = message.get('Date', 'unknown')
+            msg_info = MsgInfo(signed_data, signature, f'{filename}:{message_index}', msg_date)
             if not dsp in results:
                 results[dsp] = []
             results[dsp].append(msg_info)

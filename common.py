@@ -17,3 +17,4 @@ class MsgInfo:
     signedData: bytes
     signature: bytes
     source: str
+    date: str
