@@ -5,6 +5,7 @@ from email.headerregistry import DateHeader
 import sys
 from typing import Any
 from prisma import Prisma
+from prisma.enums import KeyType
 
 from dkim_util import decode_dkim_tag_value_list
 
@@ -70,6 +71,8 @@ async def add_records(filename: str, prisma: Prisma):
 				        'firstSeenAt': oldest_date or datetime.now(),
 				        'lastSeenAt': newest_date or datetime.now(),
 				        'value': dkim_tvl,
+						'keyType': KeyType.RSA,
+						'keyData': p,
 				        'source': 'public_key_gcd_batch',
 				    })
 				print(f'created record for {domain} / {selector}')
