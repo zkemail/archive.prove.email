@@ -3,6 +3,9 @@
 	"version": "0.1.0",
 	"license": "MIT",
 	"private": true,
+	"engines": {
+		"node": ">=v22.2.0"
+	},
 	"scripts": {
 		"dev": "next dev",
 		"build": "prisma generate --generator client_js && prisma migrate deploy && next build",
