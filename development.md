@@ -16,6 +16,7 @@ Install dependencies
 
 ```bash
 pip3 install prisma
+prisma generate
 pnpm install
 ```
 
