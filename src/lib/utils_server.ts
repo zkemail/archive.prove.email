@@ -3,7 +3,6 @@ import { createDkimRecord, dspToString, prisma, recordToString, updateDspTimesta
 import { generateWitness } from "./generateWitness";
 import { DnsDkimFetchResult, DspSourceIdentifier, kValueToKeyType, parseDkimTagList } from "./utils";
 import dns from 'dns';
-import { promisify } from "util";
 import { KeyType } from "@prisma/client";
 import { execFileSync } from "node:child_process";
 
@@ -40,7 +39,7 @@ export async function addDomainSelectorPair(domain: string, selector: string, so
 	});
 	if (dsp) {
 		console.log(`found domain/selector pair ${dspToString(dsp)}`);
-		refreshKeysFromDns(dsp);
+		await refreshKeysFromDns(dsp);
 		return false;
 	}
 	let records = await fetchDkimDnsRecord(domain, selector);
@@ -95,7 +94,6 @@ async function decodeKeyInfo(dkimRecordTsv: string): Promise<{ keyType: KeyType,
 	console.log(`tagValues: ${JSON.stringify(tagValues)}`);
 	const keyType = kValueToKeyType(tagValues['k']);
 	if (!tagValues.hasOwnProperty('p')) {
-		console.log(`no p= tag found in dkim record`);
 		throw `no p= tag found in dkim record`;
 	}
 	const p_base64 = tagValues['p'].trim();
@@ -138,17 +136,23 @@ export async function fetchDkimDnsRecord(domain: string, selector: string): Prom
 	for (let record of records) {
 		console.log(`record: ${record}`);
 		console.log(`found dns record for ${qname}`);
-		const { keyType, keyDataBase64 } = await decodeKeyInfo(record);
-		console.log(`keyType: ${keyType}, keyDataBase64: ${keyDataBase64}`);
-		const dkimRecord: DnsDkimFetchResult = {
-			selector,
-			domain,
-			value: record,
-			timestamp: new Date(),
-			keyType,
-			keyDataBase64
-		};
-		result.push(dkimRecord);
+		try {
+			const { keyType, keyDataBase64 } = await decodeKeyInfo(record);
+			console.log(`keyType: ${keyType}, keyDataBase64: ${keyDataBase64}`);
+			const dkimRecord: DnsDkimFetchResult = {
+				selector,
+				domain,
+				value: record,
+				timestamp: new Date(),
+				keyType,
+				keyDataBase64
+			};
+			result.push(dkimRecord);
+		}
+		catch (error) {
+			console.log(`error decoding record: ${error}`);
+		}
+
 	}
 	return result
 }
