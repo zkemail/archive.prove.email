@@ -1,48 +1,22 @@
 #!.venv/bin/python3
 import binascii
-import json
 import logging
 import os
 import argparse
 import pickle
 import queue
-import subprocess
 import sys
-import base64
 import threading
 from Crypto.PublicKey import RSA
 from common import Dsp, MsgInfo
+from sigs2rsa_gmpy import find_n
 
 dsp_queue: "queue.Queue[tuple[int, Dsp, list[tuple[MsgInfo, MsgInfo]]]]" = queue.Queue()
 
 
 def call_solver_and_process_result(dsp: Dsp, msg1: MsgInfo, msg2: MsgInfo, loglevel: int) -> str:
     logging.info(f'searching for public key for {dsp}')
-    cmd = [
-        "docker",
-        "run",
-        "--rm",
-        "--mount",
-        f"type=bind,source={os.getcwd()},target=/app",
-        "--workdir=/app",
-        "sagemath:latest",
-        "sage",
-        "sigs2rsa.py",
-        "--loglevel",
-        str(loglevel),
-    ]
-    data_parameters = [
-        base64.b64encode(msg1.signedData).decode('utf-8'),
-        base64.b64encode(msg1.signature).decode('utf-8'),
-        base64.b64encode(msg2.signedData).decode('utf-8'),
-        base64.b64encode(msg2.signature).decode('utf-8'),
-    ]
-    logging.debug(" ".join(cmd) + ' [... data parameters ...]')
-
-    output = subprocess.check_output(cmd + data_parameters)
-    data = json.loads(output)
-    n = int(data['n_hex'], 16)
-    e = int(data['e_hex'], 16)
+    n, e = find_n([msg1.signedData, msg2.signedData], [msg1.signature, msg2.signature])
     if (n < 2):
         logging.info(f'no public key found for {dsp}')
         return '-'
@@ -68,6 +42,12 @@ def read_and_resolve_worker(loglevel: int):
             sys.stdout.flush()
         dsp_queue.task_done()
 
+def include_dsp(dsp: Dsp) -> bool:
+    if dsp.domain == 'mail.messari.io' and dsp.selector == 's1':
+        # 2048 bits
+        return True
+    
+    return True
 
 def solve_msg_pairs(signed_messages: dict[Dsp, list[MsgInfo]], threads: int, loglevel: int, sparse_nth: int):
     msg_list = list(signed_messages.items())

@@ -49,21 +49,27 @@ def find_n(messages: list[bytes], signatures: list[bytes]):
 
     for hashfn in [hashlib.sha256]:
         pairs = [message_sig_pair(size_bytes, m, s, hashfn) for (m, s) in zip(messages, signatures)]
+        logging.error(f'ppppppppppppp pairs={pairs}')
         for e in [0x10001, 3, 17]:
             logging.debug(f'solving for hashfn={hashfn.__name__}, e={e}')
             gcd_input = [(s**e - m) for (m, s) in pairs]
 
             starttime = sage.all.cputime()
             n = sage.all.gcd(*gcd_input)
+            logging.info(f'TTTT sage.all.gcd cpu time={sage.all.cputime(starttime)}')
+            #logging.info(f'gcd_input count: {len(gcd_input)}')
+            #logging.info(f'gcd_input 0, num bits: {gcd_input[0].nbits()}')
+            #logging.info(f'gcd_input 1, num bits: {gcd_input[1].nbits()}')
+            
             if n.nbits() > 10000:
                 logging.error(f'skip n with > 10000 bits')
                 continue
-            logging.debug(f'sage.all.gcd cpu time={sage.all.cputime(starttime)}')
 
             n = remove_small_prime_factors(n)
-            logging.debug(f'result n=({n.nbits()} bit number)')
+            logging.info(f'result n=({n.nbits()} bit number)')
 
             if n > 1:
+                logging.info(f'found gcd, n={n}')
                 return (n, e)
     return 0, 0
 
