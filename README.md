@@ -9,12 +9,6 @@ git clone --recurse-submodules https://github.com/foolo/sigs2rsa.git
 cd sigs2rsa
 ```
 
-### Build the Docker image
-
-```bash
-docker build --tag sagemath .
-```
-
 ### Install Python dependencies
 
 ```bash
