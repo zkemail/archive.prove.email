@@ -8,6 +8,8 @@ import gmpy2  # type: ignore
 gmpy2_mpz: Any = gmpy2.mpz  # type: ignore
 gmpy2_gcd: Any = gmpy2.gcd  # type: ignore
 
+# https://blog.ploetzli.ch/2018/calculating-an-rsa-public-key-from-two-signatures/
+
 
 def hexdigest(data: bytes, hashfn: str):
     if hashfn == 'sha256':
