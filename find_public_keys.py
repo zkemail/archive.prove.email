@@ -1,4 +1,5 @@
 #!.venv/bin/python3
+import base64
 import binascii
 import json
 import logging
@@ -8,7 +9,6 @@ import pickle
 import queue
 import subprocess
 import sys
-import base64
 import threading
 from Crypto.PublicKey import RSA
 from common import Dsp, MsgInfo
@@ -19,14 +19,7 @@ dsp_queue: "queue.Queue[tuple[int, Dsp, list[tuple[MsgInfo, MsgInfo]]]]" = queue
 def call_solver_and_process_result(dsp: Dsp, msg1: MsgInfo, msg2: MsgInfo, loglevel: int) -> str:
     logging.info(f'searching for public key for {dsp}')
     cmd = [
-        "docker",
-        "run",
-        "--rm",
-        "--mount",
-        f"type=bind,source={os.getcwd()},target=/app",
-        "--workdir=/app",
-        "sagemath:latest",
-        "sage",
+        "python3",
         "sigs2rsa.py",
         "--loglevel",
         str(loglevel),
@@ -67,6 +60,14 @@ def read_and_resolve_worker(loglevel: int):
             print("\t".join(row_values))
             sys.stdout.flush()
         dsp_queue.task_done()
+
+
+def include_dsp(dsp: Dsp) -> bool:
+    if dsp.domain == 'mail.messari.io' and dsp.selector == 's1':
+        # 2048 bits
+        return True
+
+    return True
 
 
 def solve_msg_pairs(signed_messages: dict[Dsp, list[MsgInfo]], threads: int, loglevel: int, sparse_nth: int):

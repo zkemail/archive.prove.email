@@ -1,2 +1,0 @@
-FROM sagemath/sagemath
-
