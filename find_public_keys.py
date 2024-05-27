@@ -12,7 +12,6 @@ import sys
 import threading
 from Crypto.PublicKey import RSA
 from common import Dsp, MsgInfo
-from sigs2rsa_gmpy import find_n
 
 dsp_queue: "queue.Queue[tuple[int, Dsp, list[tuple[MsgInfo, MsgInfo]]]]" = queue.Queue()
 
