@@ -1,10 +1,13 @@
 #!.venv/bin/python3
+import base64
 import binascii
+import json
 import logging
 import os
 import argparse
 import pickle
 import queue
+import subprocess
 import sys
 import threading
 from Crypto.PublicKey import RSA
@@ -16,7 +19,24 @@ dsp_queue: "queue.Queue[tuple[int, Dsp, list[tuple[MsgInfo, MsgInfo]]]]" = queue
 
 def call_solver_and_process_result(dsp: Dsp, msg1: MsgInfo, msg2: MsgInfo, loglevel: int) -> str:
     logging.info(f'searching for public key for {dsp}, Thread ID:{threading.get_ident() }')
-    n, e = find_n([msg1.signedData, msg2.signedData], [msg1.signature, msg2.signature])
+    cmd = [
+        "python3",
+        "sigs2rsa_gmpy.py",
+        "--loglevel",
+        str(loglevel),
+    ]
+    data_parameters = [
+        base64.b64encode(msg1.signedData).decode('utf-8'),
+        base64.b64encode(msg1.signature).decode('utf-8'),
+        base64.b64encode(msg2.signedData).decode('utf-8'),
+        base64.b64encode(msg2.signature).decode('utf-8'),
+    ]
+    logging.debug(" ".join(cmd) + ' [... data parameters ...]')
+
+    output = subprocess.check_output(cmd + data_parameters)
+    data = json.loads(output)
+    n = int(data['n_hex'], 16)
+    e = int(data['e_hex'], 16)
     if (n < 2):
         logging.info(f'no public key found for {dsp}')
         return '-'

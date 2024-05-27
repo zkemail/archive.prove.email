@@ -1,5 +1,7 @@
 import binascii, hashlib
+import json
 import logging
+import os
 import threading
 import time
 from typing import Any
@@ -86,3 +88,22 @@ def find_n(messages: list[bytes], signatures: list[bytes]) -> tuple[int, int]:
                 logging.info(f'found gcd for hashfn={hashfn}, e={e}, n={n}')
                 return (int(n), int(e))
     return 0, 0
+
+
+if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('data1_base64')
+    parser.add_argument('signature1_base64')
+    parser.add_argument('data2_base64')
+    parser.add_argument('signature2_base64')
+    parser.add_argument('--loglevel', type=int, default=logging.INFO)
+    args = parser.parse_args()
+    data1 = binascii.a2b_base64(args.data1_base64)
+    data2 = binascii.a2b_base64(args.data2_base64)
+    signature1 = binascii.a2b_base64(args.signature1_base64)
+    signature2 = binascii.a2b_base64(args.signature2_base64)
+    logging.root.name = os.path.basename(__file__)
+    logging.basicConfig(level=args.loglevel, format='%(name)s: %(levelname)s: %(message)s')
+    n, e = find_n([data1, data2], [signature1, signature2])
+    print(json.dumps({'n_hex': hex(n), 'e_hex': hex(e)}))
