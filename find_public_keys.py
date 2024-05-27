@@ -18,7 +18,7 @@ dsp_queue: "queue.Queue[tuple[int, Dsp, list[tuple[MsgInfo, MsgInfo]]]]" = queue
 
 
 def call_solver_and_process_result(dsp: Dsp, msg1: MsgInfo, msg2: MsgInfo, loglevel: int) -> str:
-    logging.info(f'searching for public key for {dsp}, Thread ID:{threading.get_ident() }')
+    logging.info(f'searching for public key for {dsp}')
     cmd = [
         "python3",
         "sigs2rsa_gmpy.py",
@@ -53,7 +53,7 @@ def call_solver_and_process_result(dsp: Dsp, msg1: MsgInfo, msg2: MsgInfo, logle
 
 def read_and_resolve_worker(loglevel: int):
     while True:
-        logging.info(f'DSPs left: {dsp_queue.qsize()}, Thread ID:{threading.get_ident() }')
+        logging.info(f'DSPs left: {dsp_queue.qsize()}')
         dsp_index, dsp, msg_pairs = dsp_queue.get()
         for msg1, msg2 in msg_pairs:
             key_result = call_solver_and_process_result(dsp, msg1, msg2, loglevel)
@@ -77,7 +77,6 @@ def solve_msg_pairs(signed_messages: dict[Dsp, list[MsgInfo]], threads: int, log
         msg_list = msg_list[::sparse_nth]
     logging.info(f'searching for public key for {len(msg_list)} message pairs')
     for i, (dsp, msg_infos) in enumerate(msg_list):
-        print(f'{i}/{len(msg_list)} add to queue')
         if len(msg_infos) == 2:
             dsp_queue.put((i, dsp, [(msg_infos[0], msg_infos[1])]))
         elif len(msg_infos) == 3:
@@ -127,7 +126,7 @@ def main():
     args = parser.parse_args(namespace=ProgramArgs)
 
     logging.root.name = os.path.basename(__file__)
-    logging.basicConfig(level=args.loglevel, format='%(asctime)s - %(name)s: %(levelname)s: %(message)s')
+    logging.basicConfig(level=args.loglevel, format='%(name)s: %(levelname)s: %(message)s')
 
     signed_data = load_signed_data(args.datasig_files)
     signed_data = {dsp: msg_infos for dsp, msg_infos in signed_data.items() if len(msg_infos) >= 2}

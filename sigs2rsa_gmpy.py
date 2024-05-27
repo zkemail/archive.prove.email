@@ -2,7 +2,6 @@ import binascii, hashlib
 import json
 import logging
 import os
-import threading
 import time
 from typing import Any
 from common import first_n_primes
@@ -67,15 +66,12 @@ def find_n(messages: list[bytes], signatures: list[bytes]) -> tuple[int, int]:
         h: Any = hashfn
         pairs = [message_sig_pair(size_bytes, m, s, h) for (m, s) in zip(messages, signatures)]
         for e in [0x10001, 3, 17]:
-            logging.info(f'solving for hashfn={hashfn}, e={e}, Thread ID:{threading.get_ident() }')
-            start_time = time.process_time()
+            logging.debug(f'solving for hashfn={hashfn}, e={e}')
             gcd_input = [(s**e - m) for (m, s) in pairs]
-            logging.info(f'exponentiation done, cpu time={time.process_time() - start_time}, Thread ID:{threading.get_ident() }')
 
             start_time = time.process_time()
-            logging.info(f'calling gmpy2_gcd, Thread ID:{threading.get_ident() }')
             n: Any = gmpy2_gcd(*gcd_input)
-            logging.info(f'gcd cpu time={time.process_time() - start_time}, Thread ID:{threading.get_ident() }')
+            logging.info(f'gcd cpu time={time.process_time() - start_time}')
 
             if n.bit_length() > 10000:
                 logging.error(f'skip n with > 10000 bits')
