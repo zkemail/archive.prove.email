@@ -38,7 +38,6 @@ class Statistics:
     non_rsa_sign_algo: int = 0
     missing_body_hash: int = 0
     body_hash_mismatch: int = 0
-    body_length_tag_not_supported: int = 0
     missing_signature_tag: int = 0
     unicode_error: int = 0
     validation_error: int = 0
@@ -70,10 +69,6 @@ def parse_mbox_file(filepath: str) -> dict[Dsp, list[MsgInfo]]:
             bodyHash = tags.get('bh', None)
             if not bodyHash:
                 statistics.missing_body_hash += 1
-                continue
-            bodyLen = tags.get('l', None)
-            if bodyLen:
-                statistics.body_length_tag_not_supported += 1
                 continue
             signature_tag = tags.get('b', None)
             if not signature_tag:
