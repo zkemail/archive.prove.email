@@ -6,13 +6,11 @@ import { LogConsole, LogRecord } from "@/components/LogConsole";
 import { axiosErrorMessage, truncate } from "@/lib/utils";
 import axios from "axios";
 import { GmailResponse } from "../api/gmail/route";
-import { AddDspRequest, AddDspResponse } from "../api/dsp/route";
 import { actionButtonStyle } from "@/components/styles";
 
 export default function Page() {
 
 	const gmailApiUrl = 'api/gmail';
-	const addDspApiUrl = 'api/dsp';
 
 	const { data: session, status, update } = useSession()
 	const [log, setLog] = React.useState<LogRecord[]>([]);
@@ -143,15 +141,12 @@ export default function Page() {
 			if (response.data.messagesTotal) {
 				setTotalMessages(response.data.messagesTotal);
 			}
-			let pairs = response.data.domainSelectorPairs;
-			for (const pair of pairs) {
+			for (const addDspResult of response.data.addDspResults) {
+				const pair = addDspResult.domainSelectorPair;
 				const pairString = JSON.stringify(pair);
 				if (!uploadedPairs.has(pairString)) {
-					logmsg('new pair found, uploading: ' + JSON.stringify(pair));
-					let response = await axios.post<AddDspResponse>(addDspApiUrl, pair as AddDspRequest);
-					await update();
-					console.log(`${addDspApiUrl} response`, response);
-					if (response.data.added) {
+					logmsg('new pair found: ' + JSON.stringify(pair));
+					if (addDspResult.addResult.added) {
 						logmsg(`${pairString} was added to the archive`);
 						setAddedPairs(addedPairs => addedPairs + 1);
 					}

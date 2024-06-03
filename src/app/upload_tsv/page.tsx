@@ -5,7 +5,6 @@ import React from "react";
 import { LogConsole, LogRecord } from "@/components/LogConsole";
 import axios from "axios";
 import { useSession } from "next-auth/react";
-import { InlineCode } from "@/components/InlineCode";
 import { AddDspRequest, AddDspResponse } from "../api/dsp/route";
 
 export default function Page() {
@@ -61,7 +60,7 @@ export default function Page() {
 				let response = await axios.post<AddDspResponse>(addDspApiUrl, dsp as AddDspRequest);
 				await update();
 				console.log('upsert response', response);
-				if (response.data.added) {
+				if (response.data.addResult?.added) {
 					logmsg(`${JSON.stringify(dsp)} was added to the archive`);
 					setAddedPairs(addedPairs => addedPairs + 1);
 				}

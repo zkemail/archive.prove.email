@@ -16,10 +16,15 @@ async function refreshKeysFromDns(dsp: DomainSelectorPair) {
 	}
 }
 
+export type AddResult = {
+	already_in_db: boolean;
+	added: boolean;
+}
+
 /**
  * @returns true iff a record was added
  */
-export async function addDomainSelectorPair(domain: string, selector: string, sourceIdentifier: DspSourceIdentifier): Promise<boolean> {
+export async function addDomainSelectorPair(domain: string, selector: string, sourceIdentifier: DspSourceIdentifier): Promise<AddResult> {
 
 	domain = domain.toLowerCase();
 	selector = selector.toLowerCase();
@@ -40,12 +45,12 @@ export async function addDomainSelectorPair(domain: string, selector: string, so
 	if (dsp) {
 		console.log(`found domain/selector pair ${dspToString(dsp)}`);
 		await refreshKeysFromDns(dsp);
-		return false;
+		return { already_in_db: true, added: false };
 	}
 	let records = await fetchDkimDnsRecord(domain, selector);
 	if (records.length === 0) {
 		console.log(`no dkim dns record found for ${selector}, ${domain}`);
-		return false;
+		return { already_in_db: false, added: false };
 	}
 	console.log(`found ${records.length} dkim dns records for ${selector}, ${domain}, adding DSP and records`);
 
@@ -73,7 +78,7 @@ export async function addDomainSelectorPair(domain: string, selector: string, so
 	newDsp.records.forEach(record => {
 		generateWitness(newDsp, record);
 	});
-	return true;
+	return { already_in_db: false, added: true };
 }
 
 async function runCommand(file: string, args: string[], input: Buffer) {

@@ -5,8 +5,9 @@ import { getToken } from 'next-auth/jwt';
 import { getServerSession } from 'next-auth/next';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { AddResult, addDomainSelectorPair } from '@/lib/utils_server';
 
-async function handleMessage(messageId: string, gmail: gmail_v1.Gmail, resultArray: DomainAndSelector[]) {
+async function handleMessage(messageId: string, gmail: gmail_v1.Gmail, resultArray: AddDspResult[]) {
 	const messageRes = await gmail.users.messages.get({ userId: 'me', id: messageId, format: 'metadata' })
 	let headers = messageRes.data.payload?.headers
 	if (!headers) {
@@ -29,16 +30,23 @@ async function handleMessage(messageId: string, gmail: gmail_v1.Gmail, resultArr
 			console.log('missing s tag', tags);
 			continue;
 		}
+
+		let addResult = await addDomainSelectorPair(domain, selector, 'api');
 		let domainSelectorPair = { domain, selector };
-		resultArray.push(domainSelectorPair);
+		resultArray.push({ addResult, domainSelectorPair });
 	}
 	return resultArray;
 }
 
+type AddDspResult = {
+	addResult: AddResult,
+	domainSelectorPair: DomainAndSelector
+};
+
 export type GmailResponse = {
 	messagesProcessed: number,
 	messagesTotal?: number,
-	domainSelectorPairs: DomainAndSelector[],
+	addDspResults: AddDspResult[],
 	nextPageToken: string | null
 }
 
@@ -68,7 +76,7 @@ async function handleRequest(request: NextRequest) {
 	let listResults = await gmail.users.messages.list({ userId: 'me', maxResults: 10, ...pageTokenParam })
 
 	let messages = listResults?.data?.messages || [];
-	let domainSelectorPairs: DomainAndSelector[] = [];
+	let addDspResults: AddDspResult[] = [];
 	console.log(`handling ${messages.length} messages`);
 	for (let message of messages) {
 		if (!message.id) {
@@ -76,7 +84,7 @@ async function handleRequest(request: NextRequest) {
 			continue;
 		}
 		try {
-			await handleMessage(message.id, gmail, domainSelectorPairs);
+			await handleMessage(message.id, gmail, addDspResults);
 		}
 		catch (e) {
 			console.log(`error handling message ${message.id}`, e);
@@ -84,7 +92,7 @@ async function handleRequest(request: NextRequest) {
 	}
 	let nextPageToken = listResults.data.nextPageToken || null;
 	let messagesProcessed = messages.length;
-	let response: GmailResponse = { domainSelectorPairs, nextPageToken, messagesProcessed, ...messageTotalParam };
+	let response: GmailResponse = { addDspResults, nextPageToken, messagesProcessed, ...messageTotalParam };
 	return NextResponse.json(response, { status: 200 });
 }
 
