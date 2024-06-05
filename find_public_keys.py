@@ -1,6 +1,7 @@
 #!.venv/bin/python3
 import base64
 import binascii
+import hashlib
 import json
 import logging
 import os
@@ -16,6 +17,14 @@ from common import Dsp, MsgInfo
 dsp_queue: "queue.Queue[tuple[int, Dsp, list[tuple[MsgInfo, MsgInfo]]]]" = queue.Queue()
 
 
+def hexdigest(data: bytes, hashfn: str):
+    if hashfn == 'sha256':
+        return hashlib.sha256(data).hexdigest()
+    if hashfn == 'sha512':
+        return hashlib.sha512(data).hexdigest()
+    raise ValueError(f'unsupported hashfn={hashfn}')
+
+
 def call_solver_and_process_result(dsp: Dsp, msg1: MsgInfo, msg2: MsgInfo, loglevel: int) -> str:
     logging.info(f'searching for public key for {dsp}')
     cmd = [
@@ -24,11 +33,13 @@ def call_solver_and_process_result(dsp: Dsp, msg1: MsgInfo, msg2: MsgInfo, logle
         "--loglevel",
         str(loglevel),
     ]
+    hashfn = 'sha256'
     data_parameters = [
-        base64.b64encode(msg1.signedData).decode('utf-8'),
+        hexdigest(msg1.signedData, hashfn),
         base64.b64encode(msg1.signature).decode('utf-8'),
-        base64.b64encode(msg2.signedData).decode('utf-8'),
+        hexdigest(msg2.signedData, hashfn),
         base64.b64encode(msg2.signature).decode('utf-8'),
+        hashfn,
     ]
     logging.debug(" ".join(cmd) + ' [... data parameters ...]')
 
