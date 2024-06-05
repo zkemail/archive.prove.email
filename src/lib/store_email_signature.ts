@@ -21,7 +21,7 @@ async function generateHashFromHeaders(signedHeaders: string, headerStrings: str
 }
 
 export async function storeEmailSignature(tags: Record<string, string>, headerStrings: string[], domain: string, selector: string, timestamp: Date | null) {
-	let signingAlgorithm = tags.a
+	let signingAlgorithm = tags.a.toLowerCase();
 	if (signingAlgorithm) {
 		if (signingAlgorithm !== 'rsa-sha256') {
 			console.log(`warning: unsupported signing algorithm: ${signingAlgorithm}`);
@@ -51,5 +51,5 @@ export async function storeEmailSignature(tags: Record<string, string>, headerSt
 	let headerCanonicalizationAlgorithm = tags.c ? tags.c.split('/')[0] : 'simple';
 
 	let headerHash = await generateHashFromHeaders(signedHeaders, headerStrings, headerCanonicalizationAlgorithm);
-	await prisma.emailSignature.create({ data: { domain, selector, headerHash, dkimSignature, timestamp } });
+	await prisma.emailSignature.create({ data: { domain, selector, headerHash, dkimSignature, timestamp, signingAlgorithm } });
 }

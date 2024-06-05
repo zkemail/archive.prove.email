@@ -41,10 +41,11 @@ model DkimRecord {
 }
 
 model EmailSignature {
-  id            Int      @id @default(autoincrement())
-  domain        String
-  selector      String
-  headerHash    String
-  dkimSignature String
-  timestamp     DateTime?
+  id               Int       @id @default(autoincrement())
+  domain           String
+  selector         String
+  headerHash       String
+  dkimSignature    String
+  timestamp        DateTime?
+  signingAlgorithm String
 }
