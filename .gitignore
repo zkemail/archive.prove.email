@@ -1,0 +1,6 @@
+dkim/__pycache__/
+dkim/tests/__pycache__/
+dkim/*.pyc
+dkim/tests/*.pyc
+dkimpy.egg-info
+dist

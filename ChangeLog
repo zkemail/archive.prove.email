@@ -1,0 +1,308 @@
+2024-04-14 Version 1.1.6
+   - Use raw byte string for regex; fixes SyntaxWarning in Python 3.12 due to
+     invalid escape sequence (LP: #2049518)  - Thanks to Simon Chopin for the
+     fix
+
+2023-07-28 Version 1.1.5
+   - Use dns.resolver.resolve instead of dns.resolver.query due to deprecation
+     (LP: 2028783) - Thanks to Pedro Vicente for the report and the fix
+
+2023-05-12 Version 1.1.4
+   - Treat dns.resolver.NoNameservers like NXDOMAIN (not an error) (Thanks to
+     David for the patch and the report)
+   - Confine errors from dnspython to dnsplug and use dkim errors, since
+     dkim.__init__.py doesn't import dns and needs dkim errors (LP: #2018646)
+
+2023-04-30 Version 1.1.3
+   - Catch nacl.exceptions.ValueError and raise KeyFormatError, similar to how
+     RSA key errors are treated (LP: #2018021)
+   - Create ed25519 key files with secure permissions to avoid risk of
+     insecure chmode call/race condition (Thanks to Hanno Böck for the report
+     and the suggested fix) (LP: #2017430)
+   - Properly cleanup temporary directories in tests
+
+2023-04-09 Version 1.1.2
+   - Verify correct AMS header is used for ARC seal verification (André Cruz)
+
+2023-03-09 Version 1.1.1
+    - Document dropping of Python 2 support (dropped as of 1.1.0) (LP:
+      #20086738)
+    - Fix traceback when attempting to verify an unsigned message using
+      async verify (Thanks to Nikita Sychev for the report and a suggested
+      fix) (LP: #2008723)
+
+2023-02-25 Version 1.1.0
+    - Add domain validity check for ascii domains (no specials)
+    - Add option to specify index number of signature to verify to dkimverify
+      (Thanks to Nick Baugh for the change)
+    - Correct signature indexing error introduced in 1.0.0 that prevents
+      verification of multiple signatures in a single message
+    - Correct dkim.verify processing to avoid errors when verifying messages
+      with no DKIM signatures
+    - Update dnsplug for DNS Python (dns) 2.0 compatibility (LP: #1888583)
+    - Fix @param srv_id typos (LP: #1890532)
+    - Provide more specific error message when ed25519 private key is invalid
+      (See LP 1901569 for background)
+    - Add support for PKCS#8 for private keys, openssl 3 default (LP:
+      #1978835) - Thanks to Adrien (spitap) for the change
+    - Add limitations section to README to document current IDN status
+    - Add USE_ASYNC flag to allow async to be disabled when aiodns is
+      installed (LP: #1954331) - see README.md for details
+    - Add new dkim.DnsTimeoutError class to report queried domain and selector
+      along with timeout error from dnspython (LP: #1873449)
+    - Invalid Authentication-Results header fields are ignored for ARC signing
+      (LP: #1884044)
+    - Correct base64 validation regexp so that valid signature with == split
+      between two lines are not incorrectly evaluated as invalid (LP:
+      #2002295) - Thanks to <https://launchpad.net/~obadz> for the report and
+      the proposed fix
+
+2019-12-31 Version 1.0.2
+    - dknewkey: On posix operating systems set file permissions to 600 for
+      ed25519 private key files (as is already done for RSA) (LP: #1857827)
+    - Update documentation URL in README.md
+    - Set minimum dnspython version to 1.16 because previous versions can not
+      support the timeout parameter (LP: #1856546)
+
+2019-12-15 Version 1.0.1
+    - Follow CNAMES when looking up key records when using DNS (pydns)
+      (LP: #1856421)
+    - Provide specialized error message when signing or verifying ed25519
+      signatures and pynacl is not installed (LP: #1854475)
+
+2019-12-09 Version 1.0.0
+    - Add support for RFC 8460 tlsrpt DKIM signature processing (LP: #1847020)
+    - Add async support with aiodns for DKIM verification (ARC not supported)
+      (LP: #1847002)
+    - Add new timeout parameter to enable DNS lookup timeouts to be adjusted
+    - Add new DKIM.present function to allow applications to test if a DKIM
+      signature is present without doing validation (LP: #1851141)
+    - Support signature verification with RSAPublicKey formatted keys
+      since, although rare, they are RFC 6376 specified (LP: #1851862)
+    - Drop usage of pymilter Milter.dns in dnsplug since it doesn't support
+      havine a timeout passed to it
+    - Catch binascii related key format errors (LP: #1854477)
+
+2019-10-07 Version 0.9.5
+    - Ignore unknown service types in key records (LP: #1847020)
+      - This is required by RFC 6376 and predecessors.  It becomes important
+        now that RFC 8460, which defines a new DKIM service type exists.  This
+        change is required to avoid processing tlsrpt keys like regular email
+        keys, which is incorrect, they have different requirements.
+
+2019-09-25 Verstion 0.9.4
+    - Add LICENSE to MANIFEST.in so it is included in the tarball (LP:
+      #1845318)
+
+2019-08-09 Version 0.9.3
+    - Fix linesep setting in arcsign script (LP: #1838262) (Thanks to Gowtham
+      Gopalakrishnan for the report and the patch)
+    - Fix default canonicalization for DKIM signature verification to be
+      simple/simple per RFC 6376 (LP: #1839299) (Thanks to Cyril Nicodème for
+      the report and a suggested fix)
+
+2019-04-14 Version 0.9.2
+    - Fix the arcsign script so it works with the current API (Note: the new
+      srv_id option is the authserv_id to use in the ARC signatures - Only AR
+      fields with an authserv-id that matches srv_id will be considered for
+      ARC signing)
+    - Fix cv=none processing for initial signature in chain
+    - Add additional text documenting use of srv_id for ARC signing to
+      docstrings and man 1 arcsign (LP: #1808301)
+    - Use same line seperator for output as input in dkimsign/arcsign
+      (LP: #1808686)
+    - Refactor canonicalization.py strip_trailing_lines to avoid using re for
+      more consistent processing across python versions (Thanks to Jonathan
+      Bastien-Filiatrault for the change)
+    - Refactor header folding for more consistent results, including reduced
+      stray whitespace (Also Jonathan Bastien-Filiatrault)
+    - Don't log message headers and body unless explicitely requested. This
+      should also reduce memory usage on large messages. (Jonathan
+      Bastien-Filiatrault)
+    - Clarify the crlf does not count towards line length in fold
+    - Adjust fold maxlen to one shorter for lines after the first, since they
+      already have a leading space (LP: #1823008)
+
+2018-12-09 Version 0.9.1
+    - Fixed ARC verification to fail if h= tag is present in Arc-Seal and
+      added tests
+    - Refactored dknewkey so that it correctly writes out text instead of
+      bytes
+    - Added missing v=DKIM1; to dns record producedby dknewkey
+
+2018-10-30 Version 0.9.0
+    - Update oversigned (frozen) header field list to reduce signature
+      fragility (removes 'date' and 'subject' fields from being oversigned by
+      default - see usage section of README for information on how to restore
+      the previous behavior)
+    - Added new add_should_not for DKIM/ARC classes to prevent additional
+      header fields from being signed
+    - Added 'from' to should sign list (to prevent it from not being signed at
+      all in the unusual event that 'from' is locally removed from the frozen
+      header field set (LP: #1525048)
+    - Updates for experimental ARC support:
+      - Limit to rsa-sha256, rsa-sha1 not used by ARC and multi-signature
+        design TBD
+      - Raise error when ARC signing if i= instance limit value of 50 is
+        exceeded
+      - Specified that for ARC, Authentication-Results should not be signed
+      - Added missing documentation for timestamp function dkim.arc_sign
+        (LP: #1800314)
+    - Fix DNS lookups to be compatible with EAI addresses in domains and
+      selectors (John Levine)
+    - Add type Hinting for sign and verify functions (LP: #1782596)
+      (Thomas Ward)
+    - PEP8 Blank Lines Style Issues (LP: #1782596)
+      (Thomas Ward)
+    - Python 3.7 compatibility fixup for dkim.canonicalization.
+      strip_trailing_lines due to changed RE.sub() processing (LP: #1800313)
+
+2018-06-16 Version 0.8.1
+    - Correctly fold lines at or near the maximum line length (fix folding
+      zero length lines and adding a blank line and adding an exra cr/lf for
+      lines near max length (LP: #1717576)
+      - Thanks to Christian Jørgensen and John Levine for reporting the issue
+    - Add testing extras option to setup.py (Daniel Hahler)
+    - Fix deprecation warnings in test asserts (Daniel Hahler)
+    - Correctly limit try/except for imports to import errors (Daniel Hahler)
+    - Don't error out in Python 3 if include headers is string (LP: #1776775)
+    - Correct requires invocation for py3dns
+
+2018-05-18 Version 0.8.0
+    - Change from distutils to setuptools with entry points because it's the
+      future
+    - Use install_requires and extras_requires to document external
+      dependencies for dkimpy (LP: #1227526)
+    - Fix typo in dknewkey(1) for k= tag (Thanks to Andreas Schulze for
+      reporting)
+    - Detect incorrect version in DKIM public key record (LP: #1763815)
+    - Detect unknown algorithm in k= tag and raise an appropriate error, vice
+      failing with a traceback
+    - Indicate that ed25519-sha256 is no longer experimental
+
+2018-02-17 Version 0.7.1
+    - Update ed25519 tests, including using sample keys from RFC 8032 Section
+      7.1 and the sample message from RFC 6376
+    - Return an empty list (as expected) when no AR headers are found or no AR
+      arc stamps are found and the chain terminated (LP: #1748146)
+    - Use correct h= tag in dknewnkey.py generated DKIM records for RSA
+
+2018-02-07 Version 0.7.0
+    - Initial ed25519 implementation based on draft-ietf-dcrup-dkim-crypto
+      experimental - IETF draft, design not finalized, See README for details
+    - Port dkimsign.py to use argparse; now gives standard usage message and
+      is more extensible
+    - Add command line options to dkimsign.py to select header and body
+      canonicalization algorithmns (LP: #1272724)
+    - Add command line option to dkimsign.py to select signing algorithm
+    - For dknewkey.py make default to include h=sha256 in the DNS record to
+      exclude usage with sha1.  Can be overriden
+    - Update ARC processing to current draft
+    - Fix arcverify tag requirements (LP: #1710312)
+    - Fix empty body canonicalization for relaxed canonicalization (LP: #1727319)
+       * Thanks to Matthew Palmer for the report and the proposed fix
+    - Add new test, test_implicit_k, to verify that RSA processing is still
+      correct when the optional k= tag is not present in the DKIM public key
+      record
+    - Fix -v verbose reporting in dkimverify.py
+    - Fix unbound local variable error when processing signatures with an x
+      tag, but no t tag (LP: #1739637)
+
+2017-05-30 Version 0.6.2
+    - Fixed problem with header folding that caused the first line to be
+      folded too long (Updated test test_add_body_length since l= tag is no
+      longer at the beginning of a line)
+    - Fixed python3.4 string interpolation issue
+    - Fix some byte casting issues & typos
+    - Add test case for verification when should headers are signed
+    - Check and update references:
+      * Replace RFC 4871 withRFC 6376
+      * Replaace RFC 3447 with RFC 8017
+      * Add mention of DCRUP working group addressing key length issues
+
+2017-01-27 Version 0.6.1
+    - Fixed python3 dns lookup issue
+    - Fixed arcverify.py issue
+
+2017-01-23 Version 0.6.0
+    - Add capability to sign and verify ARC signatures
+    - Added new script, dknewkey.py, to generate DKIM keys
+
+2015-12-07 Version 0.5.6
+    - Brown paper bag release, 0.5.5 tarball inadvertently included pyc files
+      and other artifacts from development
+
+2015-12-07 Version 0.5.5
+    - Fix and test case for case insensitive subdomain matching.
+    - Python3 compatibility fixes and test cases thanks to Diane Trout
+
+2013-06-10 Version 0.5.4
+    - Fixed error in FWS regular expression that cause some valid signatures
+      to fail verification (Thanks to Peter Palfrader (weasel) for the patch)
+      http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=711751
+    - Change dkimsign.py to sign the default (recommended) set of headers
+      instead of all headers
+
+2012-10-27 Version 0.5.3
+    - Make key parsing error messages more specific to help troubleshooting
+      based on user feedback
+
+2012-06-13 Version 0.5.2
+    - Change canonicalization defaults to work around issues with different
+      verification implementations <https://launchpad.net/bugs/939128>
+    - Fully fold DKIM-Signature on sign, and ignore FWS in b= value on verify
+    - Fix hashing problem while signing using sha1
+    - Trap NXDOMAIN exception with dnspython
+    - Other minor bug fixes
+
+2012-02-03 Version 0.5.1
+    - Rename tarball to dkimpy to avoid confusion with original project
+    - Apply performance patch from <https://launchpad.net/bugs/901591>
+    - save parsed signatures in DKIM object
+    - do not require DNS/dnspython for signing
+
+2011-10-26 Version 0.5
+    - Add test case and fix for <https://launchpad.net/bugs/644046>
+    - Add test case and fix for <https://launchpad.net/bugs/737311>
+    - Fix dkim.fold()
+    - raise KeyFormatError when missing required key parts in DNS
+    - do not sign all headers by default
+    - option to verify signatures other than first
+
+2011-06-16 Version 0.4.2
+    - Fix use of dns namespace so dnspython works
+
+2011-06-15 Version 0.4.1
+    - Fix some except clauses for python3
+    - Correct Changelog and release versions
+    - Add test case for <https://launchpad.net/bugs/587783>
+    - add back dkim.Relaxed and dkim.Simple constants
+
+2011-06-14 Version 0.4
+
+    - new API: class DKIM to retrieve domain and other info after verify
+    - Add support for python3
+    - pydns driver tested and fixed
+    - when producing Relaxed mode signatures, the partial DKIM-Signature
+      header must be canonicalized before hashing (Martin Pool)
+      <https://launchpad.net/bugs/587783>
+    - other bug fixes
+
+2008-06-25 Version 0.3
+
+    - length parameter to sign() is now a boolean
+    - sign() now folds the DKIM-Signature line
+    - validation of all inputs
+    - general code cleanup
+
+2008-02-19 Version 0.2
+
+    - handle "rsa-sha1" algorithm properly
+    - handle multiple DKIM-Signature lines
+    - handle FWS around = in DKIM-Signature lines
+    - handle case of single canonicalization algorithm
+    - handle l= signature property
+
+2008-02-18 Version 0.1
+
+    - initial release

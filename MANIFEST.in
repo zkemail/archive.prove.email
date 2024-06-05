@@ -1,0 +1,10 @@
+include dkim/*
+include dkim/tests/*
+include dkim/tests/data/*
+include LICENSE
+include README.md
+include ChangeLog
+include MANIFEST.in
+include man/*
+include test.py
+exclude dkim/*.pyc dkim/tests/*.pyc
