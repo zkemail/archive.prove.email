@@ -1,0 +1,113 @@
+Return-Path: <scott@kitterman.com>
+Delivered-To: kitterma-kitterman:com-scott@kitterman.com
+X-Envelope-To: scott@kitterman.com
+Received: (qmail 84128 invoked by uid 3013); 7 Mar 2011 19:23:23 -0000
+Delivered-To: kitterma-kitterman:com-bcc@kitterman.com
+Received: (qmail 84124 invoked from network); 7 Mar 2011 19:23:23 -0000
+Received: from mailwash7.pair.com (66.39.2.7)
+  by raung.pair.com with SMTP; 7 Mar 2011 19:23:23 -0000
+Received: from localhost (localhost [127.0.0.1])
+	by mailwash7.pair.com (Postfix) with SMTP id 55353BC0C
+	for <bcc@kitterman.com>; Mon,  7 Mar 2011 14:23:23 -0500 (EST)
+X-Virus-Check-By: mailwash7.pair.com
+X-Spam-Check-By: mailwash7.pair.com
+X-Spam-Status: No, hits=-102.4 required=3.5 tests=BAYES_00,DKIM_SIGNED,DKIM_VERIFIED,SPF_HELO_PASS,USER_IN_WHITELIST autolearn=ham version=3.002005
+X-Spam-Flag: NO
+X-Spam-Level: 
+X-Spam-Filtered: e5ffa8d1346811c78a1c1beaefd60800
+Received: from mailout00.controlledmail.com (mailout00.controlledmail.com [72.81.252.19])
+	by mailwash7.pair.com (Postfix) with ESMTP id 0CCA9BC14
+	for <bcc@kitterman.com>; Mon,  7 Mar 2011 14:23:19 -0500 (EST)
+Received: from mailout00.controlledmail.com (localhost [127.0.0.1])
+	by mailout00.controlledmail.com (Postfix) with ESMTP id 6D9F438C28F;
+	Mon,  7 Mar 2011 14:23:18 -0500 (EST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=kitterman.com;
+	s=2007-00; t=1299525798;
+	bh=n0HUwGCP28PkesXBPH82Kboy8LhNFWU9zUISIpAez7M=;
+	h=From:To:Subject:Date:Cc:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding:Message-Id;
+	b=K/UUOt8lCtgjp3kSTogqBm9lY1Yax/NwZ+bKm39/WKzo5KYe3L/6RoIA/0oiDX4kO
+	 Qut49HCV6ZUe6dY9V5qWBwLanRs1sCnObaOGMpFfs8tU4TWpDSVXaNZAqn15XVW0WH
+	 EzOzUfVuatpa1kF4voIgSbmZHR1vN3WpRtcTBe/I=
+From: Scott Kitterman <scott@kitterman.com>
+To: Kerrick Staley <mail@kerrickstaley.com>,
+ Nick Coghlan <ncoghlan@gmail.com>
+Subject: Comments on PEP 394 draft
+Date: Mon, 7 Mar 2011 14:22:57 -0500
+User-Agent: KMail/1.13.5 (Linux/2.6.35-27-generic; KDE/4.5.1; i686; ; )
+Cc: barry@python.org
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1746914.gtVYRJxS1r";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
+Message-Id: <201103071423.13147.scott@kitterman.com>
+X-AV-Checked: ClamAV using ClamSMTP
+X-UID: 63126
+X-Length: 4427
+Status: R
+X-Status: N
+X-KMail-EncryptionState:  
+X-KMail-SignatureState:  
+X-KMail-MDN-Sent:  
+
+--nextPart1746914.gtVYRJxS1r
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+
+I'm one of the maintainers of the packages that provide /usr/bin/python,=20
+python3, and potentially python2 in Debian and Ubuntu.  I've read both your=
+=20
+draft ( http://www.python.org/dev/peps/pep-0394/ ) and the thread on ptyhon-
+dev.  I'm writing you directly since I'm not subscribed to python-dev and=20
+that's what Barry suggested.
+
+I think that the PEP generally makes sense.  The only comment I have is tha=
+t=20
+the recommendation regarding pointing /usr/bin/python at /usr/bin/python3 i=
+s=20
+far too aggressive.  It will break lots of local scripts and python softwar=
+e=20
+(updating distribution package repositories isn't nearly sufficient=20
+preparation for the change).  I know some distributions have or will do thi=
+s,=20
+but I think it is not appropriate for an upstream recommendation.  If you=20
+would change:
+
+"For the time being, it is recommended that python should refer to python2,=
+=20
+except on distributions which include only python3 in their base install, o=
+r=20
+those that wish to push strongly for migration of user scripts to Python 3."
+
+to
+
+"For the time being, it is recommended that python should refer to python2."
+
+then it would be something Debian would likely (I'm not the only maintainer=
+)=20
+support.  Given that the previous position was that /usr/bin/python would=20
+always refer to python2, just establishing that it should change as some po=
+int=20
+is a step forward.  I don't think pushing harder than that will be worth th=
+e=20
+added controversy associated with being more aggressive.
+
+Scott K
+
+--nextPart1746914.gtVYRJxS1r
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEABECAAYFAk11MJQACgkQHajaM93NaGpohwCfZNhmnoyq51jlCJ/nJ1dpbLWc
+llUAn0y8pceuESDSfNLHW0DADEygs4aU
+=S7uo
+-----END PGP SIGNATURE-----
+
+--nextPart1746914.gtVYRJxS1r--
+
