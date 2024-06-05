@@ -13,6 +13,7 @@ cd sigs2rsa
 
 ```bash
 pip3 install pycryptodome
+pip3 install gmpy2
 ```
 
 ## Find public RSA keys from en email archive
