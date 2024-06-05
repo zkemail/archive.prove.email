@@ -326,11 +326,11 @@ def validate_signature_fields(sig, mandatory_fields=[b'v', b'a', b'b', b'bh', b'
         if re.match(br"\d+$", sig[b't']) is None:
             raise ValidationError(
                 "t= value is not a decimal integer (%s)" % sig[b't'])
-        now = int(time.time())
-        slop = 36000 # 10H leeway for mailers with inaccurate clocks
-        t_sign = int(sig[b't'])
-        if t_sign > now + slop:
-            raise ValidationError("t= value is in the future (%s)" % sig[b't'])
+        # now = int(time.time())
+        # slop = 36000 # 10H leeway for mailers with inaccurate clocks
+        # t_sign = int(sig[b't'])
+        # if t_sign > now + slop:
+        #     raise ValidationError("t= value is in the future (%s)" % sig[b't'])
 
     if b'v' in sig and sig[b'v'] != b"1":
         raise ValidationError("v= value is not 1 (%s)" % sig[b'v'])
@@ -339,16 +339,16 @@ def validate_signature_fields(sig, mandatory_fields=[b'v', b'a', b'b', b'bh', b'
         if re.match(br"\d+$", sig[b'x']) is None:
             raise ValidationError(
               "x= value is not a decimal integer (%s)" % sig[b'x'])
-        x_sign = int(sig[b'x'])
-        now = int(time.time())
-        slop = 36000 # 10H leeway for mailers with inaccurate clocks
-        if x_sign < now - slop:
-            raise ValidationError(
-                "x= value is past (%s)" % sig[b'x'])
-            if x_sign < t_sign:
-                raise ValidationError(
-                    "x= value is less than t= value (x=%s t=%s)" %
-                    (sig[b'x'], sig[b't']))
+        # x_sign = int(sig[b'x'])
+        # now = int(time.time())
+        # slop = 36000 # 10H leeway for mailers with inaccurate clocks
+        # if x_sign < now - slop:
+        #     raise ValidationError(
+        #         "x= value is past (%s)" % sig[b'x'])
+        #     if x_sign < t_sign:
+        #         raise ValidationError(
+        #             "x= value is less than t= value (x=%s t=%s)" %
+        #             (sig[b'x'], sig[b't']))
 
 
 def rfc822_parse(message):
@@ -713,7 +713,7 @@ class DomainSigner(object):
 
     return header_value
 
-  def verify_sig_process(self, sig, include_headers, sig_header, dnsfunc):
+  def verify_sig_process(self, sig, include_headers, sig_header, infoOut):
     """Non-async sensitive verify_sig elements.  Separated to avoid async code
     duplication."""
     # RFC 8460 MAY ignore signatures without tlsrpt Service Type
@@ -738,19 +738,20 @@ class DomainSigner(object):
       if b'l' in sig and not self.tlsrpt:
         body = body[:int(sig[b'l'])]
       h.update(body)
-      if self.debug_content:
-          self.logger.debug("body hashed: %r" % h.hashed())
+    #   if self.debug_content:
+    #       self.logger.debug("body hashed: %r" % h.hashed())
       bodyhash = h.digest()
 
-      self.logger.debug("bh: %s" % base64.b64encode(bodyhash))
+      #self.logger.debug("bh: %s" % base64.b64encode(bodyhash))
       try:
           bh = base64.b64decode(re.sub(br"\s+", b"", sig[b'bh']))
       except TypeError as e:
           raise MessageFormatError(str(e))
       if bodyhash != bh:
-          raise ValidationError(
-              "body hash mismatch (got %s, expected %s)" %
-              (base64.b64encode(bodyhash), sig[b'bh']))
+        #   raise ValidationError(
+        #       "body hash mismatch (got %s, expected %s)" %
+        #       (base64.b64encode(bodyhash), sig[b'bh']))
+        infoOut['body_hash_mismatch'] = True
 
     # address bug#644046 by including any additional From header
     # fields when verifying.  Since there should be only one From header,
@@ -758,32 +759,33 @@ class DomainSigner(object):
     # generalized to check for extras of other singleton headers.
     if b'from' in include_headers:
       include_headers.append(b'from')
-    h = HashThrough(hasher(), self.debug_content)
+    h = HashThrough(hasher(), True)
 
     headers = canon_policy.canonicalize_headers(self.headers)
     self.signed_headers = hash_headers(
         h, canon_policy, headers, include_headers, sig_header, sig)
-    if self.debug_content:
-        self.logger.debug("signed for %s: %r" % (sig_header[0], h.hashed()))
-    signature = base64.b64decode(re.sub(br"\s+", b"", sig[b'b']))
-    if self.ktag == b'rsa':
-        try:
-            res = RSASSA_PKCS1_v1_5_verify(h, signature, self.pk)
-            self.logger.debug("%s valid: %s" % (sig_header[0], res))
-            if res and self.keysize < self.minkey:
-                raise KeyFormatError("public key too small: %d" % self.keysize)
-            return res
-        except (TypeError,DigestTooLargeError) as e:
-            raise KeyFormatError("digest too large for modulus: %s"%e)
-    elif self.ktag == b'ed25519':
-        try:
-            self.pk.verify(h.digest(), signature)
-            self.logger.debug("%s valid" % (sig_header[0]))
-            return True
-        except (nacl.exceptions.BadSignatureError) as e:
-            return False
-    else:
-        raise UnknownKeyTypeError(self.ktag)
+    # if self.debug_content:
+    #     self.logger.debug("signed for %s: %r" % (sig_header[0], h.hashed()))
+    # signature = base64.b64decode(re.sub(br"\s+", b"", sig[b'b']))
+    infoOut['signed_data'] = h.hashed()
+    # if self.ktag == b'rsa':
+    #     try:
+    #         res = RSASSA_PKCS1_v1_5_verify(h, signature, self.pk)
+    #         self.logger.debug("%s valid: %s" % (sig_header[0], res))
+    #         if res and self.keysize < self.minkey:
+    #             raise KeyFormatError("public key too small: %d" % self.keysize)
+    #         return res
+    #     except (TypeError,DigestTooLargeError) as e:
+    #         raise KeyFormatError("digest too large for modulus: %s"%e)
+    # elif self.ktag == b'ed25519':
+    #     try:
+    #         self.pk.verify(h.digest(), signature)
+    #         self.logger.debug("%s valid" % (sig_header[0]))
+    #         return True
+    #     except (nacl.exceptions.BadSignatureError) as e:
+    #         return False
+    # else:
+    #     raise UnknownKeyTypeError(self.ktag)
 
 
   # Abstract helper method to verify a signed header
@@ -791,8 +793,10 @@ class DomainSigner(object):
   #: @param include_headers: headers to validate b= signature against
   #: @param sig_header: (header_name, header_value)
   #: @param dnsfunc: interface to dns
-  def verify_sig(self, sig, include_headers, sig_header, dnsfunc):
+  def verify_sig(self, sig, include_headers, sig_header, dnsfunc, infoOut):
     name = sig[b's'] + b"._domainkey." + sig[b'd'] + b"."
+    import dns.name
+    name = dns.name.from_text(name.decode('utf-8'))
     try:
       self.pk, self.keysize, self.ktag, self.seqtlsrpt = load_pk_from_dns(name,
               dnsfunc, timeout=self.timeout)
@@ -806,7 +810,7 @@ class DomainSigner(object):
       self.logger.error('DnsTimeoutError: Domain: {0} Selector: {1} Error message: {2}'.format(
           sig[b'd'], sig[b's'], e))
       return False
-    return self.verify_sig_process(sig, include_headers, sig_header, dnsfunc)
+    return self.verify_sig_process(sig, include_headers, sig_header, dnsfunc, infoOut)
 
 
 #: Hold messages and options during DKIM signing and verification.
@@ -945,7 +949,7 @@ class DKIM(DomainSigner):
     except InvalidTagValueList as e:
         raise MessageFormatError(e)
 
-    self.logger.debug("sig: %r" % sig)
+    #self.logger.debug("sig: %r" % sig)
 
     validate_signature_fields(sig)
     self.domain = sig[b'd']
@@ -958,16 +962,16 @@ class DKIM(DomainSigner):
   #: Verify a DKIM signature.
   #: @type idx: int
   #: @param idx: which signature to verify.  The first (topmost) signature is 0.
-  #: @type dnsfunc: callable
   #: @param dnsfunc: an option function to lookup TXT resource records
   #: for a DNS domain.  The default uses dnspython or pydns.
   #: @return: True if signature verifies or False otherwise
   #: @raise DKIMException: when the message, signature, or key are badly formed
-  def verify(self,idx=0,dnsfunc=get_txt):
+  def verify(self,idx=0, infoOut=None):
     prep = self.verify_headerprep(idx)
     if prep:
         sig, include_headers, sigheaders = prep
-        return self.verify_sig(sig, include_headers, sigheaders[idx], dnsfunc)
+        #return self.verify_sig(sig, include_headers, sigheaders[idx], dnsfunc, infoOut)
+        return self.verify_sig_process(sig, include_headers, sigheaders[idx], infoOut)
     return False # No signature
 
 
