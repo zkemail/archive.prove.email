@@ -1,3 +1,0 @@
-[submodule "dkimpy"]
-	path = dkimpy
-	url = git@github.com:foolo/dkimpy.git
