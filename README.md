@@ -5,7 +5,6 @@ This repository contains a proof of concept for determining the public RSA key f
 Start by cloning this repository and navigating to the repository root directory.
 
 ```bash
-git clone --recurse-submodules https://github.com/foolo/sigs2rsa.git
 cd sigs2rsa
 ```
 
