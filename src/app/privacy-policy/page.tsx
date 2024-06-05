@@ -27,6 +27,7 @@ export default function Page() {
 			<ul>
 				<li><strong>Displaying your email address:</strong> We use your email address for displaying it within the platform when you use the "Upload from Gmail" feature.</li>
 				<li><strong>Build an archive of DKIM keys:</strong> We use the extracted domains and selectors from your email header fields to build a publicly accessible archive of historical DKIM keys.</li>
+				<li><strong>Build an archive of hashed emails and their corresponding DKIM signatures:</strong>We store the hash of the email content and the corresponding DKIM signature in a database.</li>
 			</ul>
 			<p><strong>Information sharing and disclosure:</strong></p>
 			<ul>

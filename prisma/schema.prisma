@@ -39,3 +39,12 @@ model DkimRecord {
   keyData              String?
   source               String?
 }
+
+model EmailSignature {
+  id            Int      @id @default(autoincrement())
+  domain        String
+  selector      String
+  headerHash    String
+  dkimSignature String
+  timestamp     DateTime?
+}

@@ -72,6 +72,9 @@ importers:
       autoprefixer:
         specifier: ^10.4.19
         version: 10.4.19(postcss@8.4.38)
+      dkim:
+        specifier: ^0.8.0
+        version: 0.8.0
       postcss:
         specifier: ^8.4.38
         version: 8.4.38
@@ -1156,6 +1159,15 @@ packages:
   diff-sequences@29.6.3:
     resolution: {integrity: sha512-EjePK1srD3P08o2j4f0ExnylqRs5B9tJjcp9t1krH2qRi8CCdsYfwe9JgSLurFBWwq4uOlipzfk5fHNvwFKr8Q==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
+
+  dkim-key@1.3.0:
+    resolution: {integrity: sha512-19+M28U4pucj6R5OfOBpWjNwUNouQUJBEN/w20MIwOVodF17kDMr03rQxvk0m8V+JRrx3x3DGyexvXgubjo5dw==}
+
+  dkim-signature@1.3.0:
+    resolution: {integrity: sha512-/NPCgG9L+k1+QhCWkGO6QlTavFg1AuhutYE197O/TsQb8OrJk52UJMMBL8eHzZ8Ei8SaUVCeoluJJunQrvz5Vg==}
+
+  dkim@0.8.0:
+    resolution: {integrity: sha512-lFkIcyPLnd9CqAsY3jHylQh89RL8d5enRgHHr0vMkuhNCe4fS91E+TQnJPvLK/2EFDLW6gBHTAKAU7aYzrBAhQ==}
 
   dom-helpers@5.2.1:
     resolution: {integrity: sha512-nRCa7CK3VTrM2NmGkIy4cbK7IZlgBE/PYMn55rrXefr5xXDP0LdtfPnblFDoVdcAfslJ7or6iqAUnx0CCGIWQA==}
@@ -3958,6 +3970,15 @@ snapshots:
     optional: true
 
   diff-sequences@29.6.3: {}
+
+  dkim-key@1.3.0: {}
+
+  dkim-signature@1.3.0: {}
+
+  dkim@0.8.0:
+    dependencies:
+      dkim-key: 1.3.0
+      dkim-signature: 1.3.0
 
   dom-helpers@5.2.1:
     dependencies:

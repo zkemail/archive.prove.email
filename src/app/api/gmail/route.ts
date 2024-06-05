@@ -6,6 +6,7 @@ import { getServerSession } from 'next-auth/next';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { AddResult, addDomainSelectorPair } from '@/lib/utils_server';
+import { storeEmailSignature } from '@/lib/store_email_signature';
 
 async function handleMessage(messageId: string, gmail: gmail_v1.Gmail, resultArray: AddDspResult[]) {
 	const messageRes = await gmail.users.messages.get({ userId: 'me', id: messageId, format: 'metadata' })
@@ -13,7 +14,11 @@ async function handleMessage(messageId: string, gmail: gmail_v1.Gmail, resultArr
 	if (!headers) {
 		throw 'missing headers';
 	}
-	let dkimSigs = headers.filter((header: any) => header.name === 'DKIM-Signature');
+	let internalDate: Date | null = new Date(Number(messageRes.data.internalDate));
+	internalDate = (internalDate instanceof Date && !isNaN(internalDate.getTime())) ? internalDate : null;
+
+	let dkimSigs = headers.filter((header) => header?.name && header.name.toLowerCase() === 'dkim-signature');
+	let headerStrings = headers.map((header: any) => `${header.name}: ${header.value}`);
 	for (let dkimSig of dkimSigs) {
 		if (!dkimSig.value) {
 			console.log('missing DKIM-Signature value', dkimSig);
@@ -32,6 +37,11 @@ async function handleMessage(messageId: string, gmail: gmail_v1.Gmail, resultArr
 		}
 
 		let addResult = await addDomainSelectorPair(domain, selector, 'api');
+		if (!addResult.already_in_db && !addResult.added) {
+			console.log(`no public key known or found for domain=${domain} selector=${selector}, storing email dkim signature`);
+			storeEmailSignature(tags, headerStrings, domain, selector, internalDate);
+		}
+
 		let domainSelectorPair = { domain, selector };
 		resultArray.push({ addResult, domainSelectorPair });
 	}
