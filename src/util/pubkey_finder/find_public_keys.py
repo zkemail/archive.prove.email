@@ -1,4 +1,3 @@
-#!.venv/bin/python3
 import base64
 import binascii
 import hashlib
@@ -29,7 +28,7 @@ def call_solver_and_process_result(dsp: Dsp, msg1: MsgInfo, msg2: MsgInfo, logle
     logging.info(f'searching for public key for {dsp}')
     cmd = [
         "python3",
-        "sigs2rsa.py",
+        "gcd_solver.py",
         "--loglevel",
         str(loglevel),
     ]

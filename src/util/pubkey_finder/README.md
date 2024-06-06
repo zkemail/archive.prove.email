@@ -1,12 +1,6 @@
-This repository contains a proof of concept for determining the public RSA key from a pair of email messages which are signed with the same private key.
+This directory contains tools for finding the public RSA keys from pairs of email messages which are signed with the same private key.
 
 ## Setup
-
-Start by cloning this repository and navigating to the repository root directory.
-
-```bash
-cd sigs2rsa
-```
 
 ### Install Python dependencies
 
