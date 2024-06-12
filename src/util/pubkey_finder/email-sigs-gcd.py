@@ -8,6 +8,7 @@ from prisma import Prisma
 from prisma.models import EmailSignature
 from prisma.types import DkimRecordWhereInput
 from Crypto.PublicKey import RSA
+from tqdm import tqdm
 from common import Dsp
 import random
 
@@ -56,13 +57,17 @@ async def main():
 	await prisma.connect()
 	email_signatures = await prisma.emailsignature.find_many()
 	dspToSigs: DspToSigs = {}
-	for s in email_signatures:
+	dspsWithKnownKeys: set[Dsp] = set()
+	for s in tqdm(email_signatures):
+		dsp = Dsp(domain=s.domain, selector=s.selector)
+		if dsp in dspsWithKnownKeys:
+			continue
 		whereQuery: DkimRecordWhereInput = {'domainSelectorPair': {'is': {'domain': s.domain, 'selector': s.selector}}}
 		dkimRecord = await prisma.dkimrecord.find_first(include={'domainSelectorPair': True}, where=whereQuery)
 		if dkimRecord:
-			print(f"key already known for {s.domain} {s.selector}")
+			logging.debug(f"key already known for {s.domain} {s.selector}")
+			dspsWithKnownKeys.add(Dsp(domain=s.domain, selector=s.selector))
 			continue
-		dsp = Dsp(domain=s.domain, selector=s.selector)
 		if dspToSigs.get(dsp) is None:
 			dspToSigs[dsp] = []
 		dspToSigs[dsp].append(s)
