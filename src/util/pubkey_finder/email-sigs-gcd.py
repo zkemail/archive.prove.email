@@ -9,6 +9,7 @@ from prisma.models import EmailSignature
 from prisma.types import DkimRecordWhereInput
 from Crypto.PublicKey import RSA
 from common import Dsp
+import random
 
 DspToSigs = dict[Dsp, list[EmailSignature]]
 
@@ -41,7 +42,8 @@ def call_solver_and_process_result(dsp: Dsp, sig0: EmailSignature, sig1: EmailSi
 def run_solver(dspToSigs: DspToSigs):
 	for dsp, sigs in dspToSigs.items():
 		if len(sigs) > 1:
-			call_solver_and_process_result(dsp, sigs[0], sigs[1], logging.INFO)
+			sig0, sig1 = random.sample(sigs, 2)
+			call_solver_and_process_result(dsp, sig0, sig1, logging.INFO)
 		else:
 			print(f"only one signature found for {dsp}")
 
@@ -56,14 +58,14 @@ async def main():
 	dspToSigs: DspToSigs = {}
 	for s in email_signatures:
 		whereQuery: DkimRecordWhereInput = {'domainSelectorPair': {'is': {'domain': s.domain, 'selector': s.selector}}}
-		records = await prisma.dkimrecord.find_many(take=50000, include={'domainSelectorPair': True}, where=whereQuery)
-		if len(records) == 0:
-			print(f"no records found for {s.domain} {s.selector}, add to dspToSigs")
-			dsp = Dsp(domain=s.domain, selector=s.selector)
-			if dspToSigs.get(dsp) is None:
-				dspToSigs[dsp] = []
-			dspToSigs[dsp].append(s)
+		dkimRecord = await prisma.dkimrecord.find_first(include={'domainSelectorPair': True}, where=whereQuery)
+		if dkimRecord:
+			print(f"key already known for {s.domain} {s.selector}")
 			continue
+		dsp = Dsp(domain=s.domain, selector=s.selector)
+		if dspToSigs.get(dsp) is None:
+			dspToSigs[dsp] = []
+		dspToSigs[dsp].append(s)
 	run_solver(dspToSigs)
 
 

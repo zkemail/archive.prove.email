@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+import hashlib
+import pickle
 
 
 @dataclass(frozen=True)
@@ -42,3 +44,14 @@ def first_n_primes(n: int) -> list[int]:
 		x |= set([next(a)])
 		y += 1
 	return list(sorted(x))
+
+
+def load_signed_data(datasig_files: list[str]):
+	result: dict[Dsp, list[MsgInfo]] = {}
+	for f in datasig_files:
+		file_load_result = pickle.load(open(f, 'rb'))
+		for dsp, msg_infos in file_load_result.items():
+			if not dsp in result:
+				result[dsp] = []
+			result[dsp].extend(msg_infos)
+	return result

@@ -5,13 +5,12 @@ import json
 import logging
 import os
 import argparse
-import pickle
 import queue
 import subprocess
 import sys
 import threading
 from Crypto.PublicKey import RSA
-from common import Dsp, MsgInfo
+from common import Dsp, MsgInfo, load_signed_data
 
 dsp_queue: "queue.Queue[tuple[int, Dsp, list[tuple[MsgInfo, MsgInfo]]]]" = queue.Queue()
 
@@ -97,17 +96,6 @@ def solve_msg_pairs(signed_messages: dict[Dsp, list[MsgInfo]], threads: int, log
 		t_in = threading.Thread(target=read_and_resolve_worker, daemon=True, args=(loglevel, ))
 		t_in.start()
 	dsp_queue.join()
-
-
-def load_signed_data(datasig_files: list[str]):
-	result: dict[Dsp, list[MsgInfo]] = {}
-	for f in datasig_files:
-		file_load_result = pickle.load(open(f, 'rb'))
-		for dsp, msg_infos in file_load_result.items():
-			if not dsp in result:
-				result[dsp] = []
-			result[dsp].extend(msg_infos)
-	return result
 
 
 class ProgramArgs(argparse.Namespace):
