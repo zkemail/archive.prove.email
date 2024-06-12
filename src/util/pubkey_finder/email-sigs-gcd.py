@@ -47,14 +47,14 @@ async def main():
 	email_signatures = await prisma.emailsignature.find_many()
 	dspToSigs: DspToSigs = {}
 	dspsWithKnownKeys: set[Dsp] = set()
+	logging.info(f"filtering out email signatures for which we already have keys")
 	for s in tqdm(email_signatures):
 		dsp = Dsp(domain=s.domain, selector=s.selector)
 		if dsp in dspsWithKnownKeys:
 			continue
-		whereQuery: DkimRecordWhereInput = {'domainSelectorPair': {'is': {'domain': s.domain, 'selector': s.selector}}}
-		dkimRecord = await prisma.dkimrecord.find_first(include={'domainSelectorPair': True}, where=whereQuery)
-		if dkimRecord:
-			logging.debug(f"key already known for {s.domain} {s.selector}")
+		dnsRecord = await prisma.domainselectorpair.find_first(where={'domain': s.domain, 'selector': s.selector})
+		if dnsRecord:
+			logging.debug(f"keys already known for {s.domain} {s.selector}")
 			dspsWithKnownKeys.add(Dsp(domain=s.domain, selector=s.selector))
 			continue
 		if dspToSigs.get(dsp) is None:
