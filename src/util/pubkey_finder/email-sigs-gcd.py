@@ -4,18 +4,20 @@ import json
 import logging
 import os
 import subprocess
+import random
+from datetime import datetime
+from tqdm import tqdm
 from prisma import Prisma
 from prisma.models import EmailSignature
 from prisma.types import DkimRecordWhereInput
+from prisma.enums import KeyType
 from Crypto.PublicKey import RSA
-from tqdm import tqdm
-from common import Dsp
-import random
+from common import Dsp, get_date_interval
 
 DspToSigs = dict[Dsp, list[EmailSignature]]
 
 
-def call_solver_and_process_result(dsp: Dsp, sig0: EmailSignature, sig1: EmailSignature, loglevel: int) -> str:
+def find_key(dsp: Dsp, sig0: EmailSignature, sig1: EmailSignature, loglevel: int) -> str | None:
 	logging.info(f'searching for public key for {dsp}')
 	cmd = ["python3", "src/util/pubkey_finder/gcd_solver.py", "--loglevel", str(loglevel)]
 	hashfn = 'sha256'
@@ -28,25 +30,12 @@ def call_solver_and_process_result(dsp: Dsp, sig0: EmailSignature, sig1: EmailSi
 	e = int(data['e_hex'], 16)
 	if (n < 2):
 		logging.info(f'no public key found for {dsp}')
-		return '-'
-	try:
-		logging.info(f'found public key for {dsp}')
-		rsa_key = RSA.construct((n, e))
-		keyDER = rsa_key.exportKey(format='DER')
-		keyDER_base64 = binascii.b2a_base64(keyDER, newline=False).decode('utf-8')
-		return keyDER_base64
-	except ValueError as e:
-		logging.error(f'ValueError: {e}')
-		return f'ValueError: {e}'
-
-
-def run_solver(dspToSigs: DspToSigs):
-	for dsp, sigs in dspToSigs.items():
-		if len(sigs) > 1:
-			sig0, sig1 = random.sample(sigs, 2)
-			call_solver_and_process_result(dsp, sig0, sig1, logging.INFO)
-		else:
-			print(f"only one signature found for {dsp}")
+		return None
+	logging.info(f'found public key for {dsp}')
+	rsa_key = RSA.construct((n, e))
+	keyDER = rsa_key.exportKey(format='DER')
+	keyDER_base64 = binascii.b2a_base64(keyDER, newline=False).decode('utf-8')
+	return keyDER_base64
 
 
 async def main():
@@ -71,7 +60,33 @@ async def main():
 		if dspToSigs.get(dsp) is None:
 			dspToSigs[dsp] = []
 		dspToSigs[dsp].append(s)
-	run_solver(dspToSigs)
+
+	for dsp, sigs in dspToSigs.items():
+		if len(sigs) > 1:
+			sig1, sig2 = random.sample(sigs, 2)
+			date1 = sig1.timestamp
+			date2 = sig2.timestamp
+			oldest_date, newest_date = get_date_interval(date1, date2)
+			p = find_key(dsp, sig1, sig2, logging.INFO)
+			if p:
+				dsp_record = await prisma.domainselectorpair.find_first(where={'domain': dsp.domain, 'selector': dsp.selector})
+				if dsp_record is None:
+					dsp_record = await prisma.domainselectorpair.create(data={'domain': dsp.domain, 'selector': dsp.selector, 'sourceIdentifier': 'public_key_gcd_batch'})
+					print(f'created domain/selector pair: {dsp.domain} / {dsp.selector}')
+				dkimrecord = await prisma.dkimrecord.find_first(where={'domainSelectorPairId': dsp.id, 'keyData': p})
+				if not dkimrecord:
+					await prisma.dkimrecord.create(
+					    data={
+					        'domainSelectorPairId': dsp_record.id,
+					        'firstSeenAt': oldest_date or datetime.now(),
+					        'lastSeenAt': newest_date or datetime.now(),
+					        'value': f'k=rsa; p={p}',
+					        'keyType': KeyType.RSA,
+					        'keyData': p,
+					        'source': 'public_key_gcd_batch',
+					    })
+		else:
+			print(f"only one signature found for {dsp}")
 
 
 if __name__ == '__main__':

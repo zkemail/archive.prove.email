@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-import hashlib
+from datetime import datetime
 import pickle
 
 
@@ -55,3 +55,19 @@ def load_signed_data(datasig_files: list[str]):
 				result[dsp] = []
 			result[dsp].extend(msg_infos)
 	return result
+
+
+def get_date_interval(date1: datetime | None, date2: datetime | None):
+	if date1 and date2:
+		oldest_date = date1 if date1 < date2 else date2
+		newest_date = date1 if date1 > date2 else date2
+	elif date1:
+		oldest_date = date1
+		newest_date = date1
+	elif date2:
+		oldest_date = date2
+		newest_date = date2
+	else:
+		oldest_date = None
+		newest_date = None
+	return oldest_date, newest_date
