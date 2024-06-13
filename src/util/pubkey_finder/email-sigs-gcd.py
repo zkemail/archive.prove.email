@@ -35,6 +35,16 @@ def find_key(dsp: Dsp, sig0: EmailSignature, sig1: EmailSignature, loglevel: int
 	return keyDER_base64
 
 
+async def has_known_keys(prisma: Prisma, dsp: Dsp, dspsWithKnownKeys: set[Dsp]) -> bool:
+	if dsp in dspsWithKnownKeys:
+		return True
+	dnsRecord = await prisma.domainselectorpair.find_first(where={'domain': dsp.domain, 'selector': dsp.selector})
+	if dnsRecord:
+		dspsWithKnownKeys.add(dsp)
+		return True
+	return False
+
+
 async def main():
 	logging.root.name = os.path.basename(__file__)
 	logging.getLogger("httpx").setLevel(logging.WARNING)
@@ -47,12 +57,8 @@ async def main():
 	logging.info(f"filtering out email signatures for which we already have keys")
 	for s in tqdm(email_signatures):
 		dsp = Dsp(domain=s.domain, selector=s.selector)
-		if dsp in dspsWithKnownKeys:
-			continue
-		dnsRecord = await prisma.domainselectorpair.find_first(where={'domain': s.domain, 'selector': s.selector})
-		if dnsRecord:
-			logging.debug(f"keys already known for {s.domain} {s.selector}")
-			dspsWithKnownKeys.add(Dsp(domain=s.domain, selector=s.selector))
+		if await has_known_keys(prisma, dsp, dspsWithKnownKeys):
+			logging.debug(f"keys already known for {dsp.domain} {dsp.selector}")
 			continue
 		if dspToSigs.get(dsp) is None:
 			dspToSigs[dsp] = []
