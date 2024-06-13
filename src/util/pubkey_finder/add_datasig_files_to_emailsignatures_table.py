@@ -1,7 +1,6 @@
 import asyncio
 import base64
 import hashlib
-import logging
 import argparse
 from common import Dsp, MsgInfo, load_signed_data
 from prisma import Prisma

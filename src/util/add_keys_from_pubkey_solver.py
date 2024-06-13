@@ -19,6 +19,9 @@ def parse_email_header_date(date_str: str) -> datetime | None:
 		print(f'Error parsing date: {e}')
 		return None
 	date = kwds.get('datetime')
+	if date is None:
+		print(f'datetime not found in {kwds}')
+		return None
 	if date.tzinfo is None:
 		# fix for that some emails have timezone= "-0000" (unspecified timezone)
 		print(f'unknown timezone for {date_str}, setting to UTC')
@@ -60,8 +63,8 @@ async def add_records(filename: str, prisma: Prisma):
 				        'firstSeenAt': oldest_date or datetime.now(),
 				        'lastSeenAt': newest_date or datetime.now(),
 				        'value': dkim_tvl,
-						'keyType': KeyType.RSA,
-						'keyData': p,
+				        'keyType': KeyType.RSA,
+				        'keyData': p,
 				        'source': 'public_key_gcd_batch',
 				    })
 				print(f'created record for {domain} / {selector}')
