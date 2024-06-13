@@ -8,6 +8,7 @@ from prisma import Prisma
 from prisma.enums import KeyType
 
 from dkim_util import decode_dkim_tag_value_list
+from pubkey_finder.common import get_date_interval
 
 
 def parse_email_header_date(date_str: str) -> datetime | None:
@@ -18,6 +19,9 @@ def parse_email_header_date(date_str: str) -> datetime | None:
 		print(f'Error parsing date: {e}')
 		return None
 	date = kwds.get('datetime')
+	if date is None:
+		print(f'datetime not found in {kwds}')
+		return None
 	if date.tzinfo is None:
 		# fix for that some emails have timezone= "-0000" (unspecified timezone)
 		print(f'unknown timezone for {date_str}, setting to UTC')
@@ -39,19 +43,7 @@ async def add_records(filename: str, prisma: Prisma):
 			#src2 = parts[5]
 			date1 = parse_email_header_date(parts[6])
 			date2 = parse_email_header_date(parts[7])
-
-			if date1 and date2:
-				oldest_date = date1 if date1 < date2 else date2
-				newest_date = date1 if date1 > date2 else date2
-			elif date1:
-				oldest_date = date1
-				newest_date = date1
-			elif date2:
-				oldest_date = date2
-				newest_date = date2
-			else:
-				oldest_date = None
-				newest_date = None
+			oldest_date, newest_date = get_date_interval(date1, date2)
 
 			print(f'domain: {domain}, selector: {selector}, oldest_date: {oldest_date}, newest_date: {newest_date}')
 			if dkim_tvl == '-':
@@ -71,8 +63,8 @@ async def add_records(filename: str, prisma: Prisma):
 				        'firstSeenAt': oldest_date or datetime.now(),
 				        'lastSeenAt': newest_date or datetime.now(),
 				        'value': dkim_tvl,
-						'keyType': KeyType.RSA,
-						'keyData': p,
+				        'keyType': KeyType.RSA,
+				        'keyData': p,
 				        'source': 'public_key_gcd_batch',
 				    })
 				print(f'created record for {domain} / {selector}')

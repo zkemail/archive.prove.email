@@ -28,8 +28,8 @@ enum KeyType {
 }
 
 model DkimRecord {
-  id                   Int                @id @default(autoincrement())
-  domainSelectorPair   DomainSelectorPair @relation(fields: [domainSelectorPairId], references: [id])
+  id                   Int                  @id @default(autoincrement())
+  domainSelectorPair   DomainSelectorPair   @relation(fields: [domainSelectorPairId], references: [id])
   domainSelectorPairId Int
   firstSeenAt          DateTime
   lastSeenAt           DateTime?
@@ -38,14 +38,29 @@ model DkimRecord {
   keyType              KeyType?
   keyData              String?
   source               String?
+  emailPairGcdResults  EmailPairGcdResult[]
 }
 
 model EmailSignature {
-  id               Int       @id @default(autoincrement())
-  domain           String
-  selector         String
-  headerHash       String
-  dkimSignature    String
-  timestamp        DateTime?
-  signingAlgorithm String
+  id                   Int                  @id @default(autoincrement())
+  domain               String
+  selector             String
+  headerHash           String
+  dkimSignature        String
+  timestamp            DateTime?
+  signingAlgorithm     String
+  email_A_in_gcd_pairs EmailPairGcdResult[] @relation(name: "gcdPairAsA")
+  email_B_in_gcd_pairs EmailPairGcdResult[] @relation(name: "gcdPairAsB")
+}
+
+model EmailPairGcdResult {
+  id                 Int            @id @default(autoincrement())
+  emailSignatureA    EmailSignature @relation(name: "gcdPairAsA", fields: [emailSignatureA_id], references: [id])
+  emailSignatureA_id Int
+  emailSignatureB    EmailSignature @relation(name: "gcdPairAsB", fields: [emailSignatureB_id], references: [id])
+  emailSignatureB_id Int
+  foundGcd           Boolean
+  dkimRecord         DkimRecord?    @relation(fields: [dkimRecordId], references: [id])
+  timestamp          DateTime
+  dkimRecordId       Int?
 }

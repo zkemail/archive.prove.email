@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+from datetime import datetime
+import pickle
 
 
 @dataclass(frozen=True)
@@ -42,3 +44,30 @@ def first_n_primes(n: int) -> list[int]:
 		x |= set([next(a)])
 		y += 1
 	return list(sorted(x))
+
+
+def load_signed_data(datasig_files: list[str]):
+	result: dict[Dsp, list[MsgInfo]] = {}
+	for f in datasig_files:
+		file_load_result = pickle.load(open(f, 'rb'))
+		for dsp, msg_infos in file_load_result.items():
+			if not dsp in result:
+				result[dsp] = []
+			result[dsp].extend(msg_infos)
+	return result
+
+
+def get_date_interval(date1: datetime | None, date2: datetime | None):
+	if date1 and date2:
+		oldest_date = date1 if date1 < date2 else date2
+		newest_date = date1 if date1 > date2 else date2
+	elif date1:
+		oldest_date = date1
+		newest_date = date1
+	elif date2:
+		oldest_date = date2
+		newest_date = date2
+	else:
+		oldest_date = None
+		newest_date = None
+	return oldest_date, newest_date
