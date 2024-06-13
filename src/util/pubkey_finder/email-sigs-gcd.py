@@ -17,7 +17,6 @@ DspToSigs = dict[Dsp, list[EmailSignature]]
 
 
 def find_key(dsp: Dsp, sig0: EmailSignature, sig1: EmailSignature, loglevel: int) -> str | None:
-	logging.info(f'searching for public key for {dsp}')
 	cmd = ["python3", "src/util/pubkey_finder/gcd_solver.py", "--loglevel", str(loglevel)]
 	hashfn = 'sha256'
 	data_parameters = [sig0.headerHash, sig0.dkimSignature, sig1.headerHash, sig1.dkimSignature, hashfn]
@@ -57,24 +56,26 @@ async def main():
 	logging.info(f"filtering out email signatures for which we already have keys")
 	for s in tqdm(email_signatures):
 		dsp = Dsp(domain=s.domain, selector=s.selector)
-		if await has_known_keys(prisma, dsp, dspsWithKnownKeys):
-			logging.debug(f"keys already known for {dsp.domain} {dsp.selector}")
-			continue
 		if dspToSigs.get(dsp) is None:
 			dspToSigs[dsp] = []
 		dspToSigs[dsp].append(s)
 
 	for dsp, sigs in dspToSigs.items():
+		logging.info(f"searching for public key for {dsp}")
+		if await has_known_keys(prisma, dsp, dspsWithKnownKeys):
+			logging.info(f"keys already known for {dsp.domain} {dsp.selector}")
+			continue
 		if len(sigs) >= 2:
 			sig1, sig2 = random.sample(sigs, 2)
 			info = f'dsp {dsp} and signatures {sig1.id} and {sig2.id}'
 			pairGcdResult = await prisma.emailpairgcdresult.find_first(where={'emailSignatureA_id': sig1.id, 'emailSignatureB_id': sig2.id})
 			if pairGcdResult:
-				logging.info(f"EmailPairGcdResult already exists for {info}")
+				logging.info(f"EmailPairGcdResult already exists for signatures {sig1.id} and {sig2.id}")
 				continue
 			date1 = sig1.timestamp
 			date2 = sig2.timestamp
 			oldest_date, newest_date = get_date_interval(date1, date2)
+			logging.info(f'run gcd solver for {info}')
 			p = find_key(dsp, sig1, sig2, logging.INFO)
 			if p:
 				logging.info(f'found public key for {info}')
