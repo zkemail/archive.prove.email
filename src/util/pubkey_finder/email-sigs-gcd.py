@@ -9,7 +9,6 @@ from datetime import datetime
 from tqdm import tqdm
 from prisma import Prisma
 from prisma.models import EmailSignature
-from prisma.types import DkimRecordWhereInput
 from prisma.enums import KeyType
 from Crypto.PublicKey import RSA
 from common import Dsp, get_date_interval
@@ -72,10 +71,10 @@ async def main():
 				dsp_record = await prisma.domainselectorpair.find_first(where={'domain': dsp.domain, 'selector': dsp.selector})
 				if dsp_record is None:
 					dsp_record = await prisma.domainselectorpair.create(data={'domain': dsp.domain, 'selector': dsp.selector, 'sourceIdentifier': 'public_key_gcd_batch'})
-					print(f'created domain/selector pair: {dsp.domain} / {dsp.selector}')
-				dkimrecord = await prisma.dkimrecord.find_first(where={'domainSelectorPairId': dsp.id, 'keyData': p})
-				if not dkimrecord:
-					await prisma.dkimrecord.create(
+					logging.info(f'created domain/selector pair: {dsp.domain} / {dsp.selector}')
+				dkimrecord = await prisma.dkimrecord.find_first(where={'domainSelectorPairId': dsp_record.id, 'keyData': p})
+				if dkimrecord is None:
+					res = await prisma.dkimrecord.create(
 					    data={
 					        'domainSelectorPairId': dsp_record.id,
 					        'firstSeenAt': oldest_date or datetime.now(),
@@ -85,8 +84,9 @@ async def main():
 					        'keyData': p,
 					        'source': 'public_key_gcd_batch',
 					    })
+					logging.info(f'created dkim record: {res}')
 		else:
-			print(f"only one signature found for {dsp}")
+			logging.info(f"only one signature found for {dsp}")
 
 
 if __name__ == '__main__':
