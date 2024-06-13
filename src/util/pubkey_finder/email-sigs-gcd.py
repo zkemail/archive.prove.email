@@ -28,9 +28,7 @@ def find_key(dsp: Dsp, sig0: EmailSignature, sig1: EmailSignature, loglevel: int
 	n = int(data['n_hex'], 16)
 	e = int(data['e_hex'], 16)
 	if (n < 2):
-		logging.info(f'no public key found for {dsp}')
 		return None
-	logging.info(f'found public key for {dsp}')
 	rsa_key = RSA.construct((n, e))
 	keyDER = rsa_key.exportKey(format='DER')
 	keyDER_base64 = binascii.b2a_base64(keyDER, newline=False).decode('utf-8')
@@ -61,20 +59,26 @@ async def main():
 		dspToSigs[dsp].append(s)
 
 	for dsp, sigs in dspToSigs.items():
-		if len(sigs) > 1:
+		if len(sigs) >= 2:
 			sig1, sig2 = random.sample(sigs, 2)
+			info = f'dsp {dsp} and signatures {sig1.id} and {sig2.id}'
+			pairGcdResult = await prisma.emailpairgcdresult.find_first(where={'emailSignatureA_id': sig1.id, 'emailSignatureB_id': sig2.id})
+			if pairGcdResult:
+				logging.info(f"EmailPairGcdResult already exists for {info}")
+				continue
 			date1 = sig1.timestamp
 			date2 = sig2.timestamp
 			oldest_date, newest_date = get_date_interval(date1, date2)
 			p = find_key(dsp, sig1, sig2, logging.INFO)
 			if p:
+				logging.info(f'found public key for {info}')
 				dsp_record = await prisma.domainselectorpair.find_first(where={'domain': dsp.domain, 'selector': dsp.selector})
 				if dsp_record is None:
 					dsp_record = await prisma.domainselectorpair.create(data={'domain': dsp.domain, 'selector': dsp.selector, 'sourceIdentifier': 'public_key_gcd_batch'})
 					logging.info(f'created domain/selector pair: {dsp.domain} / {dsp.selector}')
 				dkimrecord = await prisma.dkimrecord.find_first(where={'domainSelectorPairId': dsp_record.id, 'keyData': p})
 				if dkimrecord is None:
-					res = await prisma.dkimrecord.create(
+					dkimrecord = await prisma.dkimrecord.create(
 					    data={
 					        'domainSelectorPairId': dsp_record.id,
 					        'firstSeenAt': oldest_date or datetime.now(),
@@ -84,9 +88,25 @@ async def main():
 					        'keyData': p,
 					        'source': 'public_key_gcd_batch',
 					    })
-					logging.info(f'created dkim record: {res}')
+					logging.info(f'created dkim record: {dkimrecord}')
+				await prisma.emailpairgcdresult.create(data={
+				    'emailSignatureA_id': sig1.id,
+				    'emailSignatureB_id': sig2.id,
+				    'dkimRecordId': dkimrecord.id,
+				    'foundGcd': True,
+				    'timestamp': datetime.now(),
+				})
+			else:
+				logging.info(f'no public key found for {info}')
+				await prisma.emailpairgcdresult.create(data={
+				    'emailSignatureA_id': sig1.id,
+				    'emailSignatureB_id': sig2.id,
+				    'dkimRecordId': None,
+				    'foundGcd': False,
+				    'timestamp': datetime.now(),
+				})
 		else:
-			logging.info(f"only one signature found for {dsp}")
+			logging.info(f"less than 2 signatures found for {dsp}")
 
 
 if __name__ == '__main__':
