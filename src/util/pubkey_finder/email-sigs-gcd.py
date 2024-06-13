@@ -72,9 +72,6 @@ async def main():
 			if pairGcdResult:
 				logging.info(f"EmailPairGcdResult already exists for signatures {sig1.id} and {sig2.id}")
 				continue
-			date1 = sig1.timestamp
-			date2 = sig2.timestamp
-			oldest_date, newest_date = get_date_interval(date1, date2)
 			logging.info(f'run gcd solver for {info}')
 			p = find_key(dsp, sig1, sig2, logging.INFO)
 			if p:
@@ -85,6 +82,9 @@ async def main():
 					logging.info(f'created domain/selector pair: {dsp.domain} / {dsp.selector}')
 				dkimrecord = await prisma.dkimrecord.find_first(where={'domainSelectorPairId': dsp_record.id, 'keyData': p})
 				if dkimrecord is None:
+					date1 = sig1.timestamp
+					date2 = sig2.timestamp
+					oldest_date, newest_date = get_date_interval(date1, date2)
 					dkimrecord = await prisma.dkimrecord.create(
 					    data={
 					        'domainSelectorPairId': dsp_record.id,
