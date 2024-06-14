@@ -6,7 +6,6 @@ import os
 import subprocess
 import random
 from datetime import datetime
-from tqdm import tqdm
 from prisma import Prisma
 from prisma.models import EmailSignature
 from prisma.enums import KeyType
@@ -98,7 +97,7 @@ async def main():
 	dspToSigs: DspToSigs = {}
 	dspsWithKnownKeys: set[Dsp] = set()
 	logging.info(f"filtering out email signatures for which we already have keys")
-	for s in tqdm(email_signatures):
+	for s in email_signatures:
 		dsp = Dsp(domain=s.domain, selector=s.selector)
 		if dspToSigs.get(dsp) is None:
 			dspToSigs[dsp] = []
@@ -111,8 +110,17 @@ async def main():
 			continue
 		if len(sigs) >= 2:
 			sig1, sig2 = random.sample(sigs, 2)
-
-			pairGcdResult = await prisma.emailpairgcdresult.find_first(where={'emailSignatureA_id': sig1.id, 'emailSignatureB_id': sig2.id})
+			pairGcdResult = await prisma.emailpairgcdresult.find_first(
+			    where={'OR': [
+			        {
+			            'emailSignatureA_id': sig1.id,
+			            'emailSignatureB_id': sig2.id
+			        },
+			        {
+			            'emailSignatureA_id': sig2.id,
+			            'emailSignatureB_id': sig1.id
+			        },
+			    ]})
 			if pairGcdResult:
 				logging.info(f"EmailPairGcdResult already exists for signatures {sig1.id} and {sig2.id}")
 				continue
