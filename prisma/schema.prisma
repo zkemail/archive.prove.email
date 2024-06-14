@@ -54,7 +54,6 @@ model EmailSignature {
 }
 
 model EmailPairGcdResult {
-  id                 Int            @id @default(autoincrement())
   emailSignatureA    EmailSignature @relation(name: "gcdPairAsA", fields: [emailSignatureA_id], references: [id])
   emailSignatureA_id Int
   emailSignatureB    EmailSignature @relation(name: "gcdPairAsB", fields: [emailSignatureB_id], references: [id])
@@ -63,4 +62,6 @@ model EmailPairGcdResult {
   dkimRecord         DkimRecord?    @relation(fields: [dkimRecordId], references: [id])
   timestamp          DateTime
   dkimRecordId       Int?
+
+  @@id([emailSignatureA_id, emailSignatureB_id])
 }
