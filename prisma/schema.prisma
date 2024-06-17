@@ -65,3 +65,12 @@ model EmailPairGcdResult {
 
   @@id([emailSignatureA_id, emailSignatureB_id])
 }
+
+model IssuerCertificate {
+  id          Int      @id @default(autoincrement())
+  issuer      String
+  notBefore   DateTime
+  notAfter    DateTime
+  publicKey   String
+  updated     DateTime
+}
