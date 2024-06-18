@@ -1,13 +1,18 @@
 #!/usr/bin/env python
 
-# load an .mbox file and collect various statistics about domains
-
 import collections
+from datetime import datetime
+from itertools import chain
+import logging
 import mailbox
 import sys
 import email.utils
 import argparse
-from dkim_util import decode_dkim_tag_value_list
+from tqdm import tqdm
+from dkim_util import DecodeTvlException, decode_dkim_tag_value_list
+import dns.exception
+import dns.resolver
+import dns.rdatatype
 
 
 def domain_statistics(mboxFile: str):
@@ -25,11 +30,11 @@ def domain_statistics(mboxFile: str):
 		totalWithDkimSigCount += 1
 		fromAddress = message['From']
 		if (type(fromAddress) != str):
-			print(f'warning: invalid From header {fromAddress}', file=sys.stderr)
+			logging.debug(f'warning: invalid From header {fromAddress}')
 			continue
 		fromAddress = email.utils.parseaddr(fromAddress)[1]
 		if not fromAddress:
-			print(f'warning: invalid From header {fromAddress}', file=sys.stderr)
+			logging.debug(f'warning: invalid From header {fromAddress}')
 			continue
 		fromDomain = fromAddress.rpartition('@')[2]
 		dkimRecord = decode_dkim_tag_value_list(dkimSignature)
@@ -53,6 +58,76 @@ def domain_statistics(mboxFile: str):
 	print(f'from domains: {len(fromDomains)}')
 	for fromDomain in sorted(fromDomains):
 		print(fromDomain)
+
+
+def dsp_exists_on_dns(domain: str, selector: str) -> bool:
+
+	qname = f"{selector}._domainkey.{domain}"
+	try:
+		response = dns.resolver.resolve(qname, dns.rdatatype.TXT)
+		if len(response) == 0:
+			logging.debug(f'no records found for {qname}')
+			return False
+		txtData = ""
+		for i in range(len(response)):
+			txtData += b''.join(response[i].strings).decode()  # type: ignore
+			txtData += ";"
+		try:
+			tags = decode_dkim_tag_value_list(txtData)
+		except DecodeTvlException as e:
+			logging.debug(f'error decoding DKIM tag-value pair: {e}')
+			return False
+		if 'p' not in tags:
+			logging.debug(f'no p= tag found for {qname}, {txtData}')
+			return False
+		p = tags['p']
+		if not p:
+			logging.debug(f'empty p= tag found for {qname}, {txtData}')
+			return False
+		return True
+	except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer, dns.resolver.NoNameservers, dns.exception.Timeout) as e:
+		logging.debug(f'dns resolver error: {e}')
+		return False
+
+
+def date_to_time_slot(date: datetime) -> str:
+	q = 'Q1Q2' if date.month < 7 else 'Q3Q4'
+	return f'{date.year}_{q}'
+
+
+def dkim_dns_statistics(mboxFiles: list[str]):
+	total_domainkeys_per_time_slot: dict[str, int] = collections.defaultdict(int)
+	active_domainkeys_per_time_slot: dict[str, int] = collections.defaultdict(int)
+	loaded_mbox_files: list[mailbox.mbox] = []
+	for mboxFile in mboxFiles:
+		logging.info(f'loading {mboxFile}')
+		mb = mailbox.mbox(mboxFile)
+		len(mb)  # preload all messages
+		loaded_mbox_files.append(mb)
+
+	for message in tqdm(chain(*loaded_mbox_files), total=sum(len(mbox) for mbox in loaded_mbox_files)):
+		msgDate = message['Date']
+		if (type(msgDate) != str):
+			logging.debug(f'invalid Date header {msgDate}')
+			continue
+		try:
+			msgDate = email.utils.parsedate_to_datetime(msgDate)
+		except ValueError as e:
+			logging.debug(f'invalid Date header {msgDate}: {e}')
+			continue
+		dkimSignature = message['DKIM-Signature']
+		if not dkimSignature:
+			continue
+		dkimRecord = decode_dkim_tag_value_list(dkimSignature)
+		dkimDomain = dkimRecord['d']
+		dkimSelector = dkimRecord['s']
+		total_domainkeys_per_time_slot[date_to_time_slot(msgDate)] += 1
+		dns_active = dsp_exists_on_dns(dkimDomain, dkimSelector)
+		if dns_active:
+			active_domainkeys_per_time_slot[date_to_time_slot(msgDate)] += 1
+
+	for time_slot, count in sorted(active_domainkeys_per_time_slot.items()):
+		print(f'{time_slot}: {count} active domainkeys out of {total_domainkeys_per_time_slot[time_slot]} ({count / total_domainkeys_per_time_slot[time_slot] * 100:.2f}%)')
 
 
 def selector_statistics(tsvFile: str):
@@ -79,17 +154,21 @@ def selector_statistics(tsvFile: str):
 
 
 if __name__ == '__main__':
+	logging.basicConfig(level=logging.INFO)
 	argparser = argparse.ArgumentParser(description='Collect various statistics about domains, selectors, and DKIM signatures')
-	argparser.add_argument('--mboxFile', help='Show statistics about DKIM sigatures and domains for an .mbox file')
+	argparser.add_argument('--dkimDspStatsMbox', help='Show statistics about DKIM sigatures and domains for an .mbox file')
+	argparser.add_argument('--dkimDnsStatsMbox', help='Show statistics about the DNS lookup status of domains/selectors for a set of .mbox files', type=str, nargs='+')
 	tsvHelp = 'For a .tsv file with two columns(domain, selector), show a list of selectors, with percentage of domains convered for each selector. Also print accumulated percentage of domains covered when using the N most common selectors'
 	argparser.add_argument('--tsvFile', help=tsvHelp)
 	args = argparser.parse_args()
 
-	if (not args.mboxFile and not args.tsvFile):
+	if (not args.dkimDspStatsMbox and not args.dkimDnsStatsMbox and not args.tsvFile):
 		argparser.print_help()
 		sys.exit(1)
 
-	if args.mboxFile:
-		domain_statistics(args.mboxFile)
+	if args.dkimDspStatsMbox:
+		domain_statistics(args.dkimDspStatsMbox)
 	if args.tsvFile:
 		selector_statistics(args.tsvFile)
+	if args.dkimDnsStatsMbox:
+		dkim_dns_statistics(args.dkimDnsStatsMbox)
