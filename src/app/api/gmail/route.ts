@@ -36,11 +36,8 @@ async function handleMessage(messageId: string, gmail: gmail_v1.Gmail, resultArr
 			continue;
 		}
 
+		storeEmailSignature(tags, headerStrings, domain, selector, internalDate);
 		let addResult = await addDomainSelectorPair(domain, selector, 'api');
-		if (!addResult.already_in_db && !addResult.added) {
-			console.log(`no public key known or found for domain=${domain} selector=${selector}, storing email dkim signature`);
-			storeEmailSignature(tags, headerStrings, domain, selector, internalDate);
-		}
 
 		let domainSelectorPair = { domain, selector };
 		resultArray.push({ addResult, domainSelectorPair });

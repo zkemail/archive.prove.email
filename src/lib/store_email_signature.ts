@@ -50,6 +50,13 @@ export async function storeEmailSignature(tags: Record<string, string>, headerSt
 	// c is optional, where the default is "simple/simple"
 	let headerCanonicalizationAlgorithm = tags.c ? tags.c.split('/')[0] : 'simple';
 
+
 	let headerHash = await generateHashFromHeaders(signedHeaders, headerStrings, headerCanonicalizationAlgorithm);
+	let hashAndSignatureExists = await prisma.emailSignature.findFirst({ where: { headerHash, dkimSignature } });
+	if (hashAndSignatureExists) {
+		console.log(`skipping existing email signature, domain=${domain} selector=${selector}, timestamp=${timestamp}`);
+		return;
+	}
+	console.log(`storing email dkim signature, domain=${domain} selector=${selector}, timestamp=${timestamp}`);
 	await prisma.emailSignature.create({ data: { domain, selector, headerHash, dkimSignature, timestamp, signingAlgorithm } });
 }
