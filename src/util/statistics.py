@@ -103,11 +103,14 @@ class QnameBucket:
 
 
 # probabilistically classify whether a selector, based on its name, is likely bound to a specific public key (the key will not change for the same selector name)
-# examples: dk20170101, s2017-01, 201701, zj3gqqrotrgjg2t237hfixaqkmvmvwwi
+# examples: 2008, dk20170101, s2017-01, 201701, zj3gqqrotrgjg2t237hfixaqkmvmvwwi
 def is_keybound_selector_name(s: str):
-	if re.match(r".*20\d\d\d\d(\d\d)?.*", s):
-		return True
-	if re.match(r".*20\d\d-\d\d.*", s):
+	m = re.match(r".*20(\d\d).*", s)
+	if m:
+		yy = int(m.group(1))
+		if yy >= 5 and yy <= datetime.now().year + 1 % 100:
+			return True
+	if re.match(r"scph\d\d\d\d", s):
 		return True
 	if (len(s) == 32 and s.isalnum()):
 		return True
@@ -123,15 +126,17 @@ def test_keybound_selector_classifier(selectorList: TextIO):
 			keybound_selectors.add(selector)
 		else:
 			non_keybound_selectors.add(selector)
-	with open('keybound_selectors.txt', 'w') as f:
+	with open('tmp/keybound_selectors.txt', 'w') as f:
 		for selector in sorted(keybound_selectors):
 			f.write(f'{selector}\n')
-	with open('non_keybound_selectors.txt', 'w') as f:
+	logging.info(f'wrote {len(keybound_selectors)} keybound selectors to tmp/keybound_selectors.txt')
+	with open('tmp/non_keybound_selectors.txt', 'w') as f:
 		for selector in sorted(non_keybound_selectors):
 			f.write(f'{selector}\n')
+	logging.info(f'wrote {len(non_keybound_selectors)} non-keybound selectors to tmp/non_keybound_selectors.txt')
 
 
-def dkim_dns_statistics(mboxFiles: list[str]):
+def dkim_dns_statistics(mboxFiles: list[str], includeOnlyKeyboundSelectors: bool):
 	buckets: dict[str, QnameBucket] = collections.defaultdict(QnameBucket)
 	loaded_mbox_files: list[mailbox.mbox] = []
 	for mboxFile in mboxFiles:
@@ -156,11 +161,8 @@ def dkim_dns_statistics(mboxFiles: list[str]):
 		dkimRecord = decode_dkim_tag_value_list(dkimSignature)
 		dkimDomain = dkimRecord['d']
 		dkimSelector = dkimRecord['s']
-		if is_generic_selector_name(dkimSelector):
-			#logging.info(f'skipping generic selector name {dkimSelector}')
+		if includeOnlyKeyboundSelectors and not is_keybound_selector_name(dkimSelector):
 			continue
-		else:
-			logging.info(f'processing {dkimSelector}._domainkey.{dkimDomain}')
 
 		time_slot_key = date_to_time_slot(msgDate)
 		bucket = buckets[time_slot_key]
@@ -226,7 +228,7 @@ if __name__ == '__main__':
 	if args.tsvFile:
 		selector_statistics(args.tsvFile)
 	if args.dkimDnsStatsMbox:
-		dkim_dns_statistics(args.dkimDnsStatsMbox)
+		dkim_dns_statistics(args.dkimDnsStatsMbox, args.includeOnlyKeyboundSelectors)
 	if args.testKeyboundSelectorClassifier:
 		filename: TextIO = args.testKeyboundSelectorClassifier
 		test_keybound_selector_classifier(filename)
