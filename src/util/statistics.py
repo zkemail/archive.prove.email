@@ -6,9 +6,11 @@ from datetime import datetime
 from itertools import chain
 import logging
 import mailbox
+import re
 import sys
 import email.utils
 import argparse
+from typing import TextIO
 from tqdm import tqdm
 from dkim_util import DecodeTvlException, decode_dkim_tag_value_list
 import dns.exception
@@ -100,6 +102,35 @@ class QnameBucket:
 	active_qnames: set[str] = field(default_factory=set)
 
 
+# probabilistically classify whether a selector, based on its name, is likely bound to a specific public key (the key will not change for the same selector name)
+# examples: dk20170101, s2017-01, 201701, zj3gqqrotrgjg2t237hfixaqkmvmvwwi
+def is_keybound_selector_name(s: str):
+	if re.match(r".*20\d\d\d\d(\d\d)?.*", s):
+		return True
+	if re.match(r".*20\d\d-\d\d.*", s):
+		return True
+	if (len(s) == 32 and s.isalnum()):
+		return True
+	return False
+
+
+def test_keybound_selector_classifier(selectorList: TextIO):
+	keybound_selectors: set[str] = set()
+	non_keybound_selectors: set[str] = set()
+	for line in selectorList:
+		selector = line.strip()
+		if is_keybound_selector_name(selector):
+			keybound_selectors.add(selector)
+		else:
+			non_keybound_selectors.add(selector)
+	with open('keybound_selectors.txt', 'w') as f:
+		for selector in sorted(keybound_selectors):
+			f.write(f'{selector}\n')
+	with open('non_keybound_selectors.txt', 'w') as f:
+		for selector in sorted(non_keybound_selectors):
+			f.write(f'{selector}\n')
+
+
 def dkim_dns_statistics(mboxFiles: list[str]):
 	buckets: dict[str, QnameBucket] = collections.defaultdict(QnameBucket)
 	loaded_mbox_files: list[mailbox.mbox] = []
@@ -125,6 +156,12 @@ def dkim_dns_statistics(mboxFiles: list[str]):
 		dkimRecord = decode_dkim_tag_value_list(dkimSignature)
 		dkimDomain = dkimRecord['d']
 		dkimSelector = dkimRecord['s']
+		if is_generic_selector_name(dkimSelector):
+			#logging.info(f'skipping generic selector name {dkimSelector}')
+			continue
+		else:
+			logging.info(f'processing {dkimSelector}._domainkey.{dkimDomain}')
+
 		time_slot_key = date_to_time_slot(msgDate)
 		bucket = buckets[time_slot_key]
 		bucket.qnames.add(f"{dkimSelector}._domainkey.{dkimDomain}")
@@ -138,7 +175,7 @@ def dkim_dns_statistics(mboxFiles: list[str]):
 	for key, bucket in sorted(buckets.items()):
 		active = len(bucket.active_qnames)
 		total = len(bucket.qnames)
-		print(f'{key}: {active} of {total} active domainkeys ({active / total * 100:.2f}%)')
+		print(f'{key}: {active} active domainkeys of total {total} ({active / total * 100:.2f}%)')
 
 
 def selector_statistics(tsvFile: str):
@@ -168,12 +205,19 @@ if __name__ == '__main__':
 	logging.basicConfig(level=logging.INFO)
 	argparser = argparse.ArgumentParser(description='Collect various statistics about domains, selectors, and DKIM signatures')
 	argparser.add_argument('--dkimDspStatsMbox', help='Show statistics about DKIM sigatures and domains for an .mbox file')
+
 	argparser.add_argument('--dkimDnsStatsMbox', help='Show statistics about the DNS lookup status of domains/selectors for a set of .mbox files', type=str, nargs='+')
+	argparser.add_argument('--includeOnlyKeyboundSelectors',
+	                       help='Use together with --dkimDnsStatsMbox to exclude "generic" selectors (such as "s1", "default", etc)',
+	                       action='store_true')
+
+	argparser.add_argument('--testKeyboundSelectorClassifier', help='Test the selector classifier with a file with a list of selectors', type=argparse.FileType('r'))
+
 	tsvHelp = 'For a .tsv file with two columns(domain, selector), show a list of selectors, with percentage of domains convered for each selector. Also print accumulated percentage of domains covered when using the N most common selectors'
 	argparser.add_argument('--tsvFile', help=tsvHelp)
 	args = argparser.parse_args()
 
-	if (not args.dkimDspStatsMbox and not args.dkimDnsStatsMbox and not args.tsvFile):
+	if (not args.dkimDspStatsMbox and not args.dkimDnsStatsMbox and not args.tsvFile and not args.testKeyboundSelectorClassifier):
 		argparser.print_help(file=sys.stderr)
 		sys.exit(1)
 
@@ -183,3 +227,6 @@ if __name__ == '__main__':
 		selector_statistics(args.tsvFile)
 	if args.dkimDnsStatsMbox:
 		dkim_dns_statistics(args.dkimDnsStatsMbox)
+	if args.testKeyboundSelectorClassifier:
+		filename: TextIO = args.testKeyboundSelectorClassifier
+		test_keybound_selector_classifier(filename)
