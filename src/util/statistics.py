@@ -145,6 +145,7 @@ def dkim_dns_statistics(mboxFiles: list[str], includeOnlyKeyboundSelectors: bool
 		len(mb)  # preload all messages
 		loaded_mbox_files.append(mb)
 
+	logging.info('processing messages')
 	for message in tqdm(chain(*loaded_mbox_files), total=sum(len(mbox) for mbox in loaded_mbox_files)):
 		msgDate = message['Date']
 		if (type(msgDate) != str):
@@ -168,9 +169,9 @@ def dkim_dns_statistics(mboxFiles: list[str], includeOnlyKeyboundSelectors: bool
 		bucket = buckets[time_slot_key]
 		bucket.qnames.add(f"{dkimSelector}._domainkey.{dkimDomain}")
 
-	logging.info('checking DNS for domainkeys')
-	for bucket in buckets.values():
-		for qname in bucket.qnames:
+	for key, bucket in sorted(buckets.items()):
+		logging.info(f'checking {len(bucket.qnames)} qnames for {key}')
+		for qname in tqdm(bucket.qnames):
 			if dsp_exists_on_dns(qname):
 				bucket.active_qnames.add(qname)
 
