@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import collections
+from dataclasses import dataclass, field
 from datetime import datetime
 from itertools import chain
 import logging
@@ -60,9 +61,7 @@ def domain_statistics(mboxFile: str):
 		print(fromDomain)
 
 
-def dsp_exists_on_dns(domain: str, selector: str) -> bool:
-
-	qname = f"{selector}._domainkey.{domain}"
+def dsp_exists_on_dns(qname: str) -> bool:
 	try:
 		response = dns.resolver.resolve(qname, dns.rdatatype.TXT)
 		if len(response) == 0:
@@ -95,9 +94,14 @@ def date_to_time_slot(date: datetime) -> str:
 	return f'{date.year}_{q}'
 
 
+@dataclass
+class QnameBucket:
+	qnames: set[str] = field(default_factory=set)
+	active_qnames: set[str] = field(default_factory=set)
+
+
 def dkim_dns_statistics(mboxFiles: list[str]):
-	total_domainkeys_per_time_slot: dict[str, int] = collections.defaultdict(int)
-	active_domainkeys_per_time_slot: dict[str, int] = collections.defaultdict(int)
+	buckets: dict[str, QnameBucket] = collections.defaultdict(QnameBucket)
 	loaded_mbox_files: list[mailbox.mbox] = []
 	for mboxFile in mboxFiles:
 		logging.info(f'loading {mboxFile}')
@@ -121,13 +125,20 @@ def dkim_dns_statistics(mboxFiles: list[str]):
 		dkimRecord = decode_dkim_tag_value_list(dkimSignature)
 		dkimDomain = dkimRecord['d']
 		dkimSelector = dkimRecord['s']
-		total_domainkeys_per_time_slot[date_to_time_slot(msgDate)] += 1
-		dns_active = dsp_exists_on_dns(dkimDomain, dkimSelector)
-		if dns_active:
-			active_domainkeys_per_time_slot[date_to_time_slot(msgDate)] += 1
+		time_slot_key = date_to_time_slot(msgDate)
+		bucket = buckets[time_slot_key]
+		bucket.qnames.add(f"{dkimSelector}._domainkey.{dkimDomain}")
 
-	for time_slot, count in sorted(active_domainkeys_per_time_slot.items()):
-		print(f'{time_slot}: {count} active domainkeys out of {total_domainkeys_per_time_slot[time_slot]} ({count / total_domainkeys_per_time_slot[time_slot] * 100:.2f}%)')
+	logging.info('checking DNS for domainkeys')
+	for bucket in buckets.values():
+		for qname in bucket.qnames:
+			if dsp_exists_on_dns(qname):
+				bucket.active_qnames.add(qname)
+
+	for key, bucket in sorted(buckets.items()):
+		active = len(bucket.active_qnames)
+		total = len(bucket.qnames)
+		print(f'{key}: {active} of {total} active domainkeys ({active / total * 100:.2f}%)')
 
 
 def selector_statistics(tsvFile: str):
@@ -163,7 +174,7 @@ if __name__ == '__main__':
 	args = argparser.parse_args()
 
 	if (not args.dkimDspStatsMbox and not args.dkimDnsStatsMbox and not args.tsvFile):
-		argparser.print_help()
+		argparser.print_help(file=sys.stderr)
 		sys.exit(1)
 
 	if args.dkimDspStatsMbox:
