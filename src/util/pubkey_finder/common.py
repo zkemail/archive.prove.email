@@ -19,6 +19,7 @@ class MsgInfo:
 	signature: bytes
 	source: str
 	date: str
+	canonInfo: str
 
 
 # https://stackoverflow.com/a/2212923/961254

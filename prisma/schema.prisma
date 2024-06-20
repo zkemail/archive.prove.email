@@ -49,6 +49,7 @@ model EmailSignature {
   dkimSignature        String
   timestamp            DateTime?
   signingAlgorithm     String
+  canonInfo            String // info about what tool or library was used to generate the header hash
   email_A_in_gcd_pairs EmailPairGcdResult[] @relation(name: "gcdPairAsA")
   email_B_in_gcd_pairs EmailPairGcdResult[] @relation(name: "gcdPairAsB")
 }

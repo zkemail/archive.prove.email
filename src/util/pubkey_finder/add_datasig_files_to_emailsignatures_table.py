@@ -16,13 +16,15 @@ async def add_messages_to_db(signed_messages: dict[Dsp, list[MsgInfo]], prisma: 
 			msg_sig = base64.b64encode(msg_info.signature).decode('utf-8')
 			emailsig = await prisma.emailsignature.find_first(where={'headerHash': msg_hash, 'dkimSignature': msg_sig})
 			if not emailsig:
-				await prisma.emailsignature.create(data={
-				    'domain': dsp.domain,
-				    'selector': dsp.selector,
-				    'headerHash': msg_hash,
-				    'dkimSignature': msg_sig,
-				    'signingAlgorithm': 'rsa-sha256',
-				})
+				await prisma.emailsignature.create(
+				    data={
+				        'domain': dsp.domain,
+				        'selector': dsp.selector,
+				        'headerHash': msg_hash,
+				        'dkimSignature': msg_sig,
+				        'signingAlgorithm': 'rsa-sha256',
+				        'canonInfo': msg_info.canonInfo,
+				    })
 
 
 async def main():
