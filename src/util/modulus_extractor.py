@@ -8,12 +8,11 @@ import queue
 import re
 import subprocess
 import threading
-from typing import Optional, TextIO
+from typing import TextIO
 from prisma import Prisma
-from prisma.models import DkimRecord
-from prisma.types import DkimRecordWhereUniqueInput
 from tqdm import tqdm
 from dkim_util import decode_dkim_tag_value_list
+from db_util import load_dkim_records_with_dsps
 
 
 class CommandException(Exception):
@@ -135,16 +134,7 @@ async def post_process(csvFile: TextIO, prisma: Prisma):
 
 async def extract_moduli(prisma: Prisma):
 	logging.info('fetching records')
-	cursor: Optional[DkimRecordWhereUniqueInput] = None
-	records: list[DkimRecord] = []
-	while True:
-		skip = 0 if cursor is None else 1
-		new_records = await prisma.dkimrecord.find_many(take=50000, include={'domainSelectorPair': True}, cursor=cursor, skip=skip)
-		logging.info(f'fetched {len(records)} records')
-		if len(new_records) == 0:
-			break
-		records.extend(new_records)
-		cursor = {'id': new_records[-1].id}
+	records = await load_dkim_records_with_dsps(prisma)
 
 	await prisma.disconnect()
 
