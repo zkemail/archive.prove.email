@@ -17,6 +17,8 @@ import dns.exception
 import dns.resolver
 import dns.rdatatype
 
+from db_util import load_dkim_records_with_dsps
+
 
 def domain_statistics(mboxFile: str):
 	totalMsgCount = 0
@@ -204,8 +206,39 @@ def selector_statistics(tsvFile: str):
 		print(f'{selector}\t{len(domains)} domains ({domainsPercentage:.1f}%), accumulated: {accumulatedDomainsPercentage:.1f}%')
 
 
+async def dkim_key_reuse_statistics():
+	from prisma import Prisma
+	prisma = Prisma()
+	await prisma.connect()
+	records = await load_dkim_records_with_dsps(prisma)
+	dkimKeyMap: dict[str, dict[str, set[str]]] = collections.defaultdict(lambda: collections.defaultdict(set))
+	for record in records:
+		if not record.keyData or not record.domainSelectorPair:
+			continue
+		dkimKeyMap[record.keyData][record.domainSelectorPair.selector].add(record.domainSelectorPair.domain)
+	sorted_dkimKeyMap = dict(sorted(dkimKeyMap.items(), key=lambda x: sum(len(domains) for domains in x[1].values()), reverse=True))
+	for dkim_key_index, (dkimKey, selectors_with_domains) in enumerate(sorted_dkimKeyMap.items()):
+		number_of_dsps = sum(len(domains) for domains in selectors_with_domains.values())
+		max_displayed_dkim_keys = 100
+		if dkim_key_index >= max_displayed_dkim_keys:
+			print(f'...and {len(sorted_dkimKeyMap) - max_displayed_dkim_keys} more DKIM keys')
+			break
+		print(f'dkim key: {dkimKey}')
+		print(f'\t{number_of_dsps} domain/selector pairs')
+		selectors_with_domains = dict(sorted(selectors_with_domains.items(), key=lambda x: len(x[1]), reverse=True))
+		print(f'\t{len(selectors_with_domains)} selectors, breakdown:')
+		for selector_index, (selector, domains) in enumerate(selectors_with_domains.items()):
+			max_displayed_selectors = 5
+			if selector_index >= max_displayed_selectors:
+				print(f'\t\t...and {len(selectors_with_domains) - max_displayed_selectors} more selectors')
+				break
+			print(f'\t\t{selector}: {len(domains)} domains')
+		print()
+
+
 if __name__ == '__main__':
 	logging.basicConfig(level=logging.INFO)
+	logging.getLogger("httpx").setLevel(logging.WARNING)
 	argparser = argparse.ArgumentParser(description='Collect various statistics about domains, selectors, and DKIM signatures')
 	argparser.add_argument('--dkimDspStatsMbox', help='Show statistics about DKIM sigatures and domains for an .mbox file')
 
@@ -216,11 +249,13 @@ if __name__ == '__main__':
 
 	argparser.add_argument('--testKeyboundSelectorClassifier', help='Test the selector classifier with a file with a list of selectors', type=argparse.FileType('r'))
 
+	argparser.add_argument('--dkimKeyReuse', help='Show statistics about DKIM key reuse from the database', action='store_true')
+
 	tsvHelp = 'For a .tsv file with two columns(domain, selector), show a list of selectors, with percentage of domains convered for each selector. Also print accumulated percentage of domains covered when using the N most common selectors'
 	argparser.add_argument('--tsvFile', help=tsvHelp)
 	args = argparser.parse_args()
 
-	if (not args.dkimDspStatsMbox and not args.dkimDnsStatsMbox and not args.tsvFile and not args.testKeyboundSelectorClassifier):
+	if (not args.dkimDspStatsMbox and not args.dkimDnsStatsMbox and not args.tsvFile and not args.testKeyboundSelectorClassifier and not args.dkimKeyReuse):
 		argparser.print_help(file=sys.stderr)
 		sys.exit(1)
 
@@ -233,3 +268,6 @@ if __name__ == '__main__':
 	if args.testKeyboundSelectorClassifier:
 		filename: TextIO = args.testKeyboundSelectorClassifier
 		test_keybound_selector_classifier(filename)
+	if args.dkimKeyReuse:
+		import asyncio
+		asyncio.run(dkim_key_reuse_statistics())
