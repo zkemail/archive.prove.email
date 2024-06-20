@@ -58,5 +58,10 @@ export async function storeEmailSignature(tags: Record<string, string>, headerSt
 		return;
 	}
 	console.log(`storing email dkim signature, domain=${domain} selector=${selector}, timestamp=${timestamp}`);
-	await prisma.emailSignature.create({ data: { domain, selector, headerHash, dkimSignature, timestamp, signingAlgorithm } });
+	await prisma.emailSignature.create({
+		data: {
+			domain, selector, headerHash, dkimSignature, timestamp, signingAlgorithm,
+			canonInfo: 'dkim@0.8.0'
+		}
+	});
 }

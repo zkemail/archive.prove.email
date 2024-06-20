@@ -102,7 +102,7 @@ def parse_mbox_file(filepath: str) -> dict[Dsp, list[MsgInfo]]:
 
 			dsp = Dsp(domain, selector)
 			msg_date = message.get('Date', 'unknown')
-			msg_info = MsgInfo(signed_data, signature, f'{filename}:{message_index}', msg_date)
+			msg_info = MsgInfo(signed_data, signature, f'{filename}:{message_index}', msg_date, 'dkimpy_fork')
 			if not dsp in results:
 				results[dsp] = []
 			results[dsp].append(msg_info)
