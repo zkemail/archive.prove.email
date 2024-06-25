@@ -23,7 +23,7 @@ def parse_email_header_date(date_str: str) -> datetime | None:
 		print(f'datetime not found in {kwds}')
 		return None
 	if date.tzinfo is None:
-		# fix for that some emails have timezone= "-0000" (unspecified timezone)
+		# fix for that some emails have timezone= "-0000" (unspecified timezone), which generates "TypeError: can't compare offset-naive and offset-aware datetimes" on comparison
 		print(f'unknown timezone for {date_str}, setting to UTC')
 		date = date.replace(tzinfo=timezone.utc)
 
