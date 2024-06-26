@@ -271,21 +271,33 @@ def dkim_key_rotation(mboxFiles: list[str], excludeKeyboundSelectors: bool):
 def verification_results_to_svg(data: dict[str, list[VerificationResult]], output_file: str):
 	xres = 800
 	yres = 800
+	start_date = datetime(2010, 1, 1).timestamp()
+	end_date = datetime.now().timestamp()
 	row_height_px = 10
-	rows = yres // row_height_px
+	empty_rows = 2
+	rows = yres // row_height_px - empty_rows
+
+	def date_to_x(date: datetime) -> float:
+		return (date.timestamp() - start_date) / (end_date - start_date) * xres
+
+	def add_year_labels():
+		for year in range(2010, 2025):
+			x = date_to_x(datetime(year, 1, 1))
+			label = ET.SubElement(root, "text", x=str(x + 3), y=str(row_height_px), fill="black")
+			label.text = str(year)
+			label.set("font-size", "10")
+			ET.SubElement(root, "line", x1=str(x), y1="0", x2=str(x), y2=str(yres), stroke="black")
 
 	def add_msg_rect(parent: ET.Element, row: int, date: datetime, duration: float, verified: bool):
-		y = row * row_height_px
+		y = (row + empty_rows) * row_height_px
 		color = 'green' if verified else 'red'
-		start_date = datetime(2010, 1, 1).timestamp()
-		end_date = datetime(2025, 1, 1).timestamp()
-		x = (date.timestamp() - start_date) / (end_date - start_date) * xres
+		x = date_to_x(date)
 		width = duration / (end_date - start_date) * xres
 		mid_y = y + row_height_px / 2
 		ET.SubElement(root, "line", x1=str(x), y1=str(mid_y), x2=str(x + width), y2=str(mid_y), stroke=color)
 		ET.SubElement(parent, "line", x1=str(x), y1=str(y), x2=str(x), y2=str(y + row_height_px), stroke=color)
 
-	root = ET.Element("svg", width=str(xres), height=str(yres))
+	root = ET.Element("svg", width=str(xres), height=str(yres), xmlns="http://www.w3.org/2000/svg")
 	ET.SubElement(root, "rect", x="0", y="0", width="100%", height="100%", fill="white")
 
 	bars_group = ET.SubElement(root, "g")
@@ -299,8 +311,9 @@ def verification_results_to_svg(data: dict[str, list[VerificationResult]], outpu
 			date2 = results[i + 1].msgInfo.date if i + 1 < len(results) else now
 			duration = date2.timestamp() - date1.timestamp()
 			add_msg_rect(bars_group, row, date1, duration, r.verified)
-
+	add_year_labels()
 	tree = ET.ElementTree(root)
+	ET.indent(root)
 	tree.write(output_file)
 
 
