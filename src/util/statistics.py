@@ -20,6 +20,7 @@ from db_util import load_dkim_records_with_dsps
 import dkim  # type: ignore
 from dkim.dnsplug import get_txt_dnspython  # type: ignore
 import pickle
+import xml.etree.ElementTree as ET
 
 
 def domain_statistics(mboxFile: str):
@@ -267,19 +268,51 @@ def dkim_key_rotation(mboxFiles: list[str], excludeKeyboundSelectors: bool):
 	return dsp_verification_results
 
 
-def dkim_key_rotation_display_results(dsp_verification_results: dict[str, list[VerificationResult]]):
-	# sort by number of messages
-	dsp_verification_results = dict(sorted(dsp_verification_results.items(), key=lambda x: len(x[1]), reverse=True))
-	for qname, verification_results in dsp_verification_results.items():
-		verification_results.sort(key=lambda x: x.msgInfo.date)
-		print(f'{qname}: {len(verification_results)} messages')
-		for vr in verification_results:
-			print(f'\t{vr.msgInfo.date}, Verified: {vr.verified}, Errors: {vr.errors}')
+def verification_results_to_svg(data: dict[str, list[VerificationResult]], output_file: str):
+	xres = 800
+	yres = 800
+	row_height_px = 10
+	rows = yres // row_height_px
+
+	def add_msg_rect(parent: ET.Element, row: int, date: datetime, duration: float, verified: bool):
+		y = row * row_height_px
+		color = 'green' if verified else 'red'
+		start_date = datetime(2010, 1, 1).timestamp()
+		end_date = datetime(2025, 1, 1).timestamp()
+		x = (date.timestamp() - start_date) / (end_date - start_date) * xres
+		width = duration / (end_date - start_date) * xres
+		mid_y = y + row_height_px / 2
+		ET.SubElement(root, "line", x1=str(x), y1=str(mid_y), x2=str(x + width), y2=str(mid_y), stroke=color)
+		ET.SubElement(parent, "line", x1=str(x), y1=str(y), x2=str(x), y2=str(y + row_height_px), stroke=color)
+
+	root = ET.Element("svg", width=str(xres), height=str(yres))
+	ET.SubElement(root, "rect", x="0", y="0", width="100%", height="100%", fill="white")
+
+	bars_group = ET.SubElement(root, "g")
+	for row, (_label, results) in enumerate(data.items()):
+		if row >= rows:
+			break
+		now = datetime.now()
+		for i, r in enumerate(results):
+			r = results[i]
+			date1 = r.msgInfo.date
+			date2 = results[i + 1].msgInfo.date if i + 1 < len(results) else now
+			duration = date2.timestamp() - date1.timestamp()
+			add_msg_rect(bars_group, row, date1, duration, r.verified)
+
+	tree = ET.ElementTree(root)
+	tree.write(output_file)
+
+
+def dkim_key_rotation_display_results(results_per_dsp: dict[str, list[VerificationResult]]):
+	results_per_dsp = dict(sorted(results_per_dsp.items(), key=lambda x: len(x[1]), reverse=True))  # sort by number of messages
+	for _qname, results in results_per_dsp.items():
+		results.sort(key=lambda x: x.msgInfo.date)
+	verification_results_to_svg(results_per_dsp, "output.svg")
 
 
 def selector_statistics(tsvFile: str):
 	domainSelectorDict: dict[str, list[str]] = collections.defaultdict(list)
-	# read .tsv file
 	with open(tsvFile, 'r') as f:
 		for line in f:
 			line = line.rstrip('\n')
