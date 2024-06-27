@@ -269,8 +269,9 @@ def dkim_key_rotation(mboxFiles: list[str], excludeKeyboundSelectors: bool):
 
 
 def verification_results_to_svg(data: dict[str, list[VerificationResult]], output_file: str):
-	xres = 800
+	xres = 1200
 	yres = 800
+	table_width = 800
 	start_date = datetime(2010, 1, 1).timestamp()
 	end_date = datetime.now().timestamp()
 	row_height_px = 10
@@ -278,7 +279,7 @@ def verification_results_to_svg(data: dict[str, list[VerificationResult]], outpu
 	rows = yres // row_height_px - empty_rows
 
 	def date_to_x(date: datetime) -> float:
-		return (date.timestamp() - start_date) / (end_date - start_date) * xres
+		return (date.timestamp() - start_date) / (end_date - start_date) * table_width
 
 	def add_year_labels():
 		for year in range(2010, 2025):
@@ -292,7 +293,7 @@ def verification_results_to_svg(data: dict[str, list[VerificationResult]], outpu
 		y = (row + empty_rows) * row_height_px
 		color = 'green' if verified else 'red'
 		x = date_to_x(date)
-		width = duration / (end_date - start_date) * xres
+		width = duration / (end_date - start_date) * table_width
 		mid_y = y + row_height_px / 2
 		ET.SubElement(root, "line", x1=str(x), y1=str(mid_y), x2=str(x + width), y2=str(mid_y), stroke=color)
 		ET.SubElement(parent, "line", x1=str(x), y1=str(y), x2=str(x), y2=str(y + row_height_px), stroke=color)
@@ -311,14 +312,25 @@ def verification_results_to_svg(data: dict[str, list[VerificationResult]], outpu
 			date2 = results[i + 1].msgInfo.date if i + 1 < len(results) else now
 			duration = date2.timestamp() - date1.timestamp()
 			add_msg_rect(bars_group, row, date1, duration, r.verified)
+			label = ET.SubElement(root, "text", x=str(table_width + 5), y=str((row + empty_rows) * row_height_px + 10), fill="black")
+			label.text = f'{r.msgInfo.dkimSelector}._domainkey.{r.msgInfo.dkimDomain}'
+			label.set("font-size", "10")
 	add_year_labels()
 	tree = ET.ElementTree(root)
 	ET.indent(root)
 	tree.write(output_file)
 
 
+def calculate_significance(results: list[VerificationResult]) -> float:
+	arr = [int(r.verified) for r in results]
+	mean = sum(arr) / len(arr)
+	# total absolute deviation from the mean
+	return sum(abs(x - mean) for x in arr)
+
+
 def dkim_key_rotation_display_results(results_per_dsp: dict[str, list[VerificationResult]]):
-	results_per_dsp = dict(sorted(results_per_dsp.items(), key=lambda x: len(x[1]), reverse=True))  # sort by number of messages
+	# sort by a custom measure of significance
+	results_per_dsp = dict(sorted(results_per_dsp.items(), key=lambda x: calculate_significance(x[1]), reverse=True))
 	for _qname, results in results_per_dsp.items():
 		results.sort(key=lambda x: x.msgInfo.date)
 	verification_results_to_svg(results_per_dsp, "output.svg")
