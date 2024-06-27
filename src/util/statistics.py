@@ -273,7 +273,8 @@ def verification_results_to_svg(data: dict[str, list[VerificationResult]], outpu
 	yres = 800
 	table_width = 800
 	start_date = datetime(2010, 1, 1).timestamp()
-	end_date = datetime.now().timestamp()
+	end_datetime = datetime(2025, 1, 1)
+	end_date = end_datetime.timestamp()
 	row_height_px = 10
 	empty_rows = 2
 	rows = yres // row_height_px - empty_rows
@@ -282,7 +283,7 @@ def verification_results_to_svg(data: dict[str, list[VerificationResult]], outpu
 		return (date.timestamp() - start_date) / (end_date - start_date) * table_width
 
 	def add_year_labels():
-		for year in range(2010, 2025):
+		for year in range(2010, end_datetime.year + 1):
 			x = date_to_x(datetime(year, 1, 1))
 			label = ET.SubElement(root, "text", x=str(x + 3), y=str(row_height_px), fill="black")
 			label.text = str(year)
@@ -305,11 +306,10 @@ def verification_results_to_svg(data: dict[str, list[VerificationResult]], outpu
 	for row, (_label, results) in enumerate(data.items()):
 		if row >= rows:
 			break
-		now = datetime.now()
 		for i, r in enumerate(results):
 			r = results[i]
 			date1 = r.msgInfo.date
-			date2 = results[i + 1].msgInfo.date if i + 1 < len(results) else now
+			date2 = results[i + 1].msgInfo.date if i + 1 < len(results) else end_datetime
 			duration = date2.timestamp() - date1.timestamp()
 			add_msg_rect(bars_group, row, date1, duration, r.verified)
 			label = ET.SubElement(root, "text", x=str(table_width + 5), y=str((row + empty_rows) * row_height_px + 10), fill="black")
