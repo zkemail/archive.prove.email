@@ -15,12 +15,12 @@ For information on how to help with development, see [development.md](developmen
 
 ## Domain search API
 
-A public API endpoint for fetching keys for a certain domain is available at `https://archive.prove.email/api/domains/{domain_name}`. The response will contain a list of all known selectors and DKIM keys for `domain_name` and its subdomains.
+A public API endpoint for fetching keys for a certain domain is available at `https://archive.prove.email/api/key?domain={domain_name}`. The response will contain a list of all known selectors and DKIM keys for `domain_name` and its subdomains.
 
 An example call from the command line:
 
 ```bash
-curl "https://archive.prove.email/api/domains/ethereum.org" | python -m json.tool
+curl "https://archive.prove.email/api/key?domain=ethereum.org" | python -m json.tool
 ```
 
 <a name="mailbox_scraper"></a>
