@@ -29,6 +29,16 @@ def parse_header(data: str):
 		return
 	for dkim_field in dkim_fields:
 		dkimRecord = decode_dkim_header_field(dkim_field)
+		# Check if 'from' is signed but 'to' is not
+		if 'i' in dkimRecord and 'h' in dkimRecord:
+			signed_headers = [h.strip().lower() for h in dkimRecord['h'].split(':')]
+			if 'to' not in signed_headers:
+				to_addresses = h.get_all('to', [])
+				num_to_emails = len(to_addresses)
+				if 'from' in signed_headers:
+					print(f"Sending domain with unsigned 'to' field: {dkimRecord['d']} (Number of 'to' emails: {num_to_emails})")
+				else:
+					print(f"Sending domain with unsigned 'to' and 'from' field: {dkimRecord['d']} (Number of 'to' emails: {num_to_emails})")
 		domain = dkimRecord['d']
 		selector = dkimRecord['s']
 		dsps.add(f'{domain}\t{selector}')
@@ -46,17 +56,23 @@ def parse_message(msg):
 def parse_item(index: int, item, depth: int):
 	indent = '    ' * depth
 	if isinstance(item, pypff.message):
-		print(f'{indent}{type(item)} {index}: "{item.subject}"', file=sys.stderr)
+		pass
+		# print(f'{indent}{type(item)} {index}: "{item.subject}"', file=sys.stderr)
 		parse_message(item)
 	else:
 		if isinstance(item, pypff.folder):
-			print(f'{indent}{type(item)} {index}: "{item.name}"', file=sys.stderr)
+			pass
+			# print(f'{indent}{type(item)} {index}: "{item.name}"', file=sys.stderr)
 		else:
-			print(f'{indent}{type(item)} {index}', file=sys.stderr)
+			pass
+			# print(f'{indent}{type(item)} {index}', file=sys.stderr)
 		if hasattr(item, 'sub_items') and item.sub_items is not None:
 			for i in range(len(item.sub_items)):
-				sub_item = item.sub_items[i]
-				parse_item(i, sub_item, depth + 1)
+				try:
+					sub_item = item.sub_items[i]
+					parse_item(i, sub_item, depth + 1)
+				except Exception as e:
+					print(f'Error parsing sub_item {i}: {e}, {item.sub_items} {item}', file=sys.stderr)
 
 
 def decode_pst():
