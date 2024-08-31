@@ -8,12 +8,16 @@ export async function autocomplete(query: string) {
 	if (!query) {
 		return [];
 	}
-	let dsps = await prisma.domainSelectorPair.findMany({
-		distinct: ['domain'],
-		where: { domain: { startsWith: query } },
-		orderBy: { domain: 'asc' },
-		take: 8
-	});
+	const modifiedQuery = query.replace(/\./g, "-");
+
+  let dsps = await prisma.domainSelectorPair.findMany({
+    distinct: ["domain"],
+    where: {
+      OR: [{ domain: { startsWith: query } }, { domain: { startsWith: modifiedQuery } }],
+    },
+    orderBy: { domain: "asc" },
+    take: 8,
+  });
 	return Array.from(new Set(dsps.map(d => d.domain)));
 }
 
