@@ -51,7 +51,7 @@ export default function Page() {
 				The email access tokens are only stored on the user's browser. The server does not store any tokens.
 				For more information, see the <a href="/privacy-policy">privacy policy</a>.
 			</p>
-			<button style={actionButtonStyle} onClick={() => signIn()}>Sign in</button>
+			<button style={actionButtonStyle} onClick={() => signIn("google")}>Sign in</button>
 		</div>
 	}
 
