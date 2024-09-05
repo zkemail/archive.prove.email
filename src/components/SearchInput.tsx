@@ -35,7 +35,6 @@ export const SearchInput: React.FC<SearchFormProps> = ({ domainQuery }) => {
 				disablePortal
 				onInputChange={inputChanged}
 				onChange={onChange}
-				filterOptions={(x) => x}				
 				options={searchResults}
 				sx={{ width: 300 }}
 				freeSolo

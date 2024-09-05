@@ -8,51 +8,13 @@ export async function autocomplete(query: string) {
   if (!query) {
     return [];
   }
-  const modifiedQuery = query.replace(/\./g, "-");
-  const modifiedQuery2 = query.replace(/\-/g, ".");
-
   let dsps = await prisma.domainSelectorPair.findMany({
     distinct: ["domain"],
-    where: {
-      OR: [
-        {
-          domain: {
-            contains: query,
-            mode: Prisma.QueryMode.insensitive,
-          },
-        },
-        {
-          domain: {
-            contains: modifiedQuery,
-            mode: Prisma.QueryMode.insensitive,
-          },
-        },
-        {
-          domain: {
-            contains: modifiedQuery2,
-            mode: Prisma.QueryMode.insensitive,
-          },
-        },
-      ],
-    },
+    where: { domain: { startsWith: query } },
     orderBy: { domain: "asc" },
     take: 8,
   });
-  const results = Array.from(new Set(dsps.map((d) => d.domain)));
-
-  const sortedResults = results.sort((a, b) => {
-    const aStartsWithQuery = a.toLowerCase().startsWith(query.toLowerCase());
-    const bStartsWithQuery = b.toLowerCase().startsWith(query.toLowerCase());
-
-    if (aStartsWithQuery && !bStartsWithQuery) {
-      return -1;
-    }
-    if (!aStartsWithQuery && bStartsWithQuery) {
-      return 1;
-    }
-    return 0;
-  });
-  return sortedResults;
+  return Array.from(new Set(dsps.map((d) => d.domain)));
 }
 
 export type RecordWithSelector = DkimRecord & { domainSelectorPair: DomainSelectorPair };
@@ -68,29 +30,19 @@ export async function findKeysPaginated(
       skip: 1,
     };
   }
-
-  const modifiedQuery = domainQuery.replace(/\./g, "-");
-  const modifiedQuery2 = domainQuery.replace(/\-/g, ".");
-
-  const results = await prisma.dkimRecord.findMany({
+  return await prisma.dkimRecord.findMany({
     where: {
       domainSelectorPair: {
         OR: [
           {
             domain: {
-              contains: domainQuery,
+              equals: domainQuery,
               mode: Prisma.QueryMode.insensitive,
             },
           },
           {
             domain: {
-              contains: modifiedQuery,
-              mode: Prisma.QueryMode.insensitive,
-            },
-          },
-          {
-            domain: {
-              contains: modifiedQuery2,
+              endsWith: "." + domainQuery,
               mode: Prisma.QueryMode.insensitive,
             },
           },
@@ -103,6 +55,4 @@ export async function findKeysPaginated(
     take: 50,
     ...cursorObj,
   });
-
-  return results;
 }
