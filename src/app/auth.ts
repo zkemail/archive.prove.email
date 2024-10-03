@@ -73,6 +73,9 @@ export const authOptions = {
 			}
 			return sessionResponse
 		},
+		async redirect(){
+			return "/upload_gmail"
+;		}
 	}
 }
 
