@@ -8,6 +8,54 @@ export async function autocomplete(query: string) {
   if (!query) {
     return [];
   }
+  console.log(query);
+
+  // if (query.length < 3) {
+  //   let dsps = await prisma.domainSelectorPair.findMany({
+  //     distinct: ["domain"],
+  //     where: { domain: { startsWith: query } },
+  //     orderBy: { domain: "asc" },
+  //     take: 8,
+  //     select: {
+  //       domain: true,
+  //     },
+  //   });
+
+  //   return dsps.map((d) => d.domain);
+  // }
+  if (!query.includes(".") && !query.includes("-")) {
+    let dsps = await prisma.domainSelectorPair.findMany({
+      distinct: ["domain"],
+      where: { domain: { startsWith: query } },
+      orderBy: { domain: "asc" },
+      take: 8,
+      select: {
+        domain: true,
+      },
+    });
+
+    return dsps.map((d) => d.domain);
+  }
+
+  // if (!query.includes(".") && !query.includes("-")) {
+  //   let dsps = await prisma.domainSelectorPair.findMany({
+  //     distinct: ["domain"],
+  //     where: {
+  //       domain: {
+  //         contains: query,
+  //         mode: Prisma.QueryMode.insensitive,
+  //       },
+  //     },
+  //     orderBy: { domain: "asc" },
+  //     take: 8,
+  //     select: {
+  //       domain: true,
+  //     },
+  //   });
+
+  //   return dsps.map((d) => d.domain);
+  // }
+
   const modifiedQuery = query.replace(/\./g, "-");
   const modifiedQuery2 = query.replace(/\-/g, ".");
 
@@ -37,22 +85,20 @@ export async function autocomplete(query: string) {
     },
     orderBy: { domain: "asc" },
     take: 8,
+    select: {
+      domain: true,
+    },
   });
-  const results = Array.from(new Set(dsps.map((d) => d.domain)));
+  // console.log(dsps);
 
-  const sortedResults = results.sort((a, b) => {
+  const results = dsps.map((d) => d.domain);
+
+  return results.sort((a, b) => {
     const aStartsWithQuery = a.toLowerCase().startsWith(query.toLowerCase());
     const bStartsWithQuery = b.toLowerCase().startsWith(query.toLowerCase());
 
-    if (aStartsWithQuery && !bStartsWithQuery) {
-      return -1;
-    }
-    if (!aStartsWithQuery && bStartsWithQuery) {
-      return 1;
-    }
-    return 0;
+    return aStartsWithQuery === bStartsWithQuery ? 0 : aStartsWithQuery ? -1 : 1;
   });
-  return sortedResults;
 }
 
 export type RecordWithSelector = DkimRecord & { domainSelectorPair: DomainSelectorPair };
@@ -69,10 +115,26 @@ export async function findKeysPaginated(
     };
   }
 
+  if (!domainQuery.includes(".") && !domainQuery.includes("-")) {
+    return await prisma.dkimRecord.findMany({
+      where: {
+        domainSelectorPair: {
+          domain: {
+            startsWith: domainQuery,
+          },
+        },
+      },
+      include: {
+        domainSelectorPair: true,
+      },
+      take: 25,
+    });
+  }
+
   const modifiedQuery = domainQuery.replace(/\./g, "-");
   const modifiedQuery2 = domainQuery.replace(/\-/g, ".");
 
-  const results = await prisma.dkimRecord.findMany({
+  return await prisma.dkimRecord.findMany({
     where: {
       domainSelectorPair: {
         OR: [
@@ -100,9 +162,7 @@ export async function findKeysPaginated(
     include: {
       domainSelectorPair: true,
     },
-    take: 50,
+    take: 25,
     ...cursorObj,
   });
-
-  return results;
 }
