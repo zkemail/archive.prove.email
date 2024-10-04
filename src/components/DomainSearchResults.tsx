@@ -30,9 +30,9 @@ export const DomainSearchResults: React.FC<DomainSearchResultProps> = ({ domainQ
     if (!cursor) {
       return;
     }
-    console.log("cursor", cursor);
+
     let newRecords = domainQuery ? await findKeysPaginated(domainQuery, cursor) : [];
-    console.log("newRecords", newRecords);
+
     if (!newRecords.length) {
       // If no new records are found, stop further loading
       setCursor(null);
@@ -46,7 +46,6 @@ export const DomainSearchResults: React.FC<DomainSearchResultProps> = ({ domainQ
       return;
     }
 
-    // Combine records but filter out duplicates using their unique `id`
     const uniqueRecords = [...records, ...newRecords].reduce((acc, record) => {
       if (!acc.find((r) => r.id === record.id)) {
         acc.push(record);

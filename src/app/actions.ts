@@ -8,7 +8,6 @@ export async function autocomplete(query: string) {
   if (!query) {
     return [];
   }
-  console.log(query);
 
   // if (query.length < 3) {
   //   let dsps = await prisma.domainSelectorPair.findMany({
@@ -89,7 +88,6 @@ export async function autocomplete(query: string) {
       domain: true,
     },
   });
-  // console.log(dsps);
 
   const results = dsps.map((d) => d.domain);
 
