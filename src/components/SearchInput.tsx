@@ -20,7 +20,7 @@ export const SearchInput: React.FC<SearchFormProps> = ({ domainQuery }) => {
         const results = await autocomplete(value);
         setSearchResults(results);
       }
-    }, 500),
+    }, 200),
     []
   );
 
