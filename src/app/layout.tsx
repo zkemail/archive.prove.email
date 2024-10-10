@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { NextAuthProvider } from './session-provider'
+import Link from 'next/link'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -36,7 +37,7 @@ export default function RootLayout({
 						borderBottom: '1px solid #aaa',
 						display: 'flex',
 					}}>
-						<a href='/'
+						<Link href='/'
 							className='defaultcolor'
 							style={{ display: 'flex', fontWeight: 600 }}
 						>
@@ -45,7 +46,7 @@ export default function RootLayout({
 								alt="Proof of Email logotype"
 								style={{ width: '2.5rem', paddingRight: '0.5rem' }} />
 							DKIM Archive
-						</a>
+						</Link>
 						<DevModeNotice />
 					</header>
 					<main style={{ margin: '0.5rem', alignItems: 'center', display: 'flex', flexDirection: 'column' }}>

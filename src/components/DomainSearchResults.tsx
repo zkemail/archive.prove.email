@@ -1,30 +1,45 @@
 "use client";
-import { RecordWithSelector } from "@/lib/db";
-import { SelectorResult } from "./SelectorResult";
-import React, { useEffect } from "react";
-import { findKeysPaginated } from "@/app/actions";
-import { useInView } from "react-intersection-observer";
 
-interface DomainSearchResultProps {
+import { findKeysPaginated } from "@/app/actions";
+import Loading from "@/app/loading";
+import { RecordWithSelector } from "@/lib/db";
+import { parseDkimTagList } from "@/lib/utils";
+import { useEffect, useState } from "react";
+import { DomainSearchResultsDisplay } from "./DomainSearchResultsDisplay";
+
+interface DomainSearchResultsProps {
   domainQuery: string | undefined;
-  initialRecords: RecordWithSelector[];
+  isLoading: boolean;
+  setIsLoading: (isLoading: boolean) => void;
 }
 
-export const DomainSearchResults: React.FC<DomainSearchResultProps> = ({ domainQuery, initialRecords }) => {
-  const [cursor, setCursor] = React.useState<number | null>(initialRecords[initialRecords.length - 1]?.id);
-  const [records, setRecords] = React.useState(initialRecords);
-  const { ref: inViewElement, inView } = useInView();
+function dkimValueHasPrivateKey(dkimValue: string): boolean {
+  return !!parseDkimTagList(dkimValue).p;
+}
+
+async function DomainResultsLoader(domainQuery: string | undefined) {
+  let records = null;
+  records = domainQuery ? await findKeysPaginated(domainQuery, null) : [];
+  records = records.filter((record) => dkimValueHasPrivateKey(record.value));
+  return records;
+}
+
+function DomainSearchResults({ domainQuery, isLoading, setIsLoading }: DomainSearchResultsProps) {
+  // const [isLoading, setIsLoading] = useState(true);
+  const [records, setRecords] = useState<RecordWithSelector[]>([]);
+  const [cursor, setCursor] = useState<number | null>(null);
 
   useEffect(() => {
-    setCursor(initialRecords[initialRecords.length - 1]?.id);
-    setRecords(initialRecords);
-  }, [domainQuery]);
-
-  useEffect(() => {
-    if (inView) {
-      loadMore();
+    setIsLoading(true);
+    async function loadRecords() {
+      const newRecords = await DomainResultsLoader(domainQuery);
+      setRecords(newRecords);
+      setCursor(newRecords[newRecords.length - 1]?.id);
+      setIsLoading(false);
     }
-  }, [inView]);
+
+    loadRecords();
+  }, [domainQuery]);
 
   async function loadMore() {
     if (!cursor) {
@@ -32,7 +47,6 @@ export const DomainSearchResults: React.FC<DomainSearchResultProps> = ({ domainQ
     }
 
     let newRecords = domainQuery ? await findKeysPaginated(domainQuery, cursor) : [];
-
     if (!newRecords.length) {
       // If no new records are found, stop further loading
       setCursor(null);
@@ -40,7 +54,6 @@ export const DomainSearchResults: React.FC<DomainSearchResultProps> = ({ domainQ
     }
 
     let lastCursor = newRecords[newRecords.length - 1]?.id;
-
     if (lastCursor === cursor) {
       setCursor(null);
       return;
@@ -57,24 +70,11 @@ export const DomainSearchResults: React.FC<DomainSearchResultProps> = ({ domainQ
     setRecords(uniqueRecords);
   }
 
-  if (!domainQuery) {
-    return <div>Enter a search term</div>;
-  }
-  if (!records?.length) {
-    return <div>No records found for "{domainQuery}"</div>;
-  }
-  return (
-    <div>
-      <p>
-        Search results for <b>{domainQuery}</b>
-      </p>
-      <div>
-        {records.map((record) => (
-          <SelectorResult key={record.id} record={record} />
-        ))}
-      </div>
-      {!cursor && <p>No more records</p>}
-      <div ref={inViewElement} />
-    </div>
+  return isLoading ? (
+    <Loading />
+  ) : (
+    <DomainSearchResultsDisplay records={records} domainQuery={domainQuery} loadMore={loadMore} cursor={cursor} />
   );
-};
+}
+
+export default DomainSearchResults;

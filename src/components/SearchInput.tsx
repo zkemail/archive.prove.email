@@ -7,9 +7,10 @@ import debounce from "lodash/debounce"; // Importing lodash's debounce
 
 interface SearchFormProps {
   domainQuery: string | undefined;
+  setIsLoading: (isLoading: boolean) => void;
 }
 
-export const SearchInput: React.FC<SearchFormProps> = ({ domainQuery }) => {
+export const SearchInput: React.FC<SearchFormProps> = ({ domainQuery, setIsLoading }) => {
   const router = useRouter();
   const [searchResults, setSearchResults] = useState<AutocompleteResults>([]);
   const [inputValue, setInputValue] = useState<string>(domainQuery || "");
@@ -20,7 +21,7 @@ export const SearchInput: React.FC<SearchFormProps> = ({ domainQuery }) => {
         const results = await autocomplete(value);
         setSearchResults(results);
       }
-    }, 500),
+    }, 200),
     []
   );
 
@@ -37,6 +38,7 @@ export const SearchInput: React.FC<SearchFormProps> = ({ domainQuery }) => {
 
   const onChange = (_event: React.SyntheticEvent, value: string | null) => {
     if (value) {
+      setIsLoading(true);
       router.push(`/?domain=${value}`);
     }
   };
