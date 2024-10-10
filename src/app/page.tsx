@@ -1,9 +1,13 @@
+"use client";
+
 import DomainSearchResults from "@/components/DomainSearchResults";
 import { SearchInput } from "@/components/SearchInput";
 import Link from "next/link";
+import { useState } from "react";
 
 export default function Home({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) {
   const domainQuery = searchParams?.domain?.toString();
+  const [isLoading, setIsLoading] = useState(true);
   return (
     <div style={{ display: "flex", minHeight: "100vh", flexDirection: "column", alignItems: "center" }}>
       <h2 style={{ padding: "2rem" }}>
@@ -11,8 +15,8 @@ export default function Home({ searchParams }: { searchParams: { [key: string]: 
           DKIM Archive
         </Link>
       </h2>
-      <SearchInput domainQuery={domainQuery} />
-      <DomainSearchResults domainQuery={domainQuery} />
+      <SearchInput domainQuery={domainQuery} setIsLoading={setIsLoading} />
+      <DomainSearchResults domainQuery={domainQuery} isLoading={isLoading} setIsLoading={setIsLoading} />
       <div style={{ textAlign: "center", marginTop: "5rem", fontSize: "0.8rem" }}>
         <hr style={{ width: "50%", margin: "1rem auto", borderTop: "1px solid black" }} />
         <div>

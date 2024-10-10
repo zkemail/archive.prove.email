@@ -7,6 +7,12 @@ import { parseDkimTagList } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { DomainSearchResultsDisplay } from "./DomainSearchResultsDisplay";
 
+interface DomainSearchResultsProps {
+  domainQuery: string | undefined;
+  isLoading: boolean;
+  setIsLoading: (isLoading: boolean) => void;
+}
+
 function dkimValueHasPrivateKey(dkimValue: string): boolean {
   return !!parseDkimTagList(dkimValue).p;
 }
@@ -18,8 +24,8 @@ async function DomainResultsLoader(domainQuery: string | undefined) {
   return records;
 }
 
-function DomainSearchResults({ domainQuery }: { domainQuery: string | undefined }) {
-  const [isLoading, setIsLoading] = useState(true);
+function DomainSearchResults({ domainQuery, isLoading, setIsLoading }: DomainSearchResultsProps) {
+  // const [isLoading, setIsLoading] = useState(true);
   const [records, setRecords] = useState<RecordWithSelector[]>([]);
   const [cursor, setCursor] = useState<number | null>(null);
 
