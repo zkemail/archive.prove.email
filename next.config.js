@@ -14,6 +14,7 @@ const nextConfig = {
 		return [{
 			source: '/(.*)',
 			headers: [
+				{ key: "Access-Control-Allow-Origin", value: "*" }, 
 				{
 					key: 'Content-Security-Policy',
 					value: cspValue.join('; '),
