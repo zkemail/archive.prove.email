@@ -1,4 +1,4 @@
-This repository is part of the [Proof of Email](https://prove.email/) project
+This repository is part of the [Proof of Email](https://prove.email/) project -- read more at [prove.email/blog/archive](https://prove.email/blog/archive)!
 
 # DKIM archive website
 
