@@ -160,6 +160,7 @@ export async function findKeysPaginated(
     include: {
       domainSelectorPair: true,
     },
+    orderBy: [{ domainSelectorPair: { domain: "asc" } }],
     take: 25,
     ...cursorObj,
   });

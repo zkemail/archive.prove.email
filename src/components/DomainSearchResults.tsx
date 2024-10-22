@@ -25,7 +25,6 @@ async function DomainResultsLoader(domainQuery: string | undefined) {
 }
 
 function DomainSearchResults({ domainQuery, isLoading, setIsLoading }: DomainSearchResultsProps) {
-  // const [isLoading, setIsLoading] = useState(true);
   const [records, setRecords] = useState<RecordWithSelector[]>([]);
   const [cursor, setCursor] = useState<number | null>(null);
 
