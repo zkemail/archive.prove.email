@@ -5,25 +5,10 @@ import { DkimRecord, DomainSelectorPair, Prisma } from "@prisma/client";
 export type AutocompleteResults = string[];
 
 export async function autocomplete(query: string) {
-  if (!query) {
-    return [];
-  }
+  if (!query) return [];
 
-  // if (query.length < 3) {
-  //   let dsps = await prisma.domainSelectorPair.findMany({
-  //     distinct: ["domain"],
-  //     where: { domain: { startsWith: query } },
-  //     orderBy: { domain: "asc" },
-  //     take: 8,
-  //     select: {
-  //       domain: true,
-  //     },
-  //   });
-
-  //   return dsps.map((d) => d.domain);
-  // }
   if (!query.includes(".") && !query.includes("-")) {
-    let dsps = await prisma.domainSelectorPair.findMany({
+    const dsps = await prisma.domainSelectorPair.findMany({
       distinct: ["domain"],
       where: { domain: { startsWith: query } },
       orderBy: { domain: "asc" },
@@ -36,29 +21,10 @@ export async function autocomplete(query: string) {
     return dsps.map((d) => d.domain);
   }
 
-  // if (!query.includes(".") && !query.includes("-")) {
-  //   let dsps = await prisma.domainSelectorPair.findMany({
-  //     distinct: ["domain"],
-  //     where: {
-  //       domain: {
-  //         contains: query,
-  //         mode: Prisma.QueryMode.insensitive,
-  //       },
-  //     },
-  //     orderBy: { domain: "asc" },
-  //     take: 8,
-  //     select: {
-  //       domain: true,
-  //     },
-  //   });
-
-  //   return dsps.map((d) => d.domain);
-  // }
-
   const modifiedQuery = query.replace(/\./g, "-");
   const modifiedQuery2 = query.replace(/\-/g, ".");
 
-  let dsps = await prisma.domainSelectorPair.findMany({
+  const dsps = await prisma.domainSelectorPair.findMany({
     distinct: ["domain"],
     where: {
       OR: [
@@ -113,20 +79,30 @@ export async function findKeysPaginated(
     };
   }
 
-  if (!domainQuery.includes(".") && !domainQuery.includes("-")) {
-    return await prisma.dkimRecord.findMany({
-      where: {
-        domainSelectorPair: {
-          domain: {
-            startsWith: domainQuery,
-          },
+  return await prisma.dkimRecord.findMany({
+    where: {
+      domainSelectorPair: {
+        domain: {
+          startsWith: domainQuery,
         },
       },
-      include: {
-        domainSelectorPair: true,
-      },
-      take: 25,
-    });
+    },
+    include: {
+      domainSelectorPair: true,
+    },
+    take: 25,
+    orderBy: { domainSelectorPair: { domain: "asc" } },
+    ...cursorObj,
+  });
+}
+
+export async function findKeysPaginatedModifiedQuery(domainQuery: string, cursorIndex: number | null) {
+  let cursorObj = {};
+  if (cursorIndex) {
+    cursorObj = {
+      cursor: { id: cursorIndex },
+      skip: 1,
+    };
   }
 
   const modifiedQuery = domainQuery.replace(/\./g, "-");
