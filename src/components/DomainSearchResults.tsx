@@ -77,6 +77,8 @@ function DomainSearchResults({ domainQuery, isLoading, setIsLoading }: DomainSea
       return;
     }
 
+    newRecords = newRecords.filter((record) => dkimValueHasPrivateKey(record.value));
+
     const recordMap = new Map(records.map((record) => [record.id, record]));
 
     newRecords.forEach((record) => {
