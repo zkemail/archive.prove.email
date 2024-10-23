@@ -4,7 +4,7 @@ import { findKeysPaginated, findKeysPaginatedModifiedQuery } from "@/app/actions
 import Loading from "@/app/loading";
 import { RecordWithSelector } from "@/lib/db";
 import { parseDkimTagList } from "@/lib/utils";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { DomainSearchResultsDisplay } from "./DomainSearchResultsDisplay";
 
 interface DomainSearchResultsProps {
@@ -38,17 +38,20 @@ function DomainSearchResults({ domainQuery, isLoading, setIsLoading }: DomainSea
   const [cursor, setCursor] = useState<number | null>(null);
   const [flag, setFlag] = useState<boolean>(false);
 
-  async function loadRecords() {
-    const { records, flag } = await DomainResultsLoader(domainQuery);
-    setFlag(flag);
-    setRecords(records);
-    setCursor(records[records.length - 1]?.id);
-    setIsLoading(false);
-  }
+  const loadRecords = useCallback(
+    async (domainQuery: string | undefined) => {
+      const { records, flag } = await DomainResultsLoader(domainQuery);
+      setFlag(flag);
+      setRecords(records);
+      setCursor(records[records.length - 1]?.id);
+      setIsLoading(false);
+    },
+    [domainQuery]
+  );
 
   useEffect(() => {
     setIsLoading(true);
-    loadRecords();
+    loadRecords(domainQuery);
   }, [domainQuery]);
 
   async function loadMore() {
@@ -74,15 +77,16 @@ function DomainSearchResults({ domainQuery, isLoading, setIsLoading }: DomainSea
       return;
     }
 
-    const uniqueRecords = [...records, ...newRecords].reduce((acc, record) => {
-      if (!acc.find((r) => r.id === record.id)) {
-        acc.push(record);
+    const recordMap = new Map(records.map((record) => [record.id, record]));
+
+    newRecords.forEach((record) => {
+      if (!recordMap.has(record.id)) {
+        recordMap.set(record.id, record);
       }
-      return acc;
-    }, [] as RecordWithSelector[]);
+    });
 
     setCursor(lastCursor);
-    setRecords(uniqueRecords);
+    setRecords(Array.from(recordMap.values()));
   }
 
   return isLoading ? (
