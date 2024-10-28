@@ -72,6 +72,10 @@ function DomainSearchResults({ domainQuery, isLoading, setIsLoading }: DomainSea
     loadRecords(domainQuery);
   }, [domainQuery]);
 
+  useEffect(() => {
+    loadMore();
+  }, [flag]);
+
   async function loadMore() {
     if (flag === "stop" || (!cursor && flag === "normal")) return;
 
@@ -87,6 +91,7 @@ function DomainSearchResults({ domainQuery, isLoading, setIsLoading }: DomainSea
     }
 
     const updatedRecordsMap = new Map(records);
+
     filteredRecords.forEach((record) => {
       if (!updatedRecordsMap.has(record.id)) {
         updatedRecordsMap.set(record.id, record);
@@ -100,12 +105,7 @@ function DomainSearchResults({ domainQuery, isLoading, setIsLoading }: DomainSea
   return isLoading ? (
     <Loading />
   ) : (
-    <DomainSearchResultsDisplay
-      records={Array.from(records.values())}
-      domainQuery={domainQuery}
-      loadMore={loadMore}
-      cursor={cursor}
-    />
+    <DomainSearchResultsDisplay records={records} domainQuery={domainQuery} loadMore={loadMore} cursor={cursor} />
   );
 }
 
