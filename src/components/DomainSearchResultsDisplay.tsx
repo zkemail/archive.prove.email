@@ -6,7 +6,7 @@ import { SelectorResult } from "./SelectorResult";
 
 interface DomainSearchResultProps {
   domainQuery: string | undefined;
-  records: RecordWithSelector[];
+  records: Map<number, RecordWithSelector>;
   loadMore: () => void;
   cursor: number | null;
 }
@@ -28,7 +28,7 @@ export const DomainSearchResultsDisplay: React.FC<DomainSearchResultProps> = ({
   if (!domainQuery) {
     return <div>Enter a search term</div>;
   }
-  if (!records?.length) {
+  if (!Array.from(records.values())?.length) {
     return <div>No records found for "{domainQuery}"</div>;
   }
   return (
@@ -37,7 +37,7 @@ export const DomainSearchResultsDisplay: React.FC<DomainSearchResultProps> = ({
         Search results for <b>{domainQuery}</b>
       </p>
       <div>
-        {records.map((record) => (
+        {Array.from(records.values()).map((record) => (
           <SelectorResult key={record.id} record={record} />
         ))}
       </div>

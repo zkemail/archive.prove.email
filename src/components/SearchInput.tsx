@@ -27,11 +27,10 @@ export const SearchInput: React.FC<SearchFormProps> = ({ domainQuery, setIsLoadi
 
   const inputChanged = (_event: React.SyntheticEvent, value: string) => {
     setInputValue(value);
+    debouncedAutocomplete.cancel();
     if (value) {
-      debouncedAutocomplete.cancel();
       debouncedAutocomplete(value);
     } else {
-      debouncedAutocomplete.cancel();
       setSearchResults([]);
     }
   };

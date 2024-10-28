@@ -11,7 +11,7 @@ export default function Home({ searchParams }: { searchParams: { [key: string]: 
   return (
     <div style={{ display: "flex", minHeight: "100vh", flexDirection: "column", alignItems: "center" }}>
       <h2 style={{ padding: "2rem" }}>
-        <Link href="/" className="defaultcolor">
+        <Link href="/" className="defaultcolor" prefetch={false}>
           DKIM Archive
         </Link>
       </h2>
