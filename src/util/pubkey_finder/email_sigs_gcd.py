@@ -9,14 +9,18 @@ from datetime import datetime
 from prisma import Prisma
 from prisma.models import EmailSignature
 from prisma.enums import KeyType
-from Crypto.PublicKey import RSA
+from Cryptodome.PublicKey import RSA
 from common import Dsp, get_date_interval
+import sys
+from tqdm import tqdm
+
 
 DspToSigs = dict[Dsp, list[EmailSignature]]
 
 
 def find_key(dsp: Dsp, sig0: EmailSignature, sig1: EmailSignature, loglevel: int) -> str | None:
-	cmd = ["python3", "src/util/pubkey_finder/gcd_solver.py", "--loglevel", str(loglevel)]
+	assert sys.executable.endswith('python3.10'), f"Expected python3.10, but got {sys.executable}"
+	cmd = [sys.executable, "src/util/pubkey_finder/gcd_solver.py", "--loglevel", str(loglevel)]
 	hashfn = 'sha256'
 	data_parameters = [sig0.headerHash, sig0.dkimSignature, sig1.headerHash, sig1.dkimSignature, hashfn]
 	logging.debug(" ".join(cmd) + ' [... data parameters ...]')
@@ -103,30 +107,32 @@ async def main():
 			dspToSigs[dsp] = []
 		dspToSigs[dsp].append(s)
 
-	for dsp, sigs in dspToSigs.items():
-		logging.info(f"searching for public key for {dsp}")
-		if await has_known_keys(prisma, dsp, dspsWithKnownKeys):
-			logging.info(f"keys already known for {dsp.domain} {dsp.selector}")
-			continue
-		if len(sigs) >= 2:
-			sig1, sig2 = random.sample(sigs, 2)
-			pairGcdResult = await prisma.emailpairgcdresult.find_first(
-			    where={'OR': [
-			        {
-			            'emailSignatureA_id': sig1.id,
-			            'emailSignatureB_id': sig2.id
-			        },
-			        {
-			            'emailSignatureA_id': sig2.id,
-			            'emailSignatureB_id': sig1.id
-			        },
-			    ]})
-			if pairGcdResult:
-				logging.info(f"EmailPairGcdResult already exists for signatures {sig1.id} and {sig2.id}")
-				continue
-			await find_key_for_signature_pair(dsp, sig1, sig2, prisma)
-		else:
-			logging.info(f"less than 2 signatures found for {dsp}")
+	with tqdm(total=len(dspToSigs), desc="Searching for public keys") as pbar:
+		for dsp, sigs in dspToSigs.items():
+			if await has_known_keys(prisma, dsp, dspsWithKnownKeys):
+				pbar.set_postfix_str(f"Keys known for {dsp.domain} {dsp.selector}")
+			else:
+				pbar.set_postfix_str(f"Searching {dsp.domain} {dsp.selector}")
+			pbar.update(1)
+			if len(sigs) >= 2:
+				sig1, sig2 = random.sample(sigs, 2)
+				pairGcdResult = await prisma.emailpairgcdresult.find_first(
+						where={'OR': [
+								{
+										'emailSignatureA_id': sig1.id,
+										'emailSignatureB_id': sig2.id
+								},
+								{
+										'emailSignatureA_id': sig2.id,
+										'emailSignatureB_id': sig1.id
+								},
+						]})
+				if pairGcdResult:
+					logging.info(f"EmailPairGcdResult already exists for signatures {sig1.id} and {sig2.id}")
+					continue
+				await find_key_for_signature_pair(dsp, sig1, sig2, prisma)
+			else:
+				logging.info(f"less than 2 signatures found for {dsp}")
 
 
 if __name__ == '__main__':
